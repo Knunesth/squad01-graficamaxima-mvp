@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout';
-import Dashboard from './Paginas/Dashboard';
+import Dashboard from './features/dashboard';
 import Orcamentos from './Paginas/Orcamentos';
 import NovoOrcamentos, { ClienteFormulario, EscolherCliente } from './Paginas/NovoOrcamentos';
 import Papeis from './Paginas/Papeis';
