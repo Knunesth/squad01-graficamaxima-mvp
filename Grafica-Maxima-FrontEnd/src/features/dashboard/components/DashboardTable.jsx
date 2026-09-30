@@ -1,17 +1,25 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { moeda } from '../../../services/format';
+import { PlusCircle } from 'lucide-react';
 
-export function DashboardTable({ orcamentosPeriodo = [], filtroStatus, statusCounts = {}, totalNovos = 0 }) {
-  // Filter the list based on the pipeline filter
+export function DashboardTable({ orcamentosPeriodo = [], filtroStatus, statusCounts = {}, totalNovos = 0, mes }) {
   const lista = filtroStatus 
     ? orcamentosPeriodo.filter(item => item.status === filtroStatus)
     : orcamentosPeriodo;
 
   const totalItemCount = filtroStatus ? (statusCounts[filtroStatus]?.count || 0) : totalNovos;
 
-  // Status Badge Component
+  const monthLabel = useMemo(() => {
+    if (!mes) return '';
+    const [y, m] = mes.split('-');
+    const dt = new Date(y, m - 1, 1);
+    const mName = format(dt, "MMMM 'de' yyyy", { locale: ptBR });
+    return mName.charAt(0).toUpperCase() + mName.slice(1);
+  }, [mes]);
+
   const Badge = ({ status }) => {
     let classes = "px-2 py-0.5 rounded text-xs font-medium relative z-10 ";
     switch (status) {
@@ -26,9 +34,9 @@ export function DashboardTable({ orcamentosPeriodo = [], filtroStatus, statusCou
   };
 
   return (
-    <section className="mt-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-        <h2 className="text-sm font-semibold tracking-wide text-[var(--ink-light)] uppercase">
+    <section>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+        <h2 className="text-sm font-semibold tracking-wide text-[var(--ink-muted)] uppercase">
           Orçamentos do Período
         </h2>
         {lista.length === 50 && totalItemCount > 50 && (
@@ -38,16 +46,22 @@ export function DashboardTable({ orcamentosPeriodo = [], filtroStatus, statusCou
         )}
       </div>
 
-      <div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-[var(--surface)] border border-[var(--line)] rounded-xl overflow-hidden shadow-sm">
         {lista.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center">
-            <span className="text-[var(--ink-light)] font-medium mb-1">
+          <div className="p-16 text-center flex flex-col items-center justify-center bg-[var(--paper)] m-4 rounded-md border border-dashed border-[var(--line-strong)]">
+            <span className="text-[var(--ink)] font-medium mb-1">
               {filtroStatus 
-                ? `Nenhum orçamento com status "${filtroStatus}" neste mês.` 
-                : 'Nenhum orçamento encontrado neste mês.'}
+                ? `Nenhum orçamento com status "${filtroStatus}" em ${monthLabel}.` 
+                : `Nenhum orçamento em ${monthLabel}.`}
             </span>
-            {filtroStatus && (
-              <span className="text-sm text-[var(--ink-light)]">Tente limpar o filtro do pipeline.</span>
+            <span className="text-sm text-[var(--ink-light)] mb-6">
+              {filtroStatus ? 'Tente limpar o filtro do pipeline.' : 'Crie um novo orçamento para começar.'}
+            </span>
+            {!filtroStatus && (
+              <Link to="/orcamentos/novo" className="button button-primary gap-2">
+                <PlusCircle size={18} />
+                Criar orçamento
+              </Link>
             )}
           </div>
         ) : (

@@ -19,13 +19,13 @@ export default function DashboardFeature() {
   const errorMessage = error ? mensagemErro(error) : '';
 
   return (
-    <div className="gm-v2 w-full max-w-6xl mx-auto py-6 px-4 sm:px-6 md:px-8 pb-20">
+    <div className="gm-v2 w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 md:px-8 pb-20 flex flex-col gap-6 bg-[var(--paper)]">
       <DashboardHeader mes={mes} setMes={setMes} />
       
       <Feedback error={errorMessage} />
       
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-[var(--paper)] border border-[var(--line)] rounded-xl">
+        <div className="flex flex-col items-center justify-center p-12 bg-[var(--surface)] border border-[var(--line)] rounded-xl">
           <Spinner />
           <span className="mt-4 text-sm text-[var(--ink-light)]">Carregando indicadores...</span>
         </div>
@@ -43,6 +43,7 @@ export default function DashboardFeature() {
             filtroStatus={filtroStatus} 
             statusCounts={dados.statusCounts}
             totalNovos={dados.novos}
+            mes={mes}
           />
         </>
       )}

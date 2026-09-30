@@ -37,9 +37,9 @@ export function Sidebar() {
             key={path} 
             end 
             to={path} 
-            className={({ isActive }) => `button ${isActive ? 'button-primary' : 'button-subtle'} justify-start gap-2`}
+            className={({ isActive }) => `button ${isActive ? 'button-primary' : 'button-subtle'} justify-start gap-3`}
           >
-            <Icon size={18} /> {label}
+            <Icon size={18} strokeWidth={1.5} /> {label}
           </NavLink>
         ))}
       </nav>
@@ -47,10 +47,10 @@ export function Sidebar() {
       <div className="sidebar-session">
         <span className="session-user">{usuario.nome}</span>
         {usuario.tipo === 'admin' && (
-          <NavLink to="/usuarios" className="button button-subtle justify-start gap-2"><Users size={18} /> Usuários</NavLink>
+          <NavLink to="/usuarios" className="button button-subtle justify-start gap-3"><Users size={18} strokeWidth={1.5} /> Usuários</NavLink>
         )}
-        <NavLink to="/configuracao" className="button button-subtle justify-start gap-2"><Settings size={18} /> Configurações</NavLink>
-        <Button variant="subtle" className="justify-start gap-2 text-danger" onClick={sair}><LogOut size={18} /> Sair</Button>
+        <NavLink to="/configuracao" className="button button-subtle justify-start gap-3"><Settings size={18} strokeWidth={1.5} /> Configurações</NavLink>
+        <Button variant="subtle" className="justify-start gap-3 text-danger" onClick={sair}><LogOut size={18} strokeWidth={1.5} /> Sair</Button>
         <Feedback error={error} />
       </div>
     </aside>

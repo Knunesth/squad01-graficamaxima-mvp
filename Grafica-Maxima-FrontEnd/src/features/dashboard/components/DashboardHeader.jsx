@@ -26,7 +26,8 @@ export function DashboardHeader({ mes, setMes }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formattedMonth = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
+  const rawMonth = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
+  const formattedMonth = rawMonth.charAt(0).toUpperCase() + rawMonth.slice(1);
 
   const handlePrevMonth = () => {
     const prev = subMonths(currentDate, 1);
@@ -45,9 +46,9 @@ export function DashboardHeader({ mes, setMes }) {
   };
 
   return (
-    <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+    <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--ink)]">Dashboard</h1>
+        <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>Dashboard</h1>
         <p className="text-sm text-[var(--ink-light)] mt-1">Visão geral dos orçamentos e performance comercial.</p>
       </div>
 

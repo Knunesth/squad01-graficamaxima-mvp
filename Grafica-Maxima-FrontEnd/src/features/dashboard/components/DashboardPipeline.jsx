@@ -26,7 +26,7 @@ export function DashboardPipeline({ statusCounts = {}, filtroStatus, setFiltroSt
           </button>
         )}
       </div>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-[var(--paper)] border border-[var(--line)] rounded-lg overflow-hidden shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-[var(--surface)] border border-[var(--line)] rounded-xl overflow-hidden shadow-sm">
         {steps.map((step, index) => {
           const Icon = step.icon;
           const isLast = index === steps.length - 1;
@@ -40,23 +40,23 @@ export function DashboardPipeline({ statusCounts = {}, filtroStatus, setFiltroSt
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => setFiltroStatus(isActive ? '' : step.id)}
-                className={`flex-1 flex flex-col p-4 text-left transition-colors group focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent)] ${isActive ? 'bg-[var(--surface-hover)] shadow-inner ring-1 ring-inset ring-[var(--line-strong)]' : 'hover:bg-[var(--surface)]'}`}
+                className={`flex-1 flex flex-col px-5 py-4 text-left transition-colors group focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent)] ${isActive ? 'bg-[var(--paper)] shadow-inner ring-1 ring-inset ring-[var(--line-strong)]' : 'hover:bg-[var(--paper)]'}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-md bg-[var(--surface)] border border-[var(--line)] group-hover:border-[var(--line-strong)] transition-colors ${step.color} ${isActive ? 'border-[var(--accent)]' : ''}`}>
-                    <Icon size={18} strokeWidth={2} />
+                  <div className={`p-2.5 rounded-lg bg-[var(--paper)] border border-[var(--line)] group-hover:border-[var(--line-strong)] transition-colors ${isActive ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--ink-muted)]'}`}>
+                    <Icon size={20} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <span className={`block text-sm font-medium ${isActive ? 'text-[var(--accent)]' : 'text-[var(--ink)]'}`}>{step.label}</span>
-                    <span className="block text-xs text-[var(--ink-light)] mt-0.5 font-mono">
-                      {countInfo.count} {countInfo.count === 1 ? 'orç.' : 'orçs.'} • {moeda(countInfo.valor)}
+                    <span className={`block text-sm font-semibold tracking-wide ${isActive ? 'text-[var(--accent)]' : 'text-[var(--ink)]'}`}>{step.label}</span>
+                    <span className="block text-xs text-[var(--ink-light)] mt-1 font-mono">
+                      {countInfo.count} {countInfo.count === 1 ? 'orçamento' : 'orçamentos'} • {moeda(countInfo.valor)}
                     </span>
                   </div>
                 </div>
               </button>
               {!isLast && (
-                <div className="hidden sm:flex items-center justify-center text-[var(--line-strong)] px-2 bg-[var(--paper)]">
-                  <ChevronRight size={16} />
+                <div className="hidden sm:flex items-center justify-center text-[var(--line)] px-1 bg-[var(--surface)]">
+                  <ChevronRight size={20} strokeWidth={1.5} />
                 </div>
               )}
               {!isLast && (
