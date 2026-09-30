@@ -5,13 +5,15 @@ import { mensagemErro } from '../../services/api';
 import { DashboardHeader } from './components/DashboardHeader';
 import { DashboardPipeline } from './components/DashboardPipeline';
 import { DashboardKPIs } from './components/DashboardKPIs';
-// O componente da tabela e empty states virão na Parte B
+import { DashboardTable } from './components/DashboardTable';
 
 export default function DashboardFeature() {
   const [mes, setMes] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  
+  const [filtroStatus, setFiltroStatus] = useState('');
 
   const { data: dados, isLoading, error } = useDashboard(mes);
   const errorMessage = error ? mensagemErro(error) : '';
@@ -29,13 +31,17 @@ export default function DashboardFeature() {
         </div>
       ) : !dados ? null : (
         <>
-          <DashboardPipeline />
+          <DashboardPipeline 
+            statusCounts={dados.statusCounts} 
+            filtroStatus={filtroStatus} 
+            setFiltroStatus={setFiltroStatus} 
+          />
           <DashboardKPIs dados={dados} />
           
-          {/* Espaço reservado para a Tabela da Parte B */}
-          <div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl p-6 text-center shadow-sm">
-            <span className="text-[var(--ink-light)] text-sm">Tabela de últimos orçamentos será implementada na Parte B</span>
-          </div>
+          <DashboardTable 
+            recentes={dados.recentes} 
+            filtroStatus={filtroStatus} 
+          />
         </>
       )}
     </div>

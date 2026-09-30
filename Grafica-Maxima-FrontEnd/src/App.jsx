@@ -43,6 +43,13 @@ export default function App() {
       <Route path="/status-orcamento/:id" element={<StatusOrcamento />} /><Route path="/papel" element={<Papeis />} /><Route path="/configuracao" element={<Configuracao />} />
       <Route path="/usuarios" element={usuario.tipo === 'admin' ? <Usuarios /> : <Navigate to="/" replace />} /><Route path="*" element={<Navigate to="/" replace />} />
     </Routes></AppShell>}
-    <button className="calculator-toggle" title="Calculadora de metro quadrado" onClick={() => setCalculadora(c => !c)}>m²</button>{calculadora && <div className="calculator-window"><CalculadoraM2 aoFechar={() => setCalculadora(false)} /></div>}
-  </BrowserRouter></SessionContext.Provider></QueryClientProvider>;
+    <button 
+      className="fixed bottom-6 right-6 flex items-center justify-center w-12 h-12 bg-[var(--ink)] text-[var(--paper)] font-bold rounded-full shadow-lg hover:bg-[var(--ink-light)] hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--ink)] z-50"
+      title="Calculadora de m²"
+      aria-label="Calculadora de m²"
+      onClick={() => setCalculadora(c => !c)}
+    >
+      m²
+    </button>
+    {calculadora && <div className="calculator-window"><CalculadoraM2 aoFechar={() => setCalculadora(false)} /></div>}  </BrowserRouter></SessionContext.Provider></QueryClientProvider>;
 }
