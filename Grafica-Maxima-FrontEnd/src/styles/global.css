@@ -1,19 +1,20 @@
 /* src/styles/global.css */
+@layer theme, base, legacy, components, utilities;
+
 @import './reset.css';
 @import './tokens.css';
 @import './base.css';
 @import './components.css';
 
 /* 
-  Aqui podemos importar os outros CSS do sistema enquanto migramos 
-  aos poucos para a nova arquitetura baseada em tokens.
+  Importar o CSS legado com layer(legacy)
 */
-@import '../estilo/sistema.css';
-@import '../estilo/app.css';
-@import '../estilo/config.css';
-@import '../estilo/papeis.css';
-@import '../estilo/calculadora.css';
-@import '../estilo/statusOrcamento.css';
+@import '../estilo/sistema.css' layer(legacy);
+@import '../estilo/app.css' layer(legacy);
+@import '../estilo/config.css' layer(legacy);
+@import '../estilo/papeis.css' layer(legacy);
+@import '../estilo/calculadora.css' layer(legacy);
+@import '../estilo/statusOrcamento.css' layer(legacy);
 
 /* Utilities */
 .text-primary { color: var(--color-text-primary); }
