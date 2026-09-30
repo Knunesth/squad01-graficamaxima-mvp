@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip } from 'chart.js';
+// import { Bar, Line } from 'react-chartjs-2';
+// import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip } from 'chart.js';
 import { Activity, FilePlus, CheckCircle, ArrowRight } from 'lucide-react';
 import { mensagemErro } from '../services/api';
 import { Feedback, Spinner } from '../components/ui';
 import { PageHeader } from '../components/layout';
 import { aprovado, dataBR, moeda } from '../services/format';
 import { useDashboard } from '../hooks/useDashboard';
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip);
+// ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip);
 function MiniGrafico({ series, label, line = false }) {
-  const Component = line ? Line : Bar;
-  const data = { labels: series.map(s => `Sem. ${s.semana}`), datasets: [{ label, data: series.map(s => s.valor), borderColor: '#333', backgroundColor: series.map((_, i) => i === series.length - 1 ? '#333' : '#999'), borderWidth: line ? 3 : 0, pointRadius: 3, barThickness: 28 }] };
-  return <div className="mini-chart"><Component aria-label={label} role="img" data={data} options={{ maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, ticks: { maxTicksLimit: 3, font: { size: 10 } }, border: { display: false } } } }} /></div>;
+  // const Component = line ? Line : Bar;
+  // const data = { labels: series.map(s => `Sem. ${s.semana}`), datasets: [{ label, data: series.map(s => s.valor), borderColor: '#333', backgroundColor: series.map((_, i) => i === series.length - 1 ? '#333' : '#999'), borderWidth: line ? 3 : 0, pointRadius: 3, barThickness: 28 }] };
+  return <div className="mini-chart"><span>[Gráfico Omitido - Erro Vite]</span></div>;
 }
 export default function Dashboard() {
   const [mes, setMes] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,'0')}`; });

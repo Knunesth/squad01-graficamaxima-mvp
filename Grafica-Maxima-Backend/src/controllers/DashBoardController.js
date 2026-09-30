@@ -22,5 +22,16 @@ module.exports = async (req, res) => {
   }
   
   const [recentes] = await db.query('SELECT o.*,c.nome AS nome_cliente FROM orcamento o LEFT JOIN cliente c ON c.id_cliente=o.id_cliente ORDER BY o.id_orcamento DESC LIMIT 4');
-  res.json({ mes, ativos, valorAtivo, novos: rows.length, aprovados, semanas, recentes, statusCounts });
+  
+  const [orcamentosPeriodo] = await db.query(
+    `SELECT o.*, c.nome AS nome_cliente 
+     FROM orcamento o 
+     LEFT JOIN cliente c ON c.id_cliente=o.id_cliente 
+     WHERE o.data_criacao >= ? AND o.data_criacao < DATE_ADD(?, INTERVAL 1 MONTH) 
+     ORDER BY o.id_orcamento DESC 
+     LIMIT 50`,
+    [start, start]
+  );
+
+  res.json({ mes, ativos, valorAtivo, novos: rows.length, aprovados, semanas, recentes, statusCounts, orcamentosPeriodo });
 };
