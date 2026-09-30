@@ -41,6 +41,8 @@ export default function DashboardFeature() {
           <DashboardTable 
             orcamentosPeriodo={dados.orcamentosPeriodo} 
             filtroStatus={filtroStatus} 
+            statusCounts={dados.statusCounts}
+            totalNovos={dados.novos}
           />
         </>
       )}

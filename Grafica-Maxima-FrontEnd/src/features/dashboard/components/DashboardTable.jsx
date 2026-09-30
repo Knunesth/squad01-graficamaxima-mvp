@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { moeda } from '../../../services/format';
 
-export function DashboardTable({ orcamentosPeriodo = [], filtroStatus }) {
+export function DashboardTable({ orcamentosPeriodo = [], filtroStatus, statusCounts = {}, totalNovos = 0 }) {
   // Filter the list based on the pipeline filter
   const lista = filtroStatus 
     ? orcamentosPeriodo.filter(item => item.status === filtroStatus)
     : orcamentosPeriodo;
+
+  const totalItemCount = filtroStatus ? (statusCounts[filtroStatus]?.count || 0) : totalNovos;
 
   // Status Badge Component
   const Badge = ({ status }) => {
@@ -29,9 +31,9 @@ export function DashboardTable({ orcamentosPeriodo = [], filtroStatus }) {
         <h2 className="text-sm font-semibold tracking-wide text-[var(--ink-light)] uppercase">
           Orçamentos do Período
         </h2>
-        {lista.length === 50 && (
+        {lista.length === 50 && totalItemCount > 50 && (
           <span className="text-xs text-[var(--ink-light)] bg-[var(--surface)] px-2 py-1 rounded border border-[var(--line)]">
-            Exibindo os últimos 50 registros
+            Mostrando 50 de {totalItemCount}
           </span>
         )}
       </div>
