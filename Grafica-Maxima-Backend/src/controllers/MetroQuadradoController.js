@@ -1,91 +1,44 @@
-const MetroQuadradoService = require('../services/MetroQuadradoService');
+﻿const service = require('../services/MetroQuadradoService');
 const db = require('../config/db');
-const fs = require('fs');
-const path = require('path');
-
-// Caminho do arquivo JSON de persistência de preços
-const caminhoJson = path.join(__dirname, '../services/precos.json');
-
-const calcular = async (req, res) => {
+const { HttpError, numero, texto, id } = require('../utils/validation');
+async function listarTipos(req, res) {
+  const [tipos] = await db.query('SELECT tipo, preco_base_m2 FROM preco_m2 ORDER BY tipo');
+  res.json({ tipos });
+}
+async function calcular(req, res) {
+  const [tipos] = await db.query('SELECT tipo, preco_base_m2 FROM preco_m2');
+  const precos = Object.fromEntries(tipos.map(t => [t.tipo, Number(t.preco_base_m2)]));
+  const retorno = service.calcularMetroQuadrado(req.body, precos);
+  if (!retorno.sucesso) return res.status(422).json({ error: 'Confira os dados do cálculo.', detalhes: retorno.erros });
+  if (req.body.id_orcamento) {
+    const recordId = id(req.body.id_orcamento);
+    const conn = await db.getConnection();
     try {
-        const dados = req.body;
-        // Roda a lógica padrão limpa do seu amigo
-        const retorno = MetroQuadradoService.calcularMetroQuadrado(dados);
-
-        if (!retorno.sucesso) {
-            return res.status(422).json({ error: 'Dados inválidos.', detalhes: retorno.erros });
-        }
-
-        const { resultado } = retorno;
-        let id_item_salvo = null;
-
-        if (dados.id_orcamento) {
-            const sqlItem = `
-                INSERT INTO item (id_orcamento, tipo_produto, quantidade, largura, altura, valor_unitario, valor_total)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `;
-            const [itemResult] = await db.query(sqlItem, [
-                dados.id_orcamento, resultado.tipo_servico, resultado.quantidade,
-                resultado.dimensoes.largura_m, resultado.dimensoes.altura_m,
-                resultado.valor_unitario, resultado.valor_total
-            ]);
-            id_item_salvo = itemResult.insertId;
-
-            await db.query(
-                `UPDATE orcamento SET valor_total = COALESCE(valor_total, 0) + ? WHERE id_orcamento = ?`,
-                [resultado.valor_total, dados.id_orcamento]
-            );
-        }
-
-        return res.status(200).json({ message: 'Cálculo realizado.', id_item: id_item_salvo, calculo: resultado });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-};
-
-const listarTipos = (req, res) => {
-    try {
-        const tipos = MetroQuadradoService.listarTiposEPrecos();
-        return res.status(200).json({ tipos });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-};
-
-const simular = (req, res) => {
-    try {
-        const retorno = MetroQuadradoService.calcularMetroQuadrado(req.body);
-        if (!retorno.sucesso) return res.status(422).json({ error: 'Dados inválidos.' });
-        return res.status(200).json({ message: 'Simulação realizada.', calculo: retorno.resultado });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-};
-
-// 🚀 O GERENCIADOR DINÂMICO VIA ARQUIVO SEM BANCO DE DADOS!
-const atualizarPreco = (req, res) => {
-    try {
-        const { tipo, preco_base_m2 } = req.body;
-
-        if (!tipo || isNaN(preco_base_m2)) {
-            return res.status(422).json({ error: 'Dados inválidos para atualização.' });
-        }
-
-        // 1. Lê o arquivo JSON existente
-        const dadosBrutos = fs.readFileSync(caminhoJson, 'utf8');
-        const precosAtuais = JSON.parse(dadosBrutos);
-
-        // 2. Modifica o preço forçando a chave para minúsculo
-        precosAtuais[tipo.toLowerCase()] = parseFloat(preco_base_m2);
-
-        // 3. Salva de volta no arquivo
-        fs.writeFileSync(caminhoJson, JSON.stringify(precosAtuais, null, 2), 'utf8');
-
-        return res.status(200).json({ message: `Preço do ${tipo.toUpperCase()} atualizado para R$ ${preco_base_m2} com sucesso!` });
-    } catch (error) {
-        console.error('Erro ao atualizar arquivo de preços:', error.message);
-        return res.status(500).json({ error: error.message });
-    }
-};
-
+      await conn.beginTransaction();
+      const [rows] = await conn.query('SELECT * FROM orcamento WHERE id_orcamento = ? FOR UPDATE', [recordId]);
+      if (!rows.length) throw new HttpError(404, 'Orçamento não encontrado.');
+      const [[count]] = await conn.query('SELECT COUNT(*) AS total FROM item WHERE id_orcamento = ?', [recordId]);
+      if (count.total >= 17) throw new HttpError(422, 'O orçamento já tem 17 itens.');
+      const r = retorno.resultado;
+      await conn.query('INSERT INTO item (id_orcamento,tipo_produto,quantidade,largura,altura,valor_unitario,valor_total,precificacao_snapshot) VALUES (?,?,?,?,?,?,?,?)', [recordId,r.tipo_servico,r.quantidade,r.dimensoes.largura_m,r.dimensoes.altura_m,r.valor_unitario,r.valor_total,JSON.stringify(r)]);
+      const subtotal = Number(rows[0].subtotal ?? rows[0].valor_total) + r.valor_total;
+      const desconto = rows[0].desconto_tipo === 'percentual' ? subtotal * Number(rows[0].desconto_valor) / 100 : Number(rows[0].desconto_valor);
+      await conn.query('UPDATE orcamento SET subtotal=?,valor_total=?,quantidade=quantidade+?,versao=versao+1 WHERE id_orcamento=?', [subtotal,subtotal-desconto,r.quantidade,recordId]);
+      await conn.query("INSERT INTO historico_log (id_usuario,tabela_afetada,id_registro,acao,data_hora) VALUES (?,'orcamento',?,'adicionar_m2',NOW())", [req.usuario.id_usuario,recordId]);
+      await conn.commit();
+    } catch (error) { await conn.rollback(); throw error; } finally { conn.release(); }
+  }
+  res.json({ calculo: retorno.resultado });
+}
+async function simular(req, res) {
+  if (req.body.id_orcamento) throw new HttpError(422, 'Simulação não vincula itens a orçamentos.');
+  return calcular(req, res);
+}
+async function atualizarPreco(req, res) {
+  const tipo = texto(req.body.tipo, 'Tipo', 50, true);
+  const preco = numero(req.body.preco_base_m2, 'Preço por m²', { min: 0.0001 });
+  const [result] = await db.query('UPDATE preco_m2 SET preco_base_m2 = ? WHERE tipo = ?', [preco, tipo]);
+  if (!result.affectedRows) throw new HttpError(404, 'Tipo de serviço não encontrado.');
+  res.json({ message: 'Preço atualizado.' });
+}
 module.exports = { calcular, simular, listarTipos, atualizarPreco };

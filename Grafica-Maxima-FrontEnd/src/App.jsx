@@ -1,84 +1,48 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { useState } from "react"; 
-import Menu from "./Componentes/menu";
-import Dashboard from "./Paginas/Dashboard";
-import Orcamentos from "./Paginas/Orcamentos";
-import Papeis from "./Paginas/Papeis";
-import Configuracao from "./Paginas/Config";
-import StatusOrcamento from "./Paginas/StatusOrcamento";
-import CalculadoraM2 from "./Componentes/calculadoraM2";
-import "./estilo/app.css";
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppShell } from './components/layout';
+import Dashboard from './Paginas/Dashboard';
+import Orcamentos from './Paginas/Orcamentos';
+import NovoOrcamentos, { ClienteFormulario, EscolherCliente } from './Paginas/NovoOrcamentos';
+import Papeis from './Paginas/Papeis';
+import Configuracao from './Paginas/Config';
+import StatusOrcamento from './Paginas/StatusOrcamento';
+import Usuarios from './Paginas/Usuarios';
+import Acesso from './Paginas/Acesso';
+import CalculadoraM2 from './Componentes/calculadoraM2';
+import { SessionContext } from './services/session';
+import api from './services/api';
+import './styles/global.css';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
-function App() {
-  // Estado Global para controlar se o prompt da calculadora está aberto ou fechado
-  const [calculadoraAberta, setCalculadoraAberta] = useState(false);
-
-  return (
-    <BrowserRouter>
-      <Menu />
-      
-      <main className="conteudo" style={{ position: 'relative' }}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/orcamentos" element={<Orcamentos />} />
-          <Route path="/Orcamentos" element={<Orcamentos />} />
-          <Route path="/status-orcamento/:id" element={<StatusOrcamento />} />
-          <Route path="/papel" element={<Papeis />} />
-          <Route path="/configuracao" element={<Configuracao />} />
-          <Route path="/calculadora/:tipo" element={<CalculadoraM2 />} />
-        </Routes>
-      </main>
-
-      {/* 🚀 BOTÃO GLOBAL FLUTUANTE (Fixo e roxo no canto da tela) */}
-      <button 
-        onClick={() => setCalculadoraAberta(!calculadoraAberta)} 
-        style={{
-          position: 'fixed',
-          bottom: '25px',
-          right: '25px',
-          width: '55px',
-          height: '55px',
-          borderRadius: '50%',
-          backgroundColor: '#143a80', 
-          color: '#fff',
-          border: 'none',
-          boxShadow: '0px 4px 12px rgba(0,0,0,0.4)',
-          cursor: 'pointer',
-          fontSize: '22px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 999999, 
-          transition: 'transform 0.2s'
-        }}
-        title="Abrir Calculadora Rápida"
-        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-        onMouseLeave={(e) => e.target.style.transform = 'scale(1.0)'}
-      >
-        🧮
-      </button>
-
-      {/* 🚀 PROMPT DA CALCULADORA SUSPENSO */}
-      {calculadoraAberta && (
-        <div style={{
-          position: 'fixed',
-          bottom: '90px', 
-          right: '25px',
-          width: '410px', // Um pouquinho mais larga para acomodar bem o layout escuro
-          maxHeight: '550px',
-          backgroundColor: '#fff',
-          boxShadow: '0px 10px 30px rgba(0,0,0,0.3)',
-          borderRadius: '12px',
-          zIndex: 999995,
-          overflowY: 'auto',
-          border: '1px solid #ddd'
-        }}>
-          {/* 🔥 ENCAIXE PERFEITO: Passando a prop 'aoFechar' exatamente como o componente dele espera */}
-          <CalculadoraM2 aoFechar={() => setCalculadoraAberta(false)} />
-        </div>
-      )}
-    </BrowserRouter>
-  );
+export default function App() {
+  const [usuario, setUsuario] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [calculadora, setCalculadora] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    api.get('/api/auth/me', { signal: controller.signal }).then(({data}) => setUsuario(data.usuario)).catch(() => {}).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    const expired = () => setUsuario(null);
+    window.addEventListener('session-expired', expired);
+    return () => { controller.abort(); window.removeEventListener('session-expired', expired); };
+  }, []);
+  if (loading) return <p className="loading-session" role="status">Carregando sessão...</p>;
+  return <QueryClientProvider client={queryClient}><SessionContext.Provider value={{ usuario, setUsuario }}><BrowserRouter>
+    {!usuario ? <Routes><Route path="/cadastro" element={<Acesso key="cadastro" cadastro />} /><Route path="/login" element={<Acesso key="login" />} /><Route path="*" element={<Navigate to="/login" replace />} /></Routes> : <AppShell><Routes>
+      <Route path="/" element={<Dashboard />} /><Route path="/orcamentos" element={<Orcamentos />} /><Route path="/orcamentos/novo" element={<EscolherCliente />} />
+      <Route path="/orcamentos/novo/cliente" element={<ClienteFormulario key="existente" />} /><Route path="/orcamentos/novo/cadastro" element={<ClienteFormulario key="novo" novo />} />
+      <Route path="/orcamentos/novo/producao" element={<NovoOrcamentos key="novo" />} /><Route path="/orcamentos/:id/editar" element={<NovoOrcamentos key="editar" />} />
+      <Route path="/status-orcamento/:id" element={<StatusOrcamento />} /><Route path="/papel" element={<Papeis />} /><Route path="/configuracao" element={<Configuracao />} />
+      <Route path="/usuarios" element={usuario.tipo === 'admin' ? <Usuarios /> : <Navigate to="/" replace />} /><Route path="*" element={<Navigate to="/" replace />} />
+    </Routes></AppShell>}
+    <button className="calculator-toggle" title="Calculadora de metro quadrado" onClick={() => setCalculadora(c => !c)}>m²</button>{calculadora && <div className="calculator-window"><CalculadoraM2 aoFechar={() => setCalculadora(false)} /></div>}
+  </BrowserRouter></SessionContext.Provider></QueryClientProvider>;
 }
-
-export default App;

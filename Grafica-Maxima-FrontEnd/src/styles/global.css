@@ -1,0 +1,26 @@
+/* src/styles/global.css */
+@import './reset.css';
+@import './tokens.css';
+@import './base.css';
+@import './components.css';
+
+/* 
+  Aqui podemos importar os outros CSS do sistema enquanto migramos 
+  aos poucos para a nova arquitetura baseada em tokens.
+*/
+@import '../estilo/sistema.css';
+@import '../estilo/app.css';
+@import '../estilo/config.css';
+@import '../estilo/papeis.css';
+@import '../estilo/calculadora.css';
+@import '../estilo/statusOrcamento.css';
+
+/* Utilities */
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+.bg-surface { background-color: var(--color-surface); }
+.bg-background { background-color: var(--color-background); }
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.rounded-md { border-radius: var(--border-radius-md); }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 
-function NovoOrcamentoModal() {
+export default function NovoOrcamentoModal() {
   // Guarda todos os acabamentos que existem na tela de configurações
   const [acabamentosCatalogo, setAcabamentosCatalogo] = useState([]);
   
@@ -10,8 +10,8 @@ function NovoOrcamentoModal() {
   
   // Quantidade de itens do pedido (ex: 100 panfletos)
   const [quantidade, setQuantidade] = useState(1);
-  const [custoPapel, setCustoPapel] = useState(10.00); // Exemplo de valor que vem da tela de papéis
-  const [valorTotalOrcamento, setValorTotalOrcamento] = useState(0);
+  const custoPapel = 10.00;
+  const valorTotalOrcamento = custoPapel + acabamentosSelecionados.reduce((total, item) => total + Number(item.custoUnitario || 0) * quantidade + Number(item.custoFixo || 0), 0);
 
   // 🔄 1. BUSCA O CARDÁPIO ATUALIZADO DE ACABAMENTOS
   useEffect(() => {
@@ -28,20 +28,6 @@ function NovoOrcamentoModal() {
   }, []);
 
   // 🧮 2. CÁCULO EM TEMPO REAL
-  useEffect(() => {
-    let somaAcabamentos = 0;
-
-    acabamentosSelecionados.forEach(item => {
-      // Soma o custo unitário multiplicado pela quantidade + custo fixo se houver
-      const unitario = Number(item.custoUnitario) || 0;
-      const fixo = Number(item.custoFixo) || 0;
-      
-      somaAcabamentos += (unitario * quantidade) + fixo;
-    });
-
-    // Valor total = Custo do Papel Base + Adicionais (Acabamentos)
-    setValorTotalOrcamento(custoPapel + somaAcabamentos);
-  }, [acabamentosSelecionados, quantidade, custoPapel]);
 
   // 🔀 3. GERENCIA QUANDO O ADM MARCA/DESMARCA UM ACABAMENTO
   function handleCheckboxChange(item) {

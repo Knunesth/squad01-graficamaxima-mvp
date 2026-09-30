@@ -2,42 +2,54 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const app = express(); // 🚨 REPARADO: Criado primeiro de tudo para poder usar embaixo!
-
-// Puxa a porta do .env, caso ela nn funcione ele usa a 3301 (conforme seu log antigo)
+const app = express();
 const port = process.env.PORT || 3301;
 
 // ==========================================
-// 1. MIDDLEWARES (Precisam vir antes das rotas!)
+// 1. MIDDLEWARES
 // ==========================================
 app.use(cors({
-    origin: "http://localhost:5173"
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true   // Necessário para cookies de autenticação
 }));
 app.use(express.json());
 
 // ==========================================
 // 2. IMPORTANDO AS ROTAS
 // ==========================================
-const orcamentoRoutes = require('./src/routes/orcamentosRoutes');
-const configuracoesRoutes = require('./src/routes/configuracoesRoutes'); 
-// const authRotas = require('./src/routes/authRoutes');
-
-// 🚨 REPARADO: Adicionado o 'src/' no caminho para o Node encontrar o arquivo físico!
-const calculoRoutes = require('./src/routes/CalculoRoutes'); 
+const authRotas          = require('./src/routes/AuthRoutes');
+const orcamentoRoutes    = require('./src/routes/orcamentosRoutes');
+const configuracoesRoutes = require('./src/routes/configuracoesRoutes');
+const calculoRoutes      = require('./src/routes/calculoRoutes');
+const dashboardRoutes    = require('./src/routes/dashboardRoutes');
+const materiaisRoutes    = require('./src/routes/materiaisRoutes');
 
 // ==========================================
 // 3. VINCULANDO AS ROTAS NO EXPRESS
 // ==========================================
-app.use('/api/orcamentos', orcamentoRoutes);
-app.use('/api/calculo', calculoRoutes); // 🚀 REPARADO: Agora no lugar certo, depois do app ser criado!
-app.use(configuracoesRoutes);
-// app.use('/api/auth', authRotas);
+app.use('/api/auth',          authRotas);           // Login, registro, logout, /me
+app.use('/api/orcamentos',    orcamentoRoutes);      // CRUD de orçamentos + PDF
+app.use('/api/calculo',       calculoRoutes);        // Calculadora de m²
+app.use('/api/configuracoes', configuracoesRoutes);  // Acabamentos e cortes
+app.use('/api/dashboard',     dashboardRoutes);      // Métricas do painel
+app.use('/api/materiais',     materiaisRoutes);      // CRUD da nova tabela material
 
-// Rota de teste padrão
+// Healthcheck
 app.get('/', (req, res) => {
-    res.send('Servidor da Gráfica Máxima rodando com sucesso.');
+    res.json({ status: 'ok', message: 'Servidor da Gráfica Máxima funcionando.' });
+});
+
+// ==========================================
+// 4. MIDDLEWARE GLOBAL DE ERROS
+// ==========================================
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    const message = err.message || 'Erro interno no servidor.';
+    console.error(`[ERRO ${status}] ${req.method} ${req.path} —`, message);
+    res.status(status).json({ error: message });
 });
 
 app.listen(port, () => {
-    console.log(`Servidor funcionando na porta ${port}`);
+    console.log(`Servidor Gráfica Máxima rodando na porta ${port}`);
 });

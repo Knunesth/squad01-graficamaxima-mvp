@@ -1,6 +1,6 @@
 import React from "react";
 import { Bar } from "react-chartjs-2";
-import { Chart as chartjs, LinearScale, BarElement, scales, CategoryScale, Tooltip, Legend} from "chart.js";
+import { Chart as chartjs, LinearScale, BarElement, CategoryScale, Tooltip, Legend} from "chart.js";
 
 // Chartjs = Nome no Grafico
 // BarElement = Grafico de barra

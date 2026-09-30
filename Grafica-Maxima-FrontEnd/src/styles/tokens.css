@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #F6F3EE;
+  --color-surface: #FFFDF9;
+  --color-ink: #1A1A1A;
+  --color-ink-muted: #6B665E;
+  --color-line: #D9D3C7;
+  --color-accent: #0E7C86;
+  --color-ok: #2F7D4F;
+  --color-warn: #B7791F;
+  --color-danger: #B33A3A;
+
+  --font-sans: "Instrument Sans", sans-serif;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+/* Fallbacks to preserve original styles as much as possible for legacy pages */
+@layer base {
+  :root {
+    --paper: #F6F3EE;
+    --surface: #FFFDF9;
+    --ink: #1A1A1A;
+    --ink-muted: #6B665E;
+    --line: #D9D3C7;
+    --accent: #0E7C86;
+  }
+}

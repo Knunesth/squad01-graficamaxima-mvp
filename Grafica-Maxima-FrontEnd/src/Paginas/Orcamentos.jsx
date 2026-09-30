@@ -1,142 +1,48 @@
-import Card from "../Componentes/cards";
-import UltimosOrcamentos from "../Componentes/tabela"; 
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import NovoOrcamento from "./NovoOrcamentos";    
-import api from "../services/api"; 
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { mensagemErro } from '../services/api';
+import { Button, Feedback, InputField, Table, Spinner } from '../components/ui';
+import { PageHeader } from '../components/layout';
+import { StatusBadge } from '../components/domain';
+import { aprovado, dataBR, moeda } from '../services/format';
+import { useOrcamentos, useAlternarStatusOrcamento } from '../hooks/useOrcamentos';
 
-function Orcamentos() {
-  const [orcamentos, setOrcamentos] = useState([]);
-  const [modalAberto, setModalAberto] = useState(false);
-  const [orcamentoEmEdicao, setOrcamentoEmEdicao] = useState(null);
-  const [loading, setLoading] = useState(true); 
+export default function Orcamentos() {
   const location = useLocation();
+  const [query, setQuery] = useState({ page: 1, busca: '', status: '' });
   
-  // Função para Deletar (Blindada contra erros de tipo)
-  const deletarOrcamento = async (id) => {
-    if (!window.confirm(`Tem certeza que deseja deletar o orçamento #${id}?`)) return;
+  const { data: result, isLoading, error } = useOrcamentos(query);
+  const toggleStatus = useAlternarStatusOrcamento();
 
-    try {
-      const response = await api.delete(`/api/orcamentos/${id}`);
+  function filtrar(event) { event.preventDefault(); const form = new FormData(event.currentTarget); setQuery({ page: 1, busca: form.get('busca'), status: form.get('status') }); }
+  
+  async function alternar(item) {
+    if (toggleStatus.isPending) return;
+    toggleStatus.mutate({ 
+      id: item.id_orcamento, 
+      status: aprovado(item.status) ? 'Não aprovado' : 'Aprovado', 
+      versao: item.versao 
+    });
+  }
 
-      if (response.status === 200) {
-        alert("Orçamento deletado com sucesso!");
-        // Garante que o prev é um array antes de rodar o filter
-        setOrcamentos(prev => Array.isArray(prev) ? prev.filter(orc => orc.id_orcamento !== id) : []);
-      }
-    } catch (error) {
-      console.error("Erro ao deletar orçamento:", error);
-      alert("Não foi possível deletar o orçamento.");
-    }
-  };
+  const errorMessage = error ? mensagemErro(error) : toggleStatus.error ? mensagemErro(toggleStatus.error) : '';
 
-  // Função de Edição
-  const prepararEdicaoOrcamento = (orcamento) => {
-    setOrcamentoEmEdicao(orcamento);
-    setModalAberto(true);
-  };
-
-  // Função assíncrona que busca do banco de dados
-  const carregarOrcamentosDoBanco = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/api/orcamentos");
-      
-      // LOG TEMPORÁRIO: Abra o F12 no navegador para inspecionar o que está vindo aqui
-      console.log("Retorno da API Gráfica Máxima:", response.data);
-      
-      setOrcamentos(response.data); 
-    } catch (error) {
-      console.error("Erro ao carregar orçamentos da API:", error);
-      alert("Não foi possível carregar os orçamentos do banco de dados.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (location.state?.abrirModal) {
-      setModalAberto(true);
-    }
-    carregarOrcamentosDoBanco();
-  }, [location.state]);
-
-  // Facilita a leitura nos filtros dos cards garantindo que sempre seja uma lista
-  const listaOrcamentos = Array.isArray(orcamentos) ? orcamentos : [];
-
-  return (
-    <div className="ConteudoD">
-      
-      {/* Título e Botão */}
-      <div className="titulo">
-        <h1>Orçamentos</h1>
-        <button onClick={() => setModalAberto(true)}>
-          + Criar Orçamento
-        </button>
-      </div>
-
-      {/* Grid de Cards Superiores limpos e protegidos */}
-      <div className="cards">
-        <Card
-          titulo="Pré Orçamentos"
-          valor={listaOrcamentos.filter(o => {
-            const status = String(o.status).toLowerCase();
-            return status === "aberto" || status === "pré orçamento" || status === "pré-orçamento";
-          }).length}
-          border="1px solid #24de13"
-          img="/ativos.svg"
-        />
-        <Card
-          titulo="Em Análise"
-          valor={listaOrcamentos.filter(o => {
-            const status = String(o.status).toLowerCase();
-            return status === "em análise" || status === "em analise";
-          }).length}
-          cor="#fef4e6"
-          border="1px solid #feb07f"
-          img="/analise.svg"
-        />
-        <Card
-          titulo="Inativos"
-          valor={listaOrcamentos.filter(o => String(o.status).toLowerCase() === "inativo").length}
-          border="1px solid #ec390c"
-          img="/inativos.svg"
-        />
-        <Card
-          titulo="Finalizados"
-          valor={listaOrcamentos.filter(o => String(o.status).toLowerCase() === "finalizado").length}
-          border="1px solid #2d119f"
-          img="/finalizados.svg"
-        />
-      </div>
-
-      {loading ? (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          Carregando dados da Gráfica Máxima...
-        </div>
-      ) : (
-        /* Tabela protegida */
-        <UltimosOrcamentos 
-          orcamentos={listaOrcamentos} 
-          deletarOrcamento={deletarOrcamento}
-          prepararEdicaoOrcamento={prepararEdicaoOrcamento}
-        />  
-      )}
-
-      {/* Modal conectado à lista tratada */}
-      <NovoOrcamento 
-        aberto={modalAberto} 
-        fechar={() => {
-          setModalAberto(false);
-          setOrcamentoEmEdicao(null);
-        }}
-        orcamentos={listaOrcamentos}
-        setOrcamentos={setOrcamentos}
-        orcamentoEmEdicao={orcamentoEmEdicao}
-      />
-
-    </div>
-  );
+  return <><PageHeader title="Orçamentos realizados" subtitle="Consulte os pedidos e atualize a aprovação dos clientes." />
+    <form className="quote-filters" onSubmit={filtrar}><InputField label="Buscar orçamento" name="busca" placeholder="ID, nome ou e-mail do cliente" /><div className="field"><label htmlFor="status-filter">Status</label><select name="status" id="status-filter"><option value="">Todos os status</option><option>Aprovado</option><option>Não aprovado</option><option>Inativo</option></select></div><Button variant="neutral" type="submit">Filtrar</Button></form>
+    <p className="list-help">Clique no status para alternar entre Aprovado e Não aprovado.</p><Feedback error={errorMessage} message={location.state?.message} />
+    <section className="panel quotes-table">
+      <Table loading={isLoading} empty={!isLoading && (!result || !result.itens.length)} emptyMessage="Nenhum orçamento encontrado.">
+        <thead><tr><th>ID</th><th>Cliente</th><th>E-mail</th><th>Data de criação</th><th>Valor</th><th>Status</th><th>Gerenciar</th></tr></thead>
+        <tbody>
+          {result?.itens.map(item => <tr key={item.id_orcamento}>
+            <td><Link to={`/status-orcamento/${item.id_orcamento}`}>#{item.id_orcamento}</Link></td>
+            <td>{item.nome_cliente || 'Cliente não vinculado'}</td><td>{item.email || '—'}</td>
+            <td>{dataBR(item.data_criacao)}</td><td>{moeda(item.valor_total)}</td>
+            <td><Button variant="neutral" disabled={toggleStatus.isPending} onClick={() => alternar(item)} aria-label={`Alterar aprovação do orçamento ${item.id_orcamento}`}>{toggleStatus.isPending && toggleStatus.variables?.id === item.id_orcamento ? <Spinner /> : <StatusBadge status={aprovado(item.status) ? 'Aprovado' : item.status === 'Inativo' ? 'Inativo' : 'Não aprovado'} />}</Button></td>
+            <td><div className="row-actions"><Link className="button button-subtle" to={`/status-orcamento/${item.id_orcamento}`}>Ver</Link><Link className="button button-subtle" to={`/orcamentos/${item.id_orcamento}/editar`}>Editar</Link></div></td>
+          </tr>)}
+        </tbody>
+      </Table>
+      {result && <footer className="pagination"><small>Exibindo {result.total ? (result.page - 1) * result.limit + 1 : 0}–{Math.min(result.page * result.limit, result.total)} de {result.total} orçamentos</small><Button variant="subtle" disabled={query.page <= 1} onClick={() => setQuery(q => ({ ...q, page: q.page - 1 }))}>Anterior</Button><span>{result.page} de {Math.max(1, Math.ceil(result.total / result.limit))}</span><Button variant="neutral" disabled={query.page * result.limit >= result.total} onClick={() => setQuery(q => ({ ...q, page: q.page + 1 }))}>Próxima</Button></footer>}
+    </section></>;
 }
-
-export default Orcamentos;

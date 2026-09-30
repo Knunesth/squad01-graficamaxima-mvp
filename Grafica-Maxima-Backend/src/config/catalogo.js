@@ -1,0 +1,1 @@
+module.exports = ['Offset', 'Couchê 64', 'Supremo', 'Envelope', 'Kraft', 'Autocopiativo', 'Reciclado', 'Corte. Esp', 'Laminação', 'Vinco', 'Serrilha', 'Furo', 'Grampo', 'Cantos Arredondados', 'Corte e Vinco', 'Bloco'];

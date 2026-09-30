@@ -1,5 +1,4 @@
 import { Key } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function UltimosOrcamentos({ orcamentos = [], deletarOrcamento, prepararEdicaoOrcamento }) {

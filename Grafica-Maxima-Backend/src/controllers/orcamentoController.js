@@ -1,361 +1,146 @@
-// Chama o arquivo de configuração do pacote de gerenciamento SQL (mysql2)
-const db = require('../config/db');
+﻿const db = require('../config/db');
+const { HttpError, id, data, status, numero, texto } = require('../utils/validation');
+const { calcularOrcamento } = require('../services/quoteCalculation');
 const { renderOrcamentoPdf } = require('../services/orcamentoPdf.service');
-
-// 🚀 1. Arrow Function de criar orçamento
-const criarOrcamento = async (req, res) => {
-    const connection = await db.getConnection();
-    
-    try {
-        await connection.beginTransaction();
-
-        const {
-            id_usuario, 
-            valor_total, 
-            prazo_entrega, 
-            observacoes,
-            status,
-            cliente,      
-            item,         
-            acabamentos   
-        } = req.body; 
-
-        // 🛡️ BLINDAGEM AUTOMÁTICA DAS CHAVES ESTRANGEIRAS (Papel e Impressão)
-        // Se o banco foi resetado e não tiver o id 1, isso injeta na hora para não dar erro 500
-        const [papeis] = await connection.query("SELECT id_papel FROM papel WHERE id_papel = 1");
-        if (papeis.length === 0) {
-            await connection.query(`
-                INSERT INTO papel (id_papel, nome, tipo, largura_folha, altura_folha, custo_por_folha) 
-                VALUES (1, 'Couchê Brilho', 'Papel', 21.0, 29.7, 0.50)
-            `);
-        }
-
-        const [impressoes] = await connection.query("SELECT id_impressao FROM impressao WHERE id_impressao = 1");
-        if (impressoes.length === 0) {
-            await connection.query(`
-                INSERT INTO impressao (id_impressao, tipo, custo_por_folha) 
-                VALUES (1, 'Offset Colorido', 0.80)
-            `);
-        }
-
-        // ==========================================
-        // 🛠️ PASSO 1: Inserir o Cliente Completo
-        // ==========================================
-        const sqlCliente = `
-            INSERT INTO cliente (nome, cpf_cnpj, telefone, email, endereco) 
-            VALUES (?, ?, ?, ?, ?)
-        `;
-        const [resultCliente] = await connection.query(sqlCliente, [
-            cliente?.nome || "Cliente Sem Nome",
-            cliente?.cpf_cnpj || null,
-            cliente?.telefone || null,
-            cliente?.email || null,
-            cliente?.endereco || null
-        ]);
-        const idClienteGerado = resultCliente.insertId;
-
-        // ==========================================
-        // 🛠️ PASSO 2: Inserir o Orçamento Principal
-        // ==========================================
-        const sqlOrcamento = `
-            INSERT INTO orcamento 
-            (id_usuario, id_cliente, valor_total, valor_unitario, status, prazo_entrega, observacoes) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-        
-        const dataEntrega = prazo_entrega ? prazo_entrega : null;
-        const vUnitarioCalculado = item?.valor_unitario || 0.0000;
-
-        const [resultOrcamento] = await connection.query(sqlOrcamento, [
-            id_usuario || 1, 
-            idClienteGerado,
-            parseFloat(valor_total) || 0.0000, 
-            parseFloat(vUnitarioCalculado), 
-            status || "Aberto", 
-            dataEntrega, 
-            observacoes || ""
-        ]);
-        const idOrcamentoGerado = resultOrcamento.insertId;
-
-        // ==========================================
-        // 🛠️ PASSO 3: Inserir o Item Relacional
-        // ==========================================
-        const sqlItem = `
-            INSERT INTO item 
-            (id_orcamento, id_papel, id_impressao, tipo_produto, quantidade, largura, altura, valor_unitario, valor_total) 
-            VALUES (?, 1, 1, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const [resultItem] = await connection.query(sqlItem, [
-            idOrcamentoGerado,
-            item?.tipo_produto || "Impressão Gráfica",
-            parseInt(item?.quantidade) || 1,
-            parseFloat(item?.largura) || 0.00,
-            parseFloat(item?.altura) || 0.00,
-            parseFloat(vUnitarioCalculado),
-            parseFloat(valor_total) || 0.0000
-        ]);
-        const idItemGerado = resultItem.insertId;
-
-        // ==========================================
-        // 🛠️ PASSO 4: Vincular Acabamentos na Tabela 'acabamento_item'
-        // ==========================================
-        if (acabamentos && Array.isArray(acabamentos) && acabamentos.length > 0) {
-            const sqlAcabamentoItem = `
-                INSERT INTO acabamento_item (id_acabamento, id_item, quantidade, custo_aplicado) 
-                VALUES (?, ?, ?, ?)
-            `;
-
-            for (const acab of acabamentos) {
-                if (parseInt(acab.quantidade) > 0) {
-                    // Evita crash de constraint caso o ID do Acabamento mude na Etapa 3
-                    const [existeAcab] = await connection.query("SELECT id_acabamento FROM acabamento WHERE id_acabamento = ?", [acab.id_acabamento]);
-                    
-                    if (existeAcab.length > 0) {
-                        await connection.query(sqlAcabamentoItem, [
-                            parseInt(acab.id_acabamento),
-                            idItemGerado,
-                            parseInt(acab.quantidade),
-                            parseFloat(acab.custo_aplicado) || 0.0000
-                        ]);
-                    }
-                }
-            }
-        }
-
-        await connection.commit();
-
-        return res.status(201).json({ 
-            message: "Gravado com sucesso de forma relacional!", 
-            id: idOrcamentoGerado,
-            id_orcamento: idOrcamentoGerado
-        });
-
-    } catch (error) {
-        await connection.rollback();
-        console.error("====== ERRO INTERNO DETECTADO NO MYSQL ======");
-        console.error(error.message);
-        console.error("==============================================");
-        return res.status(500).json({ error: error.message });
-    } finally {
-        connection.release();
-    }
-};
-
-// Arrow Function listar orçamentos
-
-const listarOrcamentos = async (req, res) => {
-    try {
-        // 🛠️ MUDANÇA AQUI: Trocamos 'c.id' por 'c.id_cliente' na linha do ON
-        const sql = `
-    SELECT 
-        o.*, 
-        c.nome AS nome_cliente 
-    FROM orcamento o
-    LEFT JOIN cliente c ON o.id_cliente = c.id_cliente
-    ORDER BY o.id_orcamento DESC
-`;
-        
-        const [rows] = await db.query(sql);
-        return res.status(200).json(rows);
-
-    } catch (error) {
-        console.error("Erro crítico ao buscar no banco:", error.message);
-        
-        // Se o JOIN falhar por qualquer outro motivo, roda a de contingência pro front não sumir
-        try {
-            const [rowsSimples] = await db.query('SELECT * FROM orcamento ORDER BY id_orcamento DESC');
-            return res.status(200).json(rowsSimples);
-        } catch (erroFatal) {
-            return res.status(500).json({ error: "Erro interno no servidor." });
-        }
-    }
-};
-
-// Arrow Function editar orçamento (COMPLETADA)
-const editarOrcamento = async (req, res) => {
-    try {
-        const { id } = req.params; // Pega o ID da URL (ex: /api/orcamentos/:id)
-        const { 
-            id_usuario, 
-            id_cliente, 
-            valor_total, 
-            valor_unitario, 
-            status, 
-            prazo_entrega, 
-            observacoes 
-        } = req.body;
-
-        const sql = `
-            UPDATE orcamento 
-            SET id_usuario = ?, id_cliente = ?, valor_total = ?, valor_unitario = ?, status = ?, prazo_entrega = ?, observacoes = ? 
-            WHERE id_orcamento = ?
-        `;
-
-        const [resultado] = await db.query(sql, [id_usuario, id_cliente, valor_total, valor_unitario, status, prazo_entrega, observacoes, id]);
-
-        if (resultado.affectedRows === 0) {
-            return res.status(404).json({ error: "Orçamento não encontrado para atualizar." });
-        }
-
-        res.status(200).json({ message: "Orçamento atualizado com sucesso!" });
-    } catch (error) {
-        console.error("Erro ao editar no banco:", error);
-        res.status(500).json({ error: "Erro interno ao editar orçamento." });
-    }
-};
-
-// 🚀 4. Função Completa Deletar Orçamento (AJUSTADA)
-const deletarOrcamento = async (req, res) => {
+const baseSelect = `SELECT o.*, c.nome AS nome_cliente, c.email, c.telefone, c.cpf_cnpj, c.endereco
+ FROM orcamento o LEFT JOIN cliente c ON c.id_cliente = o.id_cliente`;
+async function audit(conn, userId, recordId, action, before, after) {
+  await conn.query('INSERT INTO historico_log (id_usuario,tabela_afetada,id_registro,acao,valor_antigo,valor_novo,data_hora) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+    [userId, 'orcamento', recordId, action, before == null ? null : JSON.stringify(before), after == null ? null : JSON.stringify(after)]);
+}
+async function removerItens(conn, ids) {
+  if (!ids.length) return;
+  for (const table of ['acabamento_item', 'item_corte', 'servico_item']) await conn.query(`DELETE FROM ${table} WHERE id_item IN (?)`, [ids]);
+  await conn.query('DELETE FROM item WHERE id_item IN (?)', [ids]);
+}
+async function persistir(req, res, editing) {
+  const calculo = calcularOrcamento(req.body);
+  const clienteId = id(req.body.id_cliente);
+  const validade = data(req.body.data_validade);
+  const entrega = data(req.body.prazo_entrega);
+  const observacoes = texto(req.body.observacoes, 'Observações', 5000);
+  const recordId = editing ? id(req.params.id) : null;
+  const connection = await db.getConnection();
   try {
-    const { id } = req.params; 
-
-    // Ajustei o nome da tabela de 'orcamentos' para 'orcamento' e a coluna para 'id_orcamento' para bater com o seu padrão
-    const sql = 'DELETE FROM orcamento WHERE id_orcamento = ?';
-    const [resultado] = await db.query(sql, [id]);
-
-    if (resultado.affectedRows === 0) {
-      return res.status(404).json({ error: "Orçamento não encontrado no banco." });
+    await connection.beginTransaction();
+    let anterior;
+    let antigos = [];
+    if (editing) {
+      const [rows] = await connection.query('SELECT * FROM orcamento WHERE id_orcamento = ? FOR UPDATE', [recordId]);
+      anterior = rows[0];
+      if (!anterior) throw new HttpError(404, 'Orçamento não encontrado.');
+      if (numero(req.body.versao, 'Versão', { min: 1, inteiro: true }) !== anterior.versao) throw new HttpError(409, 'Este orçamento foi alterado por outra pessoa. Recarregue antes de editar.');
+      [antigos] = await connection.query('SELECT * FROM item WHERE id_orcamento = ?', [recordId]);
     }
-
-    console.log(`🗑️ Orçamento #${id} deletado do MariaDB.`);
-    return res.status(200).json({ message: "Orçamento deletado com sucesso!" });
-
-  } catch (error) {
-    console.error("Erro ao deletar no banco:", error);
-    return res.status(500).json({ error: "Erro interno ao deletar orçamento." });
+    const [clientes] = await connection.query('SELECT id_cliente FROM cliente WHERE id_cliente = ?', [clienteId]);
+    if (!clientes.length) throw new HttpError(422, 'Selecione um cliente cadastrado.');
+    const snapshots = [];
+    const idsUsados = new Set();
+    for (const item of calculo.itens) {
+      const antigo = antigos.find(i => i.id_item === item.id_item);
+      if (item.id_item && (!antigo || idsUsados.has(item.id_item))) throw new HttpError(422, 'Item inválido para este orçamento.');
+      if (item.id_item) idsUsados.add(item.id_item);
+      if (item.id_material == null) {
+        if (!antigo) throw new HttpError(422, 'Selecione um material do catálogo.');
+        snapshots.push(antigo.precificacao_snapshot);
+      } else if (antigo && antigo.id_material === item.id_material) {
+        snapshots.push(antigo.precificacao_snapshot);
+      } else {
+        const [materials] = await connection.query('SELECT * FROM material WHERE id_material = ? AND ativo = 1', [item.id_material]);
+        if (!materials.length) throw new HttpError(422, 'Material indisponível. Atualize o catálogo.');
+        item.tipo_produto = materials[0].nome;
+        snapshots.push(JSON.stringify(materials[0]));
+      }
+    }
+    const quantidade = calculo.itens.reduce((sum, i) => sum + i.quantidade, 0);
+    const valores = [clienteId, calculo.valor_total, calculo.valor_total / quantidade, quantidade, validade, entrega, observacoes, calculo.subtotal, calculo.desconto_tipo, calculo.desconto_valor];
+    let savedId = recordId;
+    if (editing) {
+      await connection.query(`UPDATE orcamento SET id_cliente=?, valor_total=?, valor_unitario=?, quantidade=?, data_validade=?, prazo_entrega=?, observacoes=?, subtotal=?, desconto_tipo=?, desconto_valor=?, versao=versao+1 WHERE id_orcamento=?`, [...valores, savedId]);
+      await removerItens(connection, antigos.filter(i => !idsUsados.has(i.id_item)).map(i => i.id_item));
+    } else {
+      const [created] = await connection.query(`INSERT INTO orcamento (id_cliente,valor_total,valor_unitario,quantidade,data_validade,prazo_entrega,observacoes,subtotal,desconto_tipo,desconto_valor,id_usuario,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, [...valores, req.usuario.id_usuario, 'Não aprovado']);
+      savedId = created.insertId;
+    }
+    for (let index = 0; index < calculo.itens.length; index++) {
+      const item = calculo.itens[index];
+      const values = [item.id_material, item.tipo_produto, item.quantidade, item.valor_unitario, item.valor_total, snapshots[index]];
+      if (item.id_item) await connection.query('UPDATE item SET id_material=?,tipo_produto=?,quantidade=?,valor_unitario=?,valor_total=?,precificacao_snapshot=? WHERE id_item=? AND id_orcamento=?', [...values, item.id_item, savedId]);
+      else await connection.query('INSERT INTO item (id_material,tipo_produto,quantidade,valor_unitario,valor_total,precificacao_snapshot,id_orcamento) VALUES (?,?,?,?,?,?,?)', [...values, savedId]);
+    }
+    await audit(connection, req.usuario.id_usuario, savedId, editing ? 'editar' : 'criar', anterior && { total: anterior.valor_total, versao: anterior.versao }, { total: calculo.valor_total, itens: calculo.itens.length });
+    await connection.commit();
+    res.status(editing ? 200 : 201).json({ id: savedId, id_orcamento: savedId, valor_total: calculo.valor_total, versao: editing ? anterior.versao + 1 : 1 });
+  } catch (error) { await connection.rollback(); throw error; }
+  finally { connection.release(); }
+}
+const criarOrcamento = (req, res) => persistir(req, res, false);
+const editarOrcamento = (req, res) => persistir(req, res, true);
+async function listarOrcamentos(req, res) {
+  const page = numero(req.query.page ?? 1, 'Página', { min: 1, max: 1000000, inteiro: true });
+  const limit = numero(req.query.limit ?? 20, 'Limite', { min: 1, max: 100, inteiro: true });
+  const search = texto(req.query.busca, 'Busca', 100);
+  let where = ' WHERE 1=1'; const params = [];
+  if (search) { where += ' AND (CAST(o.id_orcamento AS CHAR) = ? OR c.nome LIKE ? OR c.email LIKE ?)'; params.push(search, `%${search}%`, `%${search}%`); }
+  if (req.query.status) {
+    const filter = status(req.query.status);
+    if (filter === 'Não aprovado') where += " AND o.status IN ('Aberto','Pré-Orçamento','Em análise','Não aprovado')";
+    else if (filter === 'Aprovado') where += " AND o.status IN ('Aprovado','Finalizado')";
+    else { where += ' AND o.status = ?'; params.push(filter); }
   }
-};
-
-const obterStatusOrcamento = async (req, res) => {
-    const { id } = req.params;
-    try {
-        // 🚀 O INNER JOIN junta a tabela orcamento com a tabela cliente usando o id_cliente!
-        const query = `
-            SELECT 
-                o.id_orcamento AS id, 
-                c.nome AS nomeCliente, 
-                o.valor_total AS valor, 
-                o.status 
-            FROM orcamento o
-            INNER JOIN cliente c ON o.id_cliente = c.id_cliente
-            WHERE o.id_orcamento = ?
-        `;
-        
-        const [rows] = await db.query(query, [id]);
-
-        if (rows.length > 0) {
-            res.json(rows[0]); // Entrega o objeto perfeito para o React do seu amigo
-        } else {
-            res.status(404).json({ error: "Orçamento não encontrado no banco." });
-        }
-    } catch (error) {
-        console.error("====== ERRO NO JOIN DO BANCO ======");
-        console.error(error.message);
-        console.error("===================================");
-        res.status(500).json({ error: error.message });
-    }
-};
-
-// 💾 Garantir que a atualização do status também use a chave primária certa
-
-const atualizarStatusOrcamento = async (req, res) => {
-        const { id } = req.params;
-    const { status } = req.body;
-    try {
-        const query = 'UPDATE orcamento SET status = ? WHERE id_orcamento = ?';
-        await db.query(query, [status, id]);
-        res.json({ message: "Status atualizado com sucesso!" });
-    } catch (error) {
-        console.error("Erro no atualizarStatusOrcamento:", error.message);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-const gerarPdfOrcamento = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const queryOrcamento = `
-            SELECT
-                o.*,
-                c.nome AS nome_cliente,
-                c.cpf_cnpj,
-                c.telefone,
-                c.email,
-                c.endereco
-            FROM orcamento o
-            LEFT JOIN cliente c ON o.id_cliente = c.id_cliente
-            WHERE o.id_orcamento = ?
-        `;
-
-        const [orcamentos] = await db.query(queryOrcamento, [id]);
-
-        if (!orcamentos.length) {
-            return res.status(404).json({ error: "Orcamento nao encontrado no banco." });
-        }
-
-        const orcamento = orcamentos[0];
-        const statusNormalizado = String(orcamento.status || "").toLowerCase();
-        const statusFinal = statusNormalizado.includes("aprovado") || statusNormalizado.includes("finalizado");
-
-        if (!statusFinal) {
-            return res.status(409).json({
-                error: "Marque as etapas finais e salve o status antes de gerar o PDF."
-            });
-        }
-
-        const [itensBanco] = await db.query(
-            `
-                SELECT
-                    tipo_produto,
-                    quantidade,
-                    valor_unitario,
-                    valor_total
-                FROM item
-                WHERE id_orcamento = ?
-            `,
-            [id]
-        );
-
-        const itens = itensBanco.length > 0 ? itensBanco : [{
-            tipo_produto: orcamento.observacoes || "Impressao",
-            quantidade: orcamento.quantidade || 1,
-            valor_unitario: orcamento.valor_unitario || orcamento.valor_total || 0,
-            valor_total: orcamento.valor_total || 0
-        }];
-
-        const dadosPdf = {
-            ...orcamento,
-            cliente: {
-                nome: orcamento.nome_cliente,
-                cpf_cnpj: orcamento.cpf_cnpj,
-                telefone: orcamento.telefone,
-                email: orcamento.email,
-                endereco: orcamento.endereco
-            },
-            itens
-        };
-
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="orcamento-${orcamento.id_orcamento}.pdf"`
-        );
-
-        return renderOrcamentoPdf(dadosPdf, res);
-    } catch (error) {
-        console.error("Erro ao gerar PDF do orcamento:", error);
-        return res.status(500).json({ error: error.message || "Erro interno ao gerar PDF." });
-    }
-};
-    
-module.exports = {
-    criarOrcamento,
-    listarOrcamentos,
-    editarOrcamento,
-    deletarOrcamento,
-    obterStatusOrcamento,
-    atualizarStatusOrcamento,
-    gerarPdfOrcamento
-};
+  const [[count]] = await db.query('SELECT COUNT(*) AS total FROM orcamento o LEFT JOIN cliente c ON c.id_cliente = o.id_cliente' + where, params);
+  const [itens] = await db.query(baseSelect + where + ' ORDER BY o.id_orcamento DESC LIMIT ? OFFSET ?', [...params, limit, (page - 1) * limit]);
+  res.json({ itens, total: count.total, page, limit });
+}
+async function obterOrcamento(req, res) {
+  const recordId = id(req.params.id);
+  const [rows] = await db.query(baseSelect + ' WHERE o.id_orcamento = ?', [recordId]);
+  if (!rows.length) throw new HttpError(404, 'Orçamento não encontrado.');
+  const [itens] = await db.query('SELECT * FROM item WHERE id_orcamento = ? ORDER BY id_item', [recordId]);
+  res.json({ ...rows[0], itens });
+}
+async function deletarOrcamento(req, res) {
+  const recordId = id(req.params.id);
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.query('SELECT id_orcamento, valor_total FROM orcamento WHERE id_orcamento = ? FOR UPDATE', [recordId]);
+    if (!rows.length) throw new HttpError(404, 'Orçamento não encontrado.');
+    const [itens] = await conn.query('SELECT id_item FROM item WHERE id_orcamento = ?', [recordId]);
+    await removerItens(conn, itens.map(i => i.id_item));
+    await conn.query('DELETE FROM documento WHERE id_orcamento = ?', [recordId]);
+    await conn.query('DELETE FROM orcamento WHERE id_orcamento = ?', [recordId]);
+    await audit(conn, req.usuario.id_usuario, recordId, 'excluir', { total: rows[0].valor_total }, null);
+    await conn.commit();
+    res.json({ message: 'Orçamento excluído.' });
+  } catch (error) { await conn.rollback(); throw error; } finally { conn.release(); }
+}
+async function obterStatusOrcamento(req, res) {
+  const [rows] = await db.query(baseSelect + ' WHERE o.id_orcamento = ?', [id(req.params.id)]);
+  if (!rows.length) throw new HttpError(404, 'Orçamento não encontrado.');
+  res.json({ ...rows[0], id: rows[0].id_orcamento, nomeCliente: rows[0].nome_cliente, valor: rows[0].valor_total });
+}
+async function atualizarStatusOrcamento(req, res) {
+  const recordId = id(req.params.id); const novo = status(req.body.status);
+  const versao = numero(req.body.versao, 'Versão', { min: 1, inteiro: true });
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.query('SELECT status, versao FROM orcamento WHERE id_orcamento = ? FOR UPDATE', [recordId]);
+    if (!rows.length) throw new HttpError(404, 'Orçamento não encontrado.');
+    if (rows[0].versao !== versao) throw new HttpError(409, 'Orçamento alterado por outra pessoa. Atualize a página.');
+    await conn.query('UPDATE orcamento SET status = ?, versao = versao + 1 WHERE id_orcamento = ?', [novo, recordId]);
+    await audit(conn, req.usuario.id_usuario, recordId, 'status', { status: rows[0].status }, { status: novo });
+    await conn.commit(); res.json({ status: novo, versao: versao + 1 });
+  } catch (error) { await conn.rollback(); throw error; } finally { conn.release(); }
+}
+async function gerarPdfOrcamento(req, res) {
+  const [rows] = await db.query(baseSelect + ' WHERE o.id_orcamento = ?', [id(req.params.id)]);
+  if (!rows.length) throw new HttpError(404, 'Orçamento não encontrado.');
+  const orcamento = rows[0];
+  if (!['Aprovado', 'Finalizado'].includes(orcamento.status)) throw new HttpError(409, 'Aprove o orçamento antes de gerar o PDF.');
+  const [itens] = await db.query('SELECT tipo_produto, quantidade, valor_unitario, valor_total FROM item WHERE id_orcamento = ? ORDER BY id_item', [orcamento.id_orcamento]);
+  res.type('pdf').set('Content-Disposition', `attachment; filename="orcamento-${orcamento.id_orcamento}.pdf"`);
+  renderOrcamentoPdf({ ...orcamento, cliente: { nome: orcamento.nome_cliente, cpf_cnpj: orcamento.cpf_cnpj, telefone: orcamento.telefone, email: orcamento.email, endereco: orcamento.endereco }, itens }, res);
+}
+module.exports = { criarOrcamento, editarOrcamento, listarOrcamentos, obterOrcamento, deletarOrcamento, obterStatusOrcamento, atualizarStatusOrcamento, gerarPdfOrcamento };
