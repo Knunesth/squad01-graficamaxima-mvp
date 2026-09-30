@@ -1,43 +1,43 @@
-/* src/styles/reset.css */
-*, *::before, *::after {
+/* src/styles/reset.css - Scoped to .gm-v2 for new pages */
+.gm-v2 *, .gm-v2 *::before, .gm-v2 *::after {
   box-sizing: border-box;
+}
+
+.gm-v2 h1, .gm-v2 h2, .gm-v2 h3, .gm-v2 h4, .gm-v2 h5, .gm-v2 h6, 
+.gm-v2 p, .gm-v2 ul, .gm-v2 ol, .gm-v2 figure {
   margin: 0;
   padding: 0;
 }
 
-html, body {
-  height: 100%;
+.gm-v2 h1, .gm-v2 h2, .gm-v2 h3, .gm-v2 h4, .gm-v2 h5, .gm-v2 h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  overflow-wrap: break-word;
 }
 
-body {
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-img, picture, video, canvas, svg {
+.gm-v2 img, .gm-v2 picture, .gm-v2 video, .gm-v2 canvas, .gm-v2 svg {
   display: block;
   max-width: 100%;
 }
 
-input, button, textarea, select {
+.gm-v2 input, .gm-v2 button, .gm-v2 textarea, .gm-v2 select {
   font: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
 }
 
-p, h1, h2, h3, h4, h5, h6 {
-  overflow-wrap: break-word;
-}
-
-button {
-  background: none;
+.gm-v2 button {
+  background: transparent;
   border: none;
   cursor: pointer;
 }
 
-ul, ol {
+.gm-v2 ul, .gm-v2 ol {
   list-style: none;
 }
 
-a {
+.gm-v2 a {
   text-decoration: none;
   color: inherit;
 }

@@ -1,18 +1,18 @@
 /* src/styles/base.css */
-body {
-  font-family: var(--font-family-base);
+.gm-v2 {
+  font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
 }
 
-h1, h2, h3, h4, h5, h6 {
+.gm-v2 h1, .gm-v2 h2, .gm-v2 h3, .gm-v2 h4, .gm-v2 h5, .gm-v2 h6 {
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-sm);
 }
 
-p {
+.gm-v2 p {
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-md);
 }

@@ -19,7 +19,7 @@ export default function DashboardFeature() {
   const errorMessage = error ? mensagemErro(error) : '';
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-6 px-4 sm:px-6 md:px-8 pb-20">
+    <div className="gm-v2 w-full max-w-6xl mx-auto py-6 px-4 sm:px-6 md:px-8 pb-20">
       <DashboardHeader mes={mes} setMes={setMes} />
       
       <Feedback error={errorMessage} />
