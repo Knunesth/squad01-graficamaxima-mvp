@@ -1,51 +1,50 @@
 import React from 'react';
-import { Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip } from 'chart.js';
 import { Activity, FilePlus, CheckCircle } from 'lucide-react';
 import { moeda } from '../../../services/format';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip);
-
-function Sparkline({ series, label, type = 'bar', color = '#0f172a' }) {
+function Sparkline({ series, type = 'bar', color = '#0f172a' }) {
   if (!series || series.length === 0) return null;
-  // Se todos os valores forem zero, evitamos renderizar o gráfico inteiro e mostramos só um tracejado ou nada
   const hasData = series.some(s => s.valor > 0);
   if (!hasData) return <div className="h-10 w-full flex items-end"><div className="w-full border-b border-dashed border-[var(--line)] mb-1"></div></div>;
 
-  const Component = type === 'line' ? Line : Bar;
+  const max = Math.max(...series.map(s => s.valor), 1);
   
-  const data = {
-    labels: series.map(s => `Semana ${s.semana}`),
-    datasets: [{
-      label,
-      data: series.map(s => s.valor),
-      borderColor: color,
-      backgroundColor: type === 'bar' ? series.map((_, i) => i === series.length - 1 ? color : `${color}66`) : 'transparent',
-      borderWidth: type === 'line' ? 2 : 0,
-      pointRadius: type === 'line' ? 2 : 0,
-      barThickness: type === 'bar' ? 'flex' : undefined,
-      maxBarThickness: 16,
-      borderRadius: type === 'bar' ? 2 : 0
-    }]
-  };
+  if (type === 'line') {
+    const points = series.map((s, i) => {
+      const x = (i / (series.length - 1)) * 100;
+      const y = 100 - (s.valor / max) * 100;
+      return `${x},${y}`;
+    }).join(' ');
 
-  const options = {
-    maintainAspectRatio: false,
-    animation: false,
-    plugins: { legend: { display: false }, tooltip: { enabled: true } },
-    scales: {
-      x: { display: false },
-      y: { display: false, min: 0 }
-    },
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-  };
+    return (
+      <div className="h-12 w-full mt-auto pt-2">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+          <polyline fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" points={points} />
+        </svg>
+      </div>
+    );
+  }
 
+  // Bar type
   return (
-    <div className="h-12 w-full mt-auto pt-2">
-      <Component data={data} options={options} />
+    <div className="h-12 w-full mt-auto pt-2 flex items-end justify-between gap-1">
+      {series.map((s, i) => {
+        const height = (s.valor / max) * 100;
+        const isLast = i === series.length - 1;
+        return (
+          <div 
+            key={i} 
+            title={`Semana ${s.semana}: ${s.valor}`}
+            className="w-full rounded-sm"
+            style={{ 
+              height: `${height}%`, 
+              minHeight: s.valor > 0 ? '4px' : '0',
+              backgroundColor: color,
+              opacity: isLast ? 1 : 0.4
+            }} 
+          />
+        );
+      })}
     </div>
   );
 }
