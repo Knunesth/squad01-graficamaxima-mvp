@@ -38,8 +38,9 @@ export function DashboardPipeline({ statusCounts = {}, filtroStatus, setFiltroSt
             <React.Fragment key={step.id}>
               <button 
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => setFiltroStatus(isActive ? '' : step.id)}
-                className={`flex-1 flex flex-col p-4 text-left transition-colors group ${isActive ? 'bg-[var(--surface-hover)] shadow-inner ring-1 ring-inset ring-[var(--line-strong)]' : 'hover:bg-[var(--surface)]'}`}
+                className={`flex-1 flex flex-col p-4 text-left transition-colors group focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent)] ${isActive ? 'bg-[var(--surface-hover)] shadow-inner ring-1 ring-inset ring-[var(--line-strong)]' : 'hover:bg-[var(--surface)]'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-md bg-[var(--surface)] border border-[var(--line)] group-hover:border-[var(--line-strong)] transition-colors ${step.color} ${isActive ? 'border-[var(--accent)]' : ''}`}>

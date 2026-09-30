@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { moeda } from '../../../services/format';
 
-export function DashboardTable({ recentes = [], filtroStatus }) {
+export function DashboardTable({ orcamentosPeriodo = [], filtroStatus }) {
   const navigate = useNavigate();
 
   // Filter the list based on the pipeline filter
   const lista = filtroStatus 
-    ? recentes.filter(item => item.status === filtroStatus)
-    : recentes;
+    ? orcamentosPeriodo.filter(item => item.status === filtroStatus)
+    : orcamentosPeriodo;
 
   // Status Badge Component
   const Badge = ({ status }) => {
@@ -25,22 +25,34 @@ export function DashboardTable({ recentes = [], filtroStatus }) {
     return <span className={classes}>{status || 'Sem status'}</span>;
   };
 
+  const handleRowClick = (id) => navigate(`/orcamentos/${id}/editar`);
+  
+  const handleKeyDown = (e, id) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleRowClick(id);
+    }
+  };
+
   return (
     <section className="mt-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <h2 className="text-sm font-semibold tracking-wide text-[var(--ink-light)] uppercase">
-          Últimos Orçamentos
+          Orçamentos do Período
         </h2>
-        <div className="text-xs text-[var(--ink-light)] italic bg-amber-50 text-amber-800 px-3 py-1.5 rounded border border-amber-200">
-          ⚠️ Tabela limitada pela API (recentes=4). Não reflete todo o mês.
-        </div>
       </div>
 
       <div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl overflow-hidden shadow-sm">
         {lista.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center justify-center">
-            <span className="text-[var(--ink-light)] font-medium mb-1">Nenhum orçamento encontrado.</span>
-            <span className="text-sm text-[var(--ink-light)]">Tente limpar o filtro do pipeline.</span>
+            <span className="text-[var(--ink-light)] font-medium mb-1">
+              {filtroStatus 
+                ? `Nenhum orçamento com status "${filtroStatus}" neste mês.` 
+                : 'Nenhum orçamento encontrado neste mês.'}
+            </span>
+            {filtroStatus && (
+              <span className="text-sm text-[var(--ink-light)]">Tente limpar o filtro do pipeline.</span>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -59,8 +71,12 @@ export function DashboardTable({ recentes = [], filtroStatus }) {
                 {lista.map((orc) => (
                   <tr 
                     key={orc.id_orcamento}
-                    onClick={() => navigate(`/orcamentos/${orc.id_orcamento}/editar`)}
-                    className="hover:bg-[var(--surface-hover)] cursor-pointer transition-colors group"
+                    onClick={() => handleRowClick(orc.id_orcamento)}
+                    onKeyDown={(e) => handleKeyDown(e, orc.id_orcamento)}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`Ver orçamento ORC-${String(orc.id_orcamento).padStart(4, '0')}`}
+                    className="hover:bg-[var(--surface-hover)] cursor-pointer transition-colors group focus:outline-none focus:bg-[var(--surface-hover)] focus:ring-2 focus:ring-inset focus:ring-[var(--accent)]"
                   >
                     <td className="px-6 py-4 font-mono font-medium text-[var(--ink)]">
                       ORC-{String(orc.id_orcamento).padStart(4, '0')}

@@ -39,7 +39,7 @@ export default function DashboardFeature() {
           <DashboardKPIs dados={dados} />
           
           <DashboardTable 
-            recentes={dados.recentes} 
+            orcamentosPeriodo={dados.orcamentosPeriodo} 
             filtroStatus={filtroStatus} 
           />
         </>
