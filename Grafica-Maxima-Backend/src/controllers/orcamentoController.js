@@ -15,7 +15,7 @@ async function removerItens(conn, ids) {
 }
 async function persistir(req, res, editing) {
   const calculo = calcularOrcamento(req.body);
-  const clienteId = id(req.body.id_cliente);
+  const clienteId = req.body.id_cliente == null ? null : id(req.body.id_cliente);
   const validade = data(req.body.data_validade);
   const entrega = data(req.body.prazo_entrega);
   const observacoes = texto(req.body.observacoes, 'Observações', 5000);
@@ -32,8 +32,10 @@ async function persistir(req, res, editing) {
       if (numero(req.body.versao, 'Versão', { min: 1, inteiro: true }) !== anterior.versao) throw new HttpError(409, 'Este orçamento foi alterado por outra pessoa. Recarregue antes de editar.');
       [antigos] = await connection.query('SELECT * FROM item WHERE id_orcamento = ?', [recordId]);
     }
-    const [clientes] = await connection.query('SELECT id_cliente FROM cliente WHERE id_cliente = ?', [clienteId]);
-    if (!clientes.length) throw new HttpError(422, 'Selecione um cliente cadastrado.');
+    if (clienteId !== null) {
+      const [clientes] = await connection.query('SELECT id_cliente FROM cliente WHERE id_cliente = ?', [clienteId]);
+      if (!clientes.length) throw new HttpError(422, 'Cliente não encontrado. Selecione um cliente cadastrado ou continue sem cliente.');
+    }
     const snapshots = [];
     const idsUsados = new Set();
     for (const item of calculo.itens) {

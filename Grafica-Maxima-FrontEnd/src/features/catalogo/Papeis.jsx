@@ -59,9 +59,9 @@ export default function Papeis() {
                     <Button
                       variant="subtle"
                       onClick={() => setEditando({ categoria })}
-                      aria-label={`Adicionar material em ${categoria}`}
+                      aria-label={`Editar materiais em ${categoria}`}
                     >
-                      + Adicionar
+                      Editar
                     </Button>
                   )}
                 </header>

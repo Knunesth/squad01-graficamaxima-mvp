@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api, { mensagemErro } from "../../services/api.js";
 import { Button, Feedback, InputField } from "../../components/ui";
@@ -9,8 +9,12 @@ import { useOrcamento, useSalvarOrcamento } from "../../hooks/useOrcamentos.js";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { ArrowRight, Plus, Trash2 } from "lucide-react";
 
-const contexto = "01 · Identifique o cliente    /    02 · Monte o orçamento";
+const contexto = "01 · Cliente (opcional)    /    02 · Monte o orçamento";
+function limparCliente() {
+  sessionStorage.removeItem("orcamento_cliente");
+}
 export function EscolherCliente() {
   return (
     <>
@@ -20,8 +24,19 @@ export function EscolherCliente() {
         back="/orcamentos"
       />
       <section className="client-choice">
-        <h2>Para quem é este orçamento?</h2>
-        <p>Selecione uma opção para continuar.</p>
+        <h2>Como você quer começar?</h2>
+        <p>Monte o orçamento agora ou escolha um cliente para identificar o pedido.</p>
+        <Link
+          className="quick-quote"
+          to="/orcamentos/novo/producao"
+          onClick={limparCliente}
+        >
+          <span className="quick-quote-copy">
+            <strong>Orçamento sem cadastro</strong>
+            <span>Vá direto aos materiais e valores. Os dados do cliente são opcionais.</span>
+          </span>
+          <span className="quick-quote-action">Continuar sem cliente <ArrowRight size={18} aria-hidden="true" /></span>
+        </Link>
         <div className="choice-grid">
           <article className="panel">
             <h3>Cliente já cadastrado</h3>
@@ -150,6 +165,9 @@ export function ClienteFormulario({ novo = false }) {
               ? "Cadastrar e continuar"
               : "Selecionar e continuar"}
         </Button>
+        <Link className="button button-subtle" to="/orcamentos/novo/producao" onClick={limparCliente}>
+          Continuar sem cliente
+        </Link>
         <small>
           {novo
             ? "Os dados serão usados para identificar o cliente nos pedidos."
@@ -232,8 +250,39 @@ const producaoSchema = z
     { message: "Selecione pelo menos um material válido.", path: ["root"] },
   );
 
+function ConfirmarRemocao({ material, cancelar, confirmar }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    dialog.showModal();
+    return () => dialog.close();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className="remove-material-dialog"
+      aria-labelledby="remove-material-title"
+      aria-describedby="remove-material-description"
+      onCancel={cancelar}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) cancelar();
+      }}
+    >
+      <h2 id="remove-material-title">Remover material?</h2>
+      <p id="remove-material-description">
+        Deseja remover {material.nome ? <strong>{material.nome}</strong> : `a linha ${material.numero}`} do orçamento? A quantidade e o valor desta linha também serão removidos.
+      </p>
+      <div className="remove-material-dialog-actions">
+        <Button variant="neutral" onClick={cancelar} autoFocus>Cancelar</Button>
+        <Button onClick={confirmar}>Remover</Button>
+      </div>
+    </dialog>
+  );
+}
+
 function Producao({ catalogo, quote }) {
   const navigate = useNavigate();
+  const [materialRemover, setMaterialRemover] = useState(null);
   const [cliente] = useState(() =>
     quote
       ? {
@@ -247,7 +296,7 @@ function Producao({ catalogo, quote }) {
   const linhasIniciais = quote?.itens || [];
   const defaultLinhas = [
     ...linhasIniciais,
-    ...Array.from({ length: Math.max(0, 17 - linhasIniciais.length) }, vazia),
+    ...Array.from({ length: Math.max(0, 3 - linhasIniciais.length) }, vazia),
   ];
 
   const mutation = useSalvarOrcamento();
@@ -268,7 +317,7 @@ function Producao({ catalogo, quote }) {
     },
   });
 
-  const { fields } = useFieldArray({ control, name: "linhas" });
+  const { fields, append, remove } = useFieldArray({ control, name: "linhas" });
 
   const watchLinhas = useWatch({ control, name: "linhas" }) || [];
   const watchDescontoTipo =
@@ -312,7 +361,7 @@ function Producao({ catalogo, quote }) {
 
     const itens = data.linhas.filter((l) => l.id_material || l.id_item);
     const payload = {
-      id_cliente: cliente.id_cliente,
+      id_cliente: cliente?.id_cliente ?? null,
       itens,
       desconto_tipo: data.desconto_tipo,
       desconto_valor: data.desconto_valor || 0,
@@ -335,30 +384,22 @@ function Producao({ catalogo, quote }) {
     );
   };
 
-  if (!cliente?.id_cliente)
-    return (
-      <>
-        <Feedback error="Selecione um cliente antes de montar o orçamento." />
-        <Link className="button button-primary" to="/orcamentos/novo">
-          Selecionar cliente
-        </Link>
-      </>
-    );
-
   return (
     <>
       <PageHeader
         title={quote ? "Editar orçamento" : "Custo de produção"}
-        subtitle="01 · Cliente identificado    /    02 · Monte o orçamento"
+        subtitle="Cliente opcional · Monte o orçamento"
         back="/orcamentos"
       />
       <div className="client-strip">
         <strong>
-          Cliente: {cliente.nome} · {cliente.email}
+          {cliente?.id_cliente
+            ? `Cliente: ${cliente.nome}${cliente.email ? ` · ${cliente.email}` : ""}`
+            : "Cliente não vinculado"}
         </strong>
         {!quote && (
           <Link className="button button-subtle" to="/orcamentos/novo">
-            Trocar cliente
+            {cliente?.id_cliente ? "Trocar cliente" : "Selecionar cliente"}
           </Link>
         )}
       </div>
@@ -366,8 +407,7 @@ function Producao({ catalogo, quote }) {
         <section className="panel materials">
           <h2>Materiais e quantidades</h2>
           <small>
-            Preencha os itens usados na produção. Os 17 espaços estão
-            disponíveis.
+            Selecione os materiais e informe as quantidades. Adicione outras linhas quando precisar.
           </small>
           <div className="materials-scroll">
             <div className="material-row material-head">
@@ -376,6 +416,7 @@ function Producao({ catalogo, quote }) {
               <span>Qtd.</span>
               <span>Valor unit. (R$)</span>
               <span>Subtotal (R$)</span>
+              <span className="sr-only">Remover</span>
             </div>
             {fields.map((field, index) => {
               const linha = watchLinhas[index] || {};
@@ -435,9 +476,30 @@ function Producao({ catalogo, quote }) {
                         Number(linha.valor_unitario || 0),
                     )}
                   </span>
+                  <button
+                    type="button"
+                    className="remove-material"
+                    aria-label={`Remover material ${index + 1}`}
+                    title="Remover material"
+                    disabled={fields.length === 1}
+                    onClick={() => setMaterialRemover({ id: field.id, numero: index + 1, nome: linha.tipo_produto })}
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                  </button>
                 </div>
               );
             })}
+          </div>
+          <div className="materials-actions">
+            <Button
+              variant="neutral"
+              type="button"
+              disabled={fields.length >= 17}
+              onClick={() => append(vazia(), { shouldFocus: false })}
+            >
+              <Plus size={18} aria-hidden="true" /> Adicionar material
+            </Button>
+            <small role="status">{fields.length >= 17 ? "Limite de 17 materiais atingido" : `${fields.length} de 17 linhas`}</small>
           </div>
           <small>Subtotal de cada item = quantidade × valor unitário.</small>
           {!catalogo.length && (
@@ -503,6 +565,17 @@ function Producao({ catalogo, quote }) {
           </Button>
         </aside>
       </form>
+      {materialRemover && (
+        <ConfirmarRemocao
+          material={materialRemover}
+          cancelar={() => setMaterialRemover(null)}
+          confirmar={() => {
+            const index = fields.findIndex((field) => field.id === materialRemover.id);
+            if (index >= 0 && fields.length > 1) remove(index);
+            setMaterialRemover(null);
+          }}
+        />
+      )}
     </>
   );
 }
