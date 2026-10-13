@@ -87,6 +87,7 @@ export default function Orcamentos() {
               <th>Data de criação</th>
               <th>Valor</th>
               <th>Status</th>
+              <th className="quote-actions">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -121,6 +122,15 @@ export default function Orcamentos() {
                       </span>
                     )}
                   </Button>
+                </td>
+                <td className="quote-actions">
+                  <Link
+                    className="button button-subtle"
+                    to={`/orcamentos/${item.id_orcamento}/editar`}
+                    aria-label={`Editar orçamento ${item.id_orcamento}`}
+                  >
+                    Editar
+                  </Link>
                 </td>
               </tr>
             ))}

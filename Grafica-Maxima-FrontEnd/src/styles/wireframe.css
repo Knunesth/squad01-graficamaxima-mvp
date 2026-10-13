@@ -278,3 +278,6 @@ input::placeholder {
 .remove-material-dialog h2 { font-size: 22px; margin: 0 0 12px; }
 .remove-material-dialog p { font-size: 14px; line-height: 1.7; color: var(--muted); margin: 0; }
 .remove-material-dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+.quotes-table .table .quote-actions { width: 96px; min-width: 96px; text-align: center; vertical-align: middle; }
+.quotes-table .quote-actions .button { min-height: 36px; padding: 6px 12px; font-size: 14px; line-height: 20px; }
