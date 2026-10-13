@@ -2,9 +2,10 @@
 const cors = require('cors');
 const { autenticar } = require('./middlewares/AuthRole');
 const errorHandler = require('./middlewares/errorHandler');
+const { getAllowedOrigins } = require('./config/cors');
 function createApp() {
   const app = express();
-  const origins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173').split(',').map(s => s.trim());
+  const origins = getAllowedOrigins();
   app.disable('x-powered-by');
   app.use(cors({ origin: origins, credentials: true }));
   app.use((req, res, next) => {

@@ -56,3 +56,19 @@
   text-align: center;
   color: var(--color-text-secondary);
 }
+
+/* Fix: Ensure .button-primary always shows white text.
+   The legacy sistema.css lives in layer(legacy) which has lower priority
+   than Tailwind's resets, so we re-declare these styles in a higher layer. */
+.button-primary,
+a.button-primary,
+a.button-primary:hover,
+a.button-primary:visited {
+  background-color: var(--ink, #292929);
+  border-color: var(--ink, #292929);
+  color: #fff;
+}
+
+.button-primary svg {
+  color: #fff;
+}

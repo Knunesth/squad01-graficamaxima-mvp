@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { handleError } from '../utils/errorHandler';
+import { handleError } from '../utils/errorHandler.js';
 
 const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3301',

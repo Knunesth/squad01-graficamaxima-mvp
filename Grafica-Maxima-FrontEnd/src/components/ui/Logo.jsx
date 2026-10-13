@@ -1,5 +1,5 @@
 import logoPlaceholder from '../../assets/images/logo-placeholder.svg';
-import { cn } from '../../lib/cn';
+import { cn } from '../../lib/cn.js';
 
 export function Logo({ className, ...props }) {
   return (

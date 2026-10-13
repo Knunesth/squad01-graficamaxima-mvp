@@ -1,0 +1,236 @@
+/* Shared geometry from the eight Gráfica Máxima wireframes (1440px desktop). */
+input, select { height: 40px; }
+.sidebar-session .button { padding-inline: 12px; font-size: 14px; }
+.sidebar-session svg { flex-shrink: 0; }
+.page-header p { white-space: pre-wrap; }
+@media (min-width: 1201px) {
+  .workspace:has(.catalog-grid) { min-height: 1700px; }
+  .workspace:has(.production-grid) { min-height: 1320px; }
+}
+.app-shell {
+  display: block;
+}
+.workspace {
+  min-width: 0;
+  padding: 40px;
+  overflow: visible;
+}
+.sidebar {
+  background: #f2f2f2;
+}
+.sidebar nav .button {
+  justify-content: center;
+}
+.page-header h1 {
+  font-weight: 700;
+}
+.page-header > .button-primary {
+  min-width: 206px;
+}
+h2,
+h3 {
+  font-weight: 600;
+}
+.choice-grid h3 {
+  font-size: 23px;
+}
+.field label {
+  font-weight: 400;
+}
+input::placeholder {
+  color: #b3b3b3;
+}
+.client-form {
+  min-height: 470px;
+  margin-top: 56px;
+}
+.client-form-new {
+  min-height: 670px;
+}
+.client-form .field {
+  min-height: 70px;
+}
+.access-form {
+  position: relative;
+  overflow: visible;
+}
+.access-link {
+  position: absolute;
+  top: calc(100% + 24px);
+  width: 100%;
+}
+.access-form .field {
+  min-height: 70px;
+}
+.table-container {
+  border: 0;
+  border-radius: 0;
+}
+.table th,
+.table td {
+  padding: 14px 16px;
+  border: 0;
+  color: var(--ink);
+}
+.table th {
+  background: var(--surface);
+  font-weight: 600;
+}
+.recent-quotes .table {
+  min-width: 800px;
+}
+.recent-quotes .table td {
+  height: 50px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.recent-quotes .table tbody tr:first-child td {
+  padding-top: 28px;
+  height: 66px;
+}
+.recent-quotes .table tbody tr:last-child td {
+  padding-bottom: 28px;
+  height: 66px;
+}
+.quotes-table .table {
+  min-width: 1000px;
+}
+.quotes-table .table td {
+  font-size: 13px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.quotes-table .table tbody tr:first-child td {
+  padding-top: 22px;
+}
+.quotes-table .table tbody tr:last-child td {
+  padding-bottom: 22px;
+}
+.quotes-table .pagination {
+  margin-top: 16px;
+}
+.quotes-table .pagination .button {
+  min-width: 120px;
+}
+.quote-filters {
+  padding-right: 32px;
+}
+.dashboard-period {
+  justify-content: flex-start;
+  gap: 16px;
+}
+.dashboard-period > span {
+  flex: 1;
+}
+.period-control {
+  position: relative;
+  margin-right: 54px;
+}
+.period-control > .button {
+  width: 210px;
+}
+.period-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  width: 260px;
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 18px #0002;
+}
+.period-popover input {
+  width: 100%;
+}
+.dashboard-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 40px;
+}
+.metric-card {
+  height: 310px;
+  min-width: 0;
+}
+.mini-chart {
+  display: block;
+  flex-shrink: 0;
+  margin: 0;
+}
+.materials h2 {
+  line-height: 32px;
+}
+.category-card th {
+  font-weight: 400;
+}
+.calculator-toggle {
+  width: auto;
+  height: auto;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+  .workspace {
+    padding: 28px;
+  }
+  .period-control {
+    margin-right: 0;
+  }
+  .quote-filters {
+    padding-right: 0;
+    grid-template-columns: minmax(0, 1fr) 200px 130px;
+  }
+}
+@media (max-width: 800px) {
+  .workspace {
+    padding: 20px;
+  }
+  .sidebar {
+    position: static;
+    width: 100%;
+  }
+  .page-header {
+    gap: 16px;
+  }
+  .page-header h1 {
+    line-height: 1.3;
+  }
+  .dashboard-period {
+    flex-wrap: wrap;
+  }
+  .dashboard-period > span {
+    flex-basis: 100%;
+  }
+  .period-popover {
+    left: 0;
+    right: auto;
+  }
+  .quote-filters {
+    grid-template-columns: 1fr;
+  }
+  .client-form {
+    min-height: 0;
+  }
+  .choice-grid .panel {
+    min-width: 0;
+  }
+  .access-content {
+    padding-bottom: 80px;
+  }
+  .metric-card {
+    height: auto;
+    min-height: 310px;
+  }
+  .calculator-toggle {
+    bottom: 12px;
+    right: 12px;
+  }
+}

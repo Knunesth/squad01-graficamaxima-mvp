@@ -2,29 +2,43 @@
 @import "tailwindcss/utilities" layer(utilities);
 
 @theme {
-  --color-paper: #F6F3EE;
-  --color-surface: #FFFDF9;
-  --color-ink: #1A1A1A;
-  --color-ink-muted: #6B665E;
-  --color-line: #D9D3C7;
-  --color-accent: #0E7C86;
-  --color-ok: #2F7D4F;
-  --color-warn: #B7791F;
-  --color-danger: #B33A3A;
-
-  --font-sans: "Instrument Sans", sans-serif;
-  --font-display: "Bricolage Grotesque", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --color-paper: #fff;
+  --color-surface: #f2f2f2;
+  --color-ink: #292929;
+  --color-ink-muted: #666;
+  --color-line: #d4d4d4;
+  --color-accent: #292929;
+  --font-sans: Inter, Arial, sans-serif;
+  --font-display: Inter, Arial, sans-serif;
+  --font-mono: monospace;
 }
 
-/* Fallbacks to preserve original styles as much as possible for legacy pages */
-@layer base {
-  :root {
-    --paper: #F6F3EE;
-    --surface: #FFFDF9;
-    --ink: #1A1A1A;
-    --ink-muted: #6B665E;
-    --line: #D9D3C7;
-    --accent: #0E7C86;
-  }
+:root {
+  --paper: #fff;
+  --surface: #f2f2f2;
+  --ink: #292929;
+  --ink-light: #666;
+  --ink-muted: #666;
+  --muted: #666;
+  --line: #d4d4d4;
+  --accent: #292929;
+  --radius: 8px;
+  --color-background: #fff;
+  --color-text-primary: #292929;
+  --color-text-secondary: #666;
+  --color-text-muted: #666;
+  --color-border: #d4d4d4;
+  --color-primary: #292929;
+  --color-primary-hover: #444;
+  --danger-700: #922929;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-xl: 40px;
+  --font-size-base: 16px;
+  --font-size-xs: 12px;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --border-radius-md: 8px;
+  --border-radius-full: 999px;
+  --transition-fast: 150ms;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight, FileEdit, Send, CheckCircle, XCircle, Package } from 'lucide-react';
-import { moeda } from '../../../services/format';
+import { moeda } from '../../lib/format.js';
 
 export function DashboardPipeline({ statusCounts = {}, filtroStatus, setFiltroStatus }) {
   const steps = [

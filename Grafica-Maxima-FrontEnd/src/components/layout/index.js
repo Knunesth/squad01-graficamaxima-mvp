@@ -1,3 +1,3 @@
-export * from './PageHeader';
-export * from './Sidebar';
-export * from './AppShell';
+export * from './PageHeader.jsx';
+export * from './Sidebar.jsx';
+export * from './AppShell.jsx';

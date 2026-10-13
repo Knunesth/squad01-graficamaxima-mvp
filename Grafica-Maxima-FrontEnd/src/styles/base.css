@@ -17,12 +17,12 @@
   margin-bottom: var(--spacing-md);
 }
 
-a {
+a:not(.button) {
   color: var(--color-primary);
   transition: color var(--transition-fast);
 }
 
-a:hover {
+a:not(.button):hover {
   color: var(--color-primary-hover);
 }
 

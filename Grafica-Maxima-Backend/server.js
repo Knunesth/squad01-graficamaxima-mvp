@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const { getAllowedOrigins } = require('./src/config/cors');
 
 const app = express();
 const port = process.env.PORT || 3301;
@@ -9,7 +10,7 @@ const port = process.env.PORT || 3301;
 // 1. MIDDLEWARES
 // ==========================================
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: getAllowedOrigins(),
     credentials: true   // Necessário para cookies de autenticação
 }));
 app.use(express.json());

@@ -20,14 +20,21 @@
   max-width: 100%;
 }
 
-.gm-v2 input, .gm-v2 button, .gm-v2 textarea, .gm-v2 select {
+.gm-v2 input, .gm-v2 textarea, .gm-v2 select {
   font: inherit;
   color: inherit;
   margin: 0;
   padding: 0;
 }
 
-.gm-v2 button {
+.gm-v2 button:not(.button) {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.gm-v2 button:not(.button) {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -37,7 +44,7 @@
   list-style: none;
 }
 
-.gm-v2 a {
+.gm-v2 a:not(.button) {
   text-decoration: none;
   color: inherit;
 }

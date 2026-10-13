@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import api from '../services/api';
+import api from '../services/api.js';
 
 async function fetchDashboard(mes) {
   const { data } = await api.get('/api/dashboard', { params: { mes } });

@@ -1,27 +1,9 @@
-/* src/styles/global.css */
-@layer theme, base, legacy, components, utilities;
-
-@import './reset.css';
+@layer theme, base, screens, components, utilities;
 @import './tokens.css';
+@import './reset.css';
+@import './document.css';
+@import './screens.css' layer(screens);
 @import './base.css';
 @import './components.css';
-
-/* 
-  Importar o CSS legado com layer(legacy)
-*/
-@import '../estilo/sistema.css' layer(legacy);
-@import '../estilo/app.css' layer(legacy);
-@import '../estilo/config.css' layer(legacy);
-@import '../estilo/papeis.css' layer(legacy);
-@import '../estilo/calculadora.css' layer(legacy);
-@import '../estilo/statusOrcamento.css' layer(legacy);
-
-/* Utilities */
-.text-primary { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.text-muted { color: var(--color-text-muted); }
-.bg-surface { background-color: var(--color-surface); }
-.bg-background { background-color: var(--color-background); }
-.shadow-sm { box-shadow: var(--shadow-sm); }
-.shadow-md { box-shadow: var(--shadow-md); }
-.rounded-md { border-radius: var(--border-radius-md); }
+@import '../features/calculadora/calculadora.css';
+@import './wireframe.css';

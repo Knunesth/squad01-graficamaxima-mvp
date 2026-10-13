@@ -37,3 +37,7 @@ Thumbs.db
 # Cache
 .cache/
 .parcel-cache/
+
+# Verificação local de interface
+/tmp/ui-check/
+/tmp/visual-review/

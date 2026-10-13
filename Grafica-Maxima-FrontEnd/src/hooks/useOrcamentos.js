@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../services/api';
+import api from '../services/api.js';
 
 async function fetchOrcamentos(query) {
-  const { data } = await api.get('/api/orcamentos', { params: { ...query, limit: 8 } });
+  const { data } = await api.get('/api/orcamentos', { params: { ...query, limit: 4 } });
   return data;
 }
 

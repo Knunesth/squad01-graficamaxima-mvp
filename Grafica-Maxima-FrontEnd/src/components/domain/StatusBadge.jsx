@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '../ui/Badge';
+import { Badge } from '../ui/Badge.jsx';
 
 export function StatusBadge({ status }) {
   let variant = 'neutral';
