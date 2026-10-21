@@ -3,10 +3,6 @@ input, select { height: 40px; }
 .sidebar-session .button { padding-inline: 12px; font-size: 14px; }
 .sidebar-session svg { flex-shrink: 0; }
 .page-header p { white-space: pre-wrap; }
-@media (min-width: 1201px) {
-  .workspace:has(.catalog-grid) { min-height: 1700px; }
-  .workspace:has(.production-grid) { min-height: 1320px; }
-}
 .app-shell {
   display: block;
 }

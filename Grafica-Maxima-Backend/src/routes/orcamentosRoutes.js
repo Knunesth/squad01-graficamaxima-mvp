@@ -1,6 +1,8 @@
-﻿const router = require('express').Router();
+const router = require('express').Router();
 const controller = require('../controllers/orcamentoController');
-const { apenasAdmin } = require('../middlewares/AuthRole');
+const { autenticar, apenasAdmin } = require('../middlewares/AuthRole');
+
+router.use(autenticar);
 router.post('/', controller.criarOrcamento);
 router.get('/', controller.listarOrcamentos);
 router.get('/status-orcamento/:id', controller.obterStatusOrcamento);

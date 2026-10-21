@@ -1,8 +1,8 @@
-﻿const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { HttpError, texto } = require('../utils/validation');
 const { hashPassword, verifyPassword } = require('../services/password');
-const cookieOptions = () => ({ httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 8 * 60 * 60 * 1000 });
+const cookieOptions = () => ({ httpOnly: true, sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 8 * 60 * 60 * 1000 });
 const attempts = new Map();
 function limitarLogin(req, res, next) {
   const now = Date.now();

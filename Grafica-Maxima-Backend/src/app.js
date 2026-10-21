@@ -15,6 +15,7 @@ function createApp() {
     next();
   });
   app.use(express.json({ limit: '100kb' }));
+  app.get('/', (req, res) => res.json({ status: 'ok', message: 'Servidor da Gráfica Máxima funcionando.' }));
   app.get('/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/api/auth', require('./routes/AuthRoutes'));
   app.use('/api', autenticar);

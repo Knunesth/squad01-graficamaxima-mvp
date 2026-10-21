@@ -14,6 +14,7 @@ const fs   = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const { hashPassword } = require('./src/services/password');
+const { loadPrices } = require('./scripts/seed-prices');
 
 const DB_NAME       = process.env.DB_NAME     || 'graficamaxima';
 const SCHEMA_FILE   = path.join(__dirname, 'database', 'graficamaxima.sql');
@@ -82,6 +83,9 @@ async function run() {
             }
         }
     }
+
+    const priceCount = await loadPrices(conn);
+    console.log(`Preços de m² verificados: ${priceCount}. Valores existentes preservados.`);
 
     // 4. Criar/atualizar admin
     console.log('\n👤 Criando usuário admin...');

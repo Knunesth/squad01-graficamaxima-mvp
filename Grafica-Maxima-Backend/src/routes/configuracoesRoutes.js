@@ -3,6 +3,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { autenticar } = require('../middlewares/AuthRole');
+
+router.use(autenticar);
 
 // ========================================================
 // GET /:aba — Busca os dados salvos por aba

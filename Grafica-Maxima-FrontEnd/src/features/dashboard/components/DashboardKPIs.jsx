@@ -94,7 +94,7 @@ export function DashboardKPIs({ dados }) {
       description: dados.ativos + " orçamentos · valor total ativo",
       chart: series("ativos", 1000),
       type: "line",
-      caption: "Evolução do valor ativo · R$ mil",
+      caption: "Valor ativo criado por semana · R$ mil",
     },
     {
       title: "Novos orçamentos",

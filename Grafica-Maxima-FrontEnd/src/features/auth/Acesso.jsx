@@ -7,6 +7,7 @@ import { Button, Feedback, InputField } from "../../components/ui";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { ArrowUpRight, BarChart3, Check, PackageCheck } from "lucide-react";
 
 const loginSchema = z.object({
   login: z.string().min(3, "Mínimo 3 caracteres"),
@@ -53,22 +54,39 @@ export default function Acesso({ cadastro = false }) {
   return (
     <div className="access-page">
       <aside className="access-brand">
-        <div className="logo-placeholder">LOGO DA GRÁFICA</div>
-        <h1>Gráfica Máxima</h1>
-        <h2>Sua gestão em um só lugar.</h2>
-        <p>
-          Organize orçamentos, acompanhe o estoque e analise seus resultados.
-        </p>
-        <strong>ORÇAMENTOS / ESTOQUE / DASHBOARDS</strong>
+        <div className="access-brand-top">
+          <img src="/logomarca-grafica-maxima.png" alt="Gráfica Máxima" />
+          <span>GESTÃO PARA QUEM FAZ ACONTECER</span>
+        </div>
+        <div className="access-brand-copy">
+          <span className="access-eyebrow">DA IDEIA À IMPRESSÃO</span>
+          <h1>Sua gráfica, no ritmo da sua criatividade.</h1>
+          <p>
+            Orçamentos e operação em um só lugar. Mais clareza para cuidar de
+            cada detalhe e fazer bons trabalhos acontecerem.
+          </p>
+        </div>
+        <div className="access-brand-features" aria-label="Recursos do sistema">
+          <span><Check size={15} aria-hidden="true" /> Orçamentos organizados</span>
+          <span><PackageCheck size={15} aria-hidden="true" /> Materiais à mão</span>
+          <span><BarChart3 size={15} aria-hidden="true" /> Resultados em foco</span>
+        </div>
+        <div className="access-brand-footer">
+          <span>BOAS IDEIAS MERECEM UMA GRANDE IMPRESSÃO.</span>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </div>
       </aside>
       <section className="access-content">
         <form className="access-form" onSubmit={handleSubmit(onSubmit)}>
-          <small>{cadastro ? "CADASTRO" : "ACESSO"}</small>
+          <small className="access-form-kicker">
+            <span aria-hidden="true" />
+            {cadastro ? "NOVO POR AQUI?" : "BEM-VINDO DE VOLTA"}
+          </small>
           <h1>{cadastro ? "Crie sua conta" : "Entre na sua conta"}</h1>
           <p>
             {cadastro
-              ? "Defina seu login e sua senha para acessar o sistema da Gráfica Máxima."
-              : "Acesse seus orçamentos e o catálogo da Gráfica Máxima."}
+              ? "Escolha seus dados de acesso para começar."
+              : "Acesse seu espaço de trabalho da Gráfica Máxima."}
           </p>
           <InputField
             label="Login"
@@ -91,11 +109,16 @@ export default function Acesso({ cadastro = false }) {
           />
           <Feedback error={error} message={message} />
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Aguarde..." : cadastro ? "Criar conta" : "Entrar"}
+            {isSubmitting
+              ? "Aguarde..."
+              : cadastro
+                ? "Criar minha conta"
+                : "Entrar no sistema"}
           </Button>
           <Link className="access-link" to={cadastro ? "/login" : "/cadastro"}>
-            {cadastro ? "Já tenho uma conta" : "Criar uma conta"}
+            {cadastro ? "Já tem uma conta? Entre" : "Primeiro acesso? Criar conta"}
           </Link>
+          <small className="access-privacy">Seu espaço de trabalho, simples e seguro.</small>
         </form>
       </section>
     </div>

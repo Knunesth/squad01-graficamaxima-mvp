@@ -11,6 +11,7 @@ import Configuracao from "../features/configuracoes/Configuracao.jsx";
 import StatusOrcamento from "../features/orcamentos/StatusOrcamento.jsx";
 import Usuarios from "../features/usuarios/Usuarios.jsx";
 import Acesso from "../features/auth/Acesso.jsx";
+import Clientes from "../features/clientes/Clientes.jsx";
 
 export function AppRoutes({ usuario }) {
   return (
@@ -29,6 +30,7 @@ export function AppRoutes({ usuario }) {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/orcamentos" element={<Orcamentos />} />
+            <Route path="/clientes" element={<Clientes />} />
             <Route path="/orcamentos/novo" element={<EscolherCliente />} />
             <Route
               path="/orcamentos/novo/cliente"

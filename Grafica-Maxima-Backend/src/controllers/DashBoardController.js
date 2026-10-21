@@ -16,6 +16,7 @@ module.exports = async (req, res) => {
     const semana = semanas[Math.min(4, Math.floor((Number(String(row.data_criacao).slice(8,10)) - 1) / 7))];
     semana.novos++;
     if (['Aprovado','Finalizado'].includes(row.status)) { aprovados++; semana.aprovados++; }
+    if (!['Inativo', 'Finalizado'].includes(row.status)) semana.ativos += Number(row.valor_total);
   }
 
   // Calculate active pipeline metrics

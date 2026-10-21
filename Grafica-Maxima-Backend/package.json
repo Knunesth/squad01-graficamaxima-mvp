@@ -7,7 +7,8 @@
     "dev":     "nodemon server.js",
     "migrate": "node migrate.js",
     "seed":    "node seed.js",
-    "setup":   "node setup.js"
+    "setup":   "node setup.js",
+    "db:seed-prices": "node scripts/seed-prices.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

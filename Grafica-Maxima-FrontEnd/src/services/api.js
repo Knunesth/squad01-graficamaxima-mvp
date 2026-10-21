@@ -1,7 +1,8 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3301', timeout: 10000, withCredentials: true });
 api.interceptors.response.use(response => response, error => {
-  if (error.response?.status === 401 && !error.config?.url?.startsWith('/api/auth/')) window.dispatchEvent(new Event('session-expired'));
+  const publicAuthRequest = ['/api/auth/login', '/api/auth/register', '/api/auth/me'].includes(error.config?.url);
+  if (error.response?.status === 401 && !publicAuthRequest) window.dispatchEvent(new Event('session-expired'));
   return Promise.reject(error);
 });
 export function mensagemErro(error) {
