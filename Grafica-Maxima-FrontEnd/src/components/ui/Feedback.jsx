@@ -1,9 +1,13 @@
-import React from 'react';
+import React from "react";
 
 export function Feedback({ error, message }) {
   return error ? (
-    <p className="feedback error" role="alert">{error}</p>
+    <p className="feedback error" role="alert">
+      {error}
+    </p>
   ) : message ? (
-    <p className="feedback success" role="status">{message}</p>
+    <p className="feedback success" role="status">
+      {message}
+    </p>
   ) : null;
 }

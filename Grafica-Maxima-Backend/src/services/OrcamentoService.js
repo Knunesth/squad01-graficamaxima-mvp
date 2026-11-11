@@ -1,9 +1,9 @@
 class OrcamentoService {
-    calcularOrcamento(dados) {
-        let custoTotal = 0;
+  calcularOrcamento(dados) {
+    let custoTotal = 0;
 
-        custoTotaL += Number(dados.custoPapel || 0);
-    }
+    custoTotaL += Number(dados.custoPapel || 0);
+  }
 }
 
 // Resumo Financeiro

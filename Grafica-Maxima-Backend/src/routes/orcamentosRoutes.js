@@ -1,14 +1,14 @@
-const router = require('express').Router();
-const controller = require('../controllers/orcamentoController');
-const { autenticar, apenasAdmin } = require('../middlewares/AuthRole');
+const router = require("express").Router();
+const controller = require("../controllers/orcamentoController");
+const { autenticar, apenasAdmin } = require("../middlewares/AuthRole");
 
 router.use(autenticar);
-router.post('/', controller.criarOrcamento);
-router.get('/', controller.listarOrcamentos);
-router.get('/status-orcamento/:id', controller.obterStatusOrcamento);
-router.put('/status-orcamento/:id', controller.atualizarStatusOrcamento);
-router.get('/:id/pdf', controller.gerarPdfOrcamento);
-router.get('/:id', controller.obterOrcamento);
-router.put('/:id', controller.editarOrcamento);
-router.delete('/:id', apenasAdmin, controller.deletarOrcamento);
+router.post("/", controller.criarOrcamento);
+router.get("/", controller.listarOrcamentos);
+router.get("/status-orcamento/:id", controller.obterStatusOrcamento);
+router.put("/status-orcamento/:id", controller.atualizarStatusOrcamento);
+router.get("/:id/pdf", controller.gerarPdfOrcamento);
+router.get("/:id", controller.obterOrcamento);
+router.put("/:id", controller.editarOrcamento);
+router.delete("/:id", apenasAdmin, controller.deletarOrcamento);
 module.exports = router;

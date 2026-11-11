@@ -5,7 +5,12 @@
   font-size: var(--font-size-base);
 }
 
-.gm-v2 h1, .gm-v2 h2, .gm-v2 h3, .gm-v2 h4, .gm-v2 h5, .gm-v2 h6 {
+.gm-v2 h1,
+.gm-v2 h2,
+.gm-v2 h3,
+.gm-v2 h4,
+.gm-v2 h5,
+.gm-v2 h6 {
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-sm);
