@@ -1,298 +1,245 @@
-const PDFDocument = require("pdfkit");
+const path = require('node:path');
+const PDFDocument = require('pdfkit');
 
-const empresaPadrao = {
-  nome: "GRAFICA MAXIMA",
-  endereco: "QNM 5 Conjunto P Ceilandia Sul",
-  cidade: "(Ceilandia) 72215-066 Brasilia DF",
-  telefone: "6130221010",
-  email: "graficamaximadf@gmail.com",
-  site: "www.graficamaximadf.imprimastore.com.br",
-  cnpj: "27.336.716/0001-10",
+const LOGO = path.join(__dirname, '..', 'assets', 'logomarca-grafica-maxima.png');
+const PAGINA = { largura: 595.28, altura: 841.89, margem: 42, limite: 754 };
+const COR = {
+  primaria: '#4541a2', escura: '#20234f', cyan: '#007da7', magenta: '#b5186c',
+  texto: '#353950', secundaria: '#62677d', linha: '#d8dbea', fundo: '#f5f6fb', branco: '#ffffff',
 };
-
-const moeda = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
+const EMPRESA = {
+  nome: 'Gráfica Máxima', cnpj: '27.336.716/0001-10',
+  endereco: 'QNM 5, Conjunto P, Ceilândia Sul - Brasília, DF - CEP 72215-066',
+  telefone: '(61) 3022-1010', email: 'graficamaximadf@gmail.com',
+  site: 'graficamaximadf.imprimastore.com.br',
+};
+const moedaBR = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const numeroBR = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+const dataHoraBR = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric',
+  hour: '2-digit', minute: '2-digit',
 });
 
-const data = new Intl.DateTimeFormat("pt-BR", {
-  timeZone: "America/Sao_Paulo",
-});
-
-const dataHora = new Intl.DateTimeFormat("pt-BR", {
-  timeZone: "America/Sao_Paulo",
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-function formatarMoeda(valor) {
-  return moeda.format(Number(valor || 0));
+function moeda(valor) {
+  return moedaBR.format(Number(valor || 0)).replace(/\u00a0/g, ' ');
 }
 
-function formatarData(valor) {
-  if (!valor) return "- - -";
-  return data.format(new Date(valor));
+function dataCalendario(valor) {
+  if (!valor) return 'A definir';
+  const iso = valor instanceof Date ? valor.toISOString() : String(valor);
+  const dia = iso.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia.split('-').reverse().join('/') : 'A definir';
 }
 
-function formatarDataHora(valor) {
-  if (!valor) return "- - -";
-  return dataHora.format(new Date(valor)).replace(",", "");
+function dataHora(valor) {
+  if (!valor) return 'A definir';
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime()) ? 'A definir' : dataHoraBR.format(data).replace(',', '');
 }
 
-function totalItem(item) {
-  return Number(item.quantidade || 0) * Number(item.valor_unitario || 0);
+function texto(doc, conteudo, x, y, largura, opcoes = {}) {
+  doc.text(String(conteudo ?? ''), x, y, { width: largura, ...opcoes });
 }
 
-function texto(doc, conteudo, x, y, options = {}) {
-  doc.text(String(conteudo || ""), x, y, options);
+function rotulo(doc, valor, x, y, largura) {
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(COR.secundaria);
+  texto(doc, valor, x, y, largura);
 }
 
-function faixa(doc, titulo, y) {
-  doc.save();
-  doc.rect(45, y, 505, 22).fill("#e9e9e9");
-  doc.fillColor("#111111").font("Helvetica-Bold").fontSize(10);
-  texto(doc, titulo, 45, y + 6, { width: 505, align: "center" });
-  doc.restore();
+function faixaSuperior(doc) {
+  doc.rect(0, 0, PAGINA.largura, 6).fill(COR.primaria);
+  doc.rect(0, 6, PAGINA.largura * 0.34, 3).fill(COR.cyan);
+  doc.rect(PAGINA.largura * 0.34, 6, PAGINA.largura * 0.18, 3).fill(COR.magenta);
 }
 
-function logoTexto(doc, x, y) {
-  const cores = ["#23a8e0", "#f04b4b", "#f5ca2f", "#36b869", "#7d5fff"];
+function cabecalho(doc, orcamento) {
+  faixaSuperior(doc);
+  doc.image(LOGO, PAGINA.margem, 25, { fit: [174, 95] });
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(COR.primaria);
+  texto(doc, 'ORÇAMENTO', 365, 39, 188, { align: 'right' });
+  doc.font('Helvetica-Bold').fontSize(27).fillColor(COR.escura);
+  texto(doc, `#${orcamento.id_orcamento}`, 365, 53, 188, { align: 'right' });
+  doc.font('Helvetica').fontSize(9).fillColor(COR.secundaria);
+  texto(doc, `Criado em ${dataHora(orcamento.data_criacao)}`, 305, 88, 248, { align: 'right' });
 
-  doc.save();
-  cores.forEach((cor, index) => {
-    doc.circle(x + 14 + index * 5, y + 18 - Math.sin(index) * 5, 5).fill(cor);
+  doc.font('Helvetica').fontSize(8.5).fillColor(COR.texto);
+  texto(doc, EMPRESA.telefone, 42, 129, 120);
+  texto(doc, EMPRESA.email, 166, 129, 223);
+  texto(doc, `CNPJ ${EMPRESA.cnpj}`, 390, 129, 163, { align: 'right' });
+  doc.fillColor(COR.secundaria).fontSize(8);
+  texto(doc, EMPRESA.endereco, 42, 147, 511);
+  doc.moveTo(42, 174).lineTo(553, 174).strokeColor(COR.linha).lineWidth(1).stroke();
+}
+
+function cabecalhoContinuacao(doc, orcamento) {
+  faixaSuperior(doc);
+  doc.font('Helvetica-Bold').fontSize(15).fillColor(COR.escura);
+  texto(doc, `${EMPRESA.nome}  ·  Orçamento #${orcamento.id_orcamento}`, 42, 38, 511);
+  doc.moveTo(42, 67).lineTo(553, 67).strokeColor(COR.linha).stroke();
+  return 85;
+}
+
+function clienteEMetadados(doc, orcamento) {
+  const cliente = orcamento.cliente || {};
+  const nome = cliente.nome || orcamento.nome_cliente || 'Cliente não informado';
+  doc.font('Helvetica-Bold').fontSize(12);
+  const alturaNome = doc.heightOfString(nome, { width: 240 });
+  const endereco = cliente.endereco ? String(cliente.endereco) : '';
+  const alturaCartao = Math.max(98, 58 + alturaNome + (endereco ? 27 : 0));
+  const topo = 194;
+  doc.roundedRect(42, topo, 511, alturaCartao, 8).fill(COR.fundo);
+  rotulo(doc, 'CLIENTE', 56, topo + 14, 240);
+  doc.font('Helvetica-Bold').fontSize(12).fillColor(COR.escura);
+  texto(doc, nome, 56, topo + 30, 240);
+  doc.font('Helvetica').fontSize(9).fillColor(COR.secundaria);
+  if (cliente.cpf_cnpj) texto(doc, String(cliente.cpf_cnpj), 56, topo + 35 + alturaNome, 240);
+  if (endereco) texto(doc, endereco, 56, topo + 55 + alturaNome, 240, { height: 24, ellipsis: true });
+
+  rotulo(doc, 'CONTATO', 317, topo + 14, 220);
+  doc.font('Helvetica').fontSize(9).fillColor(COR.texto);
+  if (cliente.telefone) texto(doc, cliente.telefone, 317, topo + 32, 220);
+  if (cliente.email) texto(doc, cliente.email, 317, topo + 51, 220);
+
+  const metaY = topo + alturaCartao + 15;
+  const metas = [
+    ['Validade', dataCalendario(orcamento.data_validade)],
+    ['Prazo de entrega', dataCalendario(orcamento.prazo_entrega)],
+    ['Situação', orcamento.status || 'Não informado'],
+  ];
+  metas.forEach(([titulo, valor], indice) => {
+    const x = 42 + indice * 174;
+    doc.roundedRect(x, metaY, 163, 55, 7).lineWidth(1).strokeColor(COR.linha).stroke();
+    rotulo(doc, titulo, x + 11, metaY + 9, 141);
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(COR.escura);
+    texto(doc, valor, x + 11, metaY + 26, 141, { height: 20, ellipsis: true });
   });
-
-  doc
-    .fillColor("#444444")
-    .font("Helvetica-Bold")
-    .fontSize(13)
-    .text("GRAFICA", x + 55, y + 7);
-  doc.fontSize(15).text("MAXIMA", x + 55, y + 20);
-  doc
-    .font("Helvetica")
-    .fontSize(6)
-    .text("Nossa impressao e o que fica.", x + 56, y + 38);
-  doc.restore();
+  return metaY + 77;
 }
 
-function garantirEspaco(doc, y, alturaNecessaria) {
-  if (y + alturaNecessaria <= 755) {
-    return y;
-  }
+function tituloSecao(doc, titulo, y) {
+  doc.font('Helvetica-Bold').fontSize(12).fillColor(COR.escura);
+  texto(doc, titulo, 42, y, 511);
+  return y + 24;
+}
 
+function cabecalhoTabela(doc, y) {
+  doc.roundedRect(42, y, 511, 29, 5).fill(COR.escura);
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(COR.branco);
+  texto(doc, 'Material ou serviço', 54, y + 9, 258);
+  texto(doc, 'Qtd.', 314, y + 9, 38, { align: 'right' });
+  texto(doc, 'Unitário', 363, y + 9, 89, { align: 'right' });
+  texto(doc, 'Total', 463, y + 9, 78, { align: 'right' });
+  return y + 29;
+}
+
+function paginaNova(doc, orcamento, tabela = false) {
   doc.addPage();
-  return 45;
+  const y = cabecalhoContinuacao(doc, orcamento);
+  return tabela ? cabecalhoTabela(doc, y) : y;
 }
 
-function desenharTabelaItens(doc, itens, startY) {
-  let y = startY;
-  const produtoX = 50;
-  const qtdX = 340;
-  const unitarioX = 405;
-  const totalX = 485;
-  const larguraProduto = 275;
-
-  doc.rect(45, y, 505, 22).fill("#e9e9e9");
-  doc.fillColor("#111111").font("Helvetica-Bold").fontSize(10);
-  texto(doc, "PRODUTO", produtoX, y + 6, { width: larguraProduto });
-  texto(doc, "QTD", qtdX, y + 6, { width: 45, align: "right" });
-  texto(doc, "UNITARIO", unitarioX, y + 6, { width: 65, align: "right" });
-  texto(doc, "VALOR", totalX, y + 6, { width: 60, align: "right" });
-  y += 22;
-
-  itens.forEach((item) => {
-    const produto =
-      item.tipo_produto || item.produto || item.observacoes || "Impressao";
-
-    doc.font("Helvetica-Bold").fontSize(10);
-    const alturaTexto = doc.heightOfString(produto, { width: larguraProduto });
-    const alturaLinha = Math.max(36, alturaTexto + 18);
-    y = garantirEspaco(doc, y, alturaLinha + 18);
-
-    doc.fillColor("#111111").font("Helvetica-Bold").fontSize(10);
-    texto(doc, produto, produtoX, y + 8, { width: larguraProduto });
-
-    doc.font("Helvetica").fontSize(10);
-    texto(doc, item.quantidade || 1, qtdX, y + 10, {
-      width: 45,
-      align: "right",
-    });
-    texto(doc, formatarMoeda(item.valor_unitario), unitarioX, y + 10, {
-      width: 65,
-      align: "right",
-    });
-    texto(
-      doc,
-      formatarMoeda(item.valor_total || totalItem(item)),
-      totalX,
-      y + 10,
-      {
-        width: 60,
-        align: "right",
-      },
-    );
-
+function itensTabela(doc, orcamento, itens, y) {
+  y = tituloSecao(doc, 'Itens do orçamento', y);
+  y = cabecalhoTabela(doc, y);
+  itens.forEach((item, indice) => {
+    const nome = String(item.tipo_produto || item.produto || 'Serviço');
+    doc.font('Helvetica-Bold').fontSize(9.5);
+    const alturaNome = doc.heightOfString(nome, { width: 250 });
+    const alturaLinha = Math.max(36, alturaNome + 17);
+    if (y + alturaLinha > PAGINA.limite) y = paginaNova(doc, orcamento, true);
+    if (indice % 2 === 1) doc.rect(42, y, 511, alturaLinha).fill(COR.fundo);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COR.escura);
+    texto(doc, nome, 54, y + 9, 250);
+    doc.font('Helvetica').fontSize(9).fillColor(COR.texto);
+    texto(doc, numeroBR.format(Number(item.quantidade || 1)), 314, y + 10, 38, { align: 'right' });
+    texto(doc, moeda(item.valor_unitario), 363, y + 10, 89, { align: 'right' });
+    texto(doc, moeda(item.valor_total ?? Number(item.quantidade || 1) * Number(item.valor_unitario || 0)), 463, y + 10, 78, { align: 'right' });
     y += alturaLinha;
-    doc.moveTo(45, y).lineTo(550, y).strokeColor("#d5d5d5").stroke();
+    doc.moveTo(42, y).lineTo(553, y).strokeColor(COR.linha).lineWidth(0.6).stroke();
   });
-
   return y;
 }
 
-function desenharTotais(doc, valorTotal, startY) {
-  const y = garantirEspaco(doc, startY, 80);
-
-  doc.fillColor("#111111").font("Helvetica").fontSize(10);
-  texto(doc, "Subtotal", 390, y + 12, { width: 75, align: "right" });
-  texto(doc, formatarMoeda(valorTotal), 475, y + 12, {
-    width: 75,
-    align: "right",
-  });
-
-  doc.rect(350, y + 34, 200, 28).fill("#e9e9e9");
-  doc.fillColor("#111111").font("Helvetica-Bold").fontSize(12);
-  texto(doc, "TOTAL", 365, y + 42, { width: 70 });
-  texto(doc, formatarMoeda(valorTotal), 455, y + 42, {
-    width: 85,
-    align: "right",
-  });
-
-  return y + 78;
+function resumo(doc, orcamento, itens, y) {
+  const somaItens = itens.reduce((soma, item) => soma + Number(item.valor_total ?? Number(item.quantidade || 1) * Number(item.valor_unitario || 0)), 0);
+  const subtotal = Number(orcamento.subtotal ?? somaItens);
+  const total = Number(orcamento.valor_total ?? subtotal);
+  const desconto = Math.max(0, subtotal - total);
+  if (y + 133 > PAGINA.limite) y = paginaNova(doc, orcamento);
+  y += 20;
+  doc.roundedRect(322, y, 231, 106, 8).fill(COR.fundo);
+  doc.font('Helvetica').fontSize(9).fillColor(COR.texto);
+  texto(doc, 'Subtotal', 336, y + 13, 100);
+  texto(doc, moeda(subtotal), 444, y + 13, 95, { align: 'right' });
+  const nomeDesconto = orcamento.desconto_tipo === 'percentual' && Number(orcamento.desconto_valor) > 0
+    ? `Desconto (${numeroBR.format(Number(orcamento.desconto_valor))}%)` : 'Desconto';
+  texto(doc, nomeDesconto, 336, y + 35, 110);
+  texto(doc, `- ${moeda(desconto)}`, 444, y + 35, 95, { align: 'right' });
+  doc.moveTo(336, y + 60).lineTo(539, y + 60).strokeColor(COR.linha).stroke();
+  doc.font('Helvetica-Bold').fontSize(12).fillColor(COR.escura);
+  texto(doc, 'Total', 336, y + 72, 100);
+  texto(doc, moeda(total), 424, y + 72, 115, { align: 'right' });
+  return y + 122;
 }
 
-function rodape(doc) {
-  const bottom = 760;
+function linhas(doc, conteudo, largura) {
+  const resultado = [];
+  String(conteudo).split(/\r?\n/).forEach((paragrafo) => {
+    let linha = '';
+    for (const palavra of paragrafo.split(/\s+/).filter(Boolean)) {
+      const proxima = linha ? `${linha} ${palavra}` : palavra;
+      if (linha && doc.widthOfString(proxima) > largura) {
+        resultado.push(linha);
+        linha = palavra;
+      } else linha = proxima;
+    }
+    resultado.push(linha);
+  });
+  return resultado;
+}
 
-  doc
-    .moveTo(45, bottom - 8)
-    .lineTo(550, bottom - 8)
-    .strokeColor("#d5d5d5")
-    .stroke();
-  doc.fillColor("#555555").font("Helvetica").fontSize(8);
-  texto(
-    doc,
-    "Documento gerado automaticamente a partir das informacoes do orcamento.",
-    45,
-    bottom,
-    { width: 505, align: "center" },
-  );
+function observacoes(doc, orcamento, y) {
+  if (!orcamento.observacoes) return;
+  if (y + 58 > PAGINA.limite) y = paginaNova(doc, orcamento);
+  y = tituloSecao(doc, 'Observações', y + 6);
+  doc.font('Helvetica').fontSize(9.5).fillColor(COR.texto);
+  for (const linha of linhas(doc, orcamento.observacoes, 500)) {
+    if (y + 15 > PAGINA.limite) {
+      y = paginaNova(doc, orcamento);
+      y = tituloSecao(doc, 'Observações (continuação)', y);
+      doc.font('Helvetica').fontSize(9.5).fillColor(COR.texto);
+    }
+    texto(doc, linha, 48, y, 500);
+    y += 15;
+  }
+}
+
+function rodapes(doc) {
+  const { start, count } = doc.bufferedPageRange();
+  for (let indice = start; indice < start + count; indice++) {
+    doc.switchToPage(indice);
+    doc.moveTo(42, 784).lineTo(553, 784).strokeColor(COR.linha).stroke();
+    doc.font('Helvetica').fontSize(8).fillColor(COR.secundaria);
+    texto(doc, EMPRESA.site, 42, 794, 360);
+    texto(doc, `Página ${indice - start + 1} de ${count}`, 445, 794, 108, { align: 'right' });
+  }
 }
 
 function renderOrcamentoPdf(orcamento, stream) {
-  const doc = new PDFDocument({
-    size: "A4",
-    margin: 45,
-    info: {
-      Title: `Orcamento ${orcamento.id_orcamento}`,
-      Author: empresaPadrao.nome,
-    },
-  });
-
+  const doc = new PDFDocument({ size: 'A4', margin: 0, bufferPages: true,
+    info: { Title: `Orçamento ${orcamento.id_orcamento}`, Author: EMPRESA.nome } });
   doc.pipe(stream);
-
-  const cliente = orcamento.cliente || {};
-  const itens =
-    Array.isArray(orcamento.itens) && orcamento.itens.length > 0
-      ? orcamento.itens
-      : [
-          {
-            tipo_produto:
-              orcamento.produto || orcamento.observacoes || "Impressao",
-            quantidade: orcamento.quantidade || 1,
-            valor_unitario:
-              orcamento.valor_unitario || orcamento.valor_total || 0,
-            valor_total: orcamento.valor_total || 0,
-          },
-        ];
-  const valorTotal = Number(
-    orcamento.valor_total ||
-      itens.reduce((acc, item) => acc + totalItem(item), 0),
-  );
-
-  doc.fillColor("#111111").font("Helvetica").fontSize(8);
-  texto(doc, formatarDataHora(new Date()), 45, 45, { width: 160 });
-  texto(doc, "Pagina de impressao", 45, 45, { width: 505, align: "center" });
-
-  logoTexto(doc, 75, 82);
-
-  doc.fillColor("#111111").font("Helvetica-Bold").fontSize(10);
-  texto(doc, empresaPadrao.nome, 175, 80, { width: 180 });
-  doc.font("Helvetica").fontSize(10);
-  texto(doc, empresaPadrao.endereco, 175, 96, { width: 220 });
-  texto(doc, empresaPadrao.cidade, 175, 111, { width: 220 });
-
-  doc.font("Helvetica-Bold").fontSize(10);
-  texto(doc, empresaPadrao.telefone, 360, 80, { width: 190, align: "right" });
-  doc.font("Helvetica").fontSize(9);
-  texto(doc, empresaPadrao.email, 360, 97, { width: 190, align: "right" });
-  texto(doc, empresaPadrao.site, 305, 112, { width: 245, align: "right" });
-  texto(doc, `CNPJ: ${empresaPadrao.cnpj}`, 360, 127, {
-    width: 190,
-    align: "right",
-  });
-
-  faixa(
-    doc,
-    `ORCAMENTO N ${orcamento.id_orcamento} REALIZADO EM ${formatarDataHora(orcamento.data_criacao)}`,
-    160,
-  );
-
-  doc.fillColor("#111111").font("Helvetica-Bold").fontSize(10);
-  texto(doc, "VENCIMENTO", 95, 202, { width: 100, align: "center" });
-  texto(doc, "ENTREGA", 245, 202, { width: 100, align: "center" });
-  texto(doc, "TIPO", 420, 202, { width: 100, align: "center" });
-
-  doc.font("Helvetica").fontSize(11);
-  texto(doc, formatarData(orcamento.data_validade), 95, 218, {
-    width: 100,
-    align: "center",
-  });
-  texto(doc, formatarData(orcamento.prazo_entrega), 245, 218, {
-    width: 100,
-    align: "center",
-  });
-  texto(doc, "Cliente final", 420, 218, { width: 100, align: "center" });
-
-  faixa(doc, "DADOS DO CLIENTE", 250);
-
-  doc.fillColor("#111111").font("Helvetica").fontSize(11);
-  texto(
-    doc,
-    cliente.nome || orcamento.nome_cliente || "Cliente nao informado",
-    50,
-    287,
-    {
-      width: 275,
-    },
-  );
-  texto(doc, cliente.cpf_cnpj || "", 320, 303, { width: 150 });
-
-  doc.moveTo(45, 347).lineTo(550, 347).strokeColor("#d5d5d5").stroke();
-  texto(doc, cliente.endereco || "Endereco nao informado", 50, 357, {
-    width: 500,
-  });
-
-  doc.moveTo(45, 382).lineTo(550, 382).strokeColor("#d5d5d5").stroke();
-  texto(doc, cliente.telefone || "", 50, 392, { width: 220 });
-
-  const fimTabela = desenharTabelaItens(doc, itens, 422);
-  let y = desenharTotais(doc, valorTotal, fimTabela + 4);
-
-  if (orcamento.observacoes) {
-    y = garantirEspaco(doc, y, 72);
-    faixa(doc, "OBSERVACOES", y);
-    doc.fillColor("#111111").font("Helvetica").fontSize(9);
-    texto(doc, orcamento.observacoes, 50, y + 32, { width: 495 });
-  }
-
-  rodape(doc);
+  const itens = Array.isArray(orcamento.itens) && orcamento.itens.length ? orcamento.itens : [{
+    tipo_produto: orcamento.produto || 'Serviço', quantidade: orcamento.quantidade || 1,
+    valor_unitario: orcamento.valor_unitario ?? orcamento.valor_total ?? 0,
+    valor_total: orcamento.valor_total ?? 0,
+  }];
+  cabecalho(doc, orcamento);
+  const fimItens = itensTabela(doc, orcamento, itens, clienteEMetadados(doc, orcamento));
+  const fimResumo = resumo(doc, orcamento, itens, fimItens);
+  observacoes(doc, orcamento, fimResumo);
+  rodapes(doc);
   doc.end();
 }
 
-module.exports = {
-  renderOrcamentoPdf,
-};
+module.exports = { renderOrcamentoPdf };

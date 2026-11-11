@@ -40,6 +40,8 @@ describe("dashboard", () => {
     expect(setMes).toHaveBeenCalledWith("2026-10");
     fireEvent.click(screen.getByRole("button", { name: "Próximo mês" }));
     expect(setMes).toHaveBeenCalledWith("2026-12");
+    fireEvent.change(screen.getByLabelText("Escolher mês do dashboard"), { target: { value: "2026-06" } });
+    expect(setMes).toHaveBeenCalledWith("2026-06");
   });
 
   it("mostra itens urgentes e estado em dia", () => {

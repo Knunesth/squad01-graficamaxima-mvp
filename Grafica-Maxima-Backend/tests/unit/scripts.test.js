@@ -147,6 +147,7 @@ describe('orcamentoPdf.renderOrcamentoPdf', () => {
     assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
     assert.match(pdf.subarray(-32).toString(), /%%EOF\s*$/);
     assert.ok(pdf.length > 1500, `PDF pequeno demais: ${pdf.length} bytes`);
+    assert.match(pdf.toString('latin1'), /\/Subtype \/Image\b/, 'a logomarca deve estar incorporada');
   });
 
   it('não quebra sem cliente, sem datas e com 17 itens', async () => {
@@ -159,5 +160,6 @@ describe('orcamentoPdf.renderOrcamentoPdf', () => {
       itens: Array.from({ length: 17 }, (_, i) => ({ tipo_produto: `Item ${i + 1} ${'x'.repeat(80)}`, quantidade: i + 1, valor_unitario: '1.5', valor_total: String((i + 1) * 1.5) })),
     });
     assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
+    assert.ok((pdf.toString('latin1').match(/\/Type \/Page\b/g) || []).length > 1, 'itens extensos devem continuar em outra página');
   });
 });

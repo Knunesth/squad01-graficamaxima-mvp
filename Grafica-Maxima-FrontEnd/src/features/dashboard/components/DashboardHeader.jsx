@@ -25,6 +25,14 @@ export function DashboardHeader({ mes, setMes }) {
           <ChevronLeft size={18} aria-hidden="true" /> Anterior
         </Button>
         <strong aria-live="polite">{label}</strong>
+        <input
+          type="month"
+          aria-label="Escolher mês do dashboard"
+          value={mes}
+          onChange={(event) => {
+            if (event.target.value) setMes(event.target.value);
+          }}
+        />
         <Button variant="subtle" aria-label="Próximo mês" onClick={() => setMes(moverMes(mes, 1))}>
           <ChevronRight size={18} aria-hidden="true" /> Próximo
         </Button>
