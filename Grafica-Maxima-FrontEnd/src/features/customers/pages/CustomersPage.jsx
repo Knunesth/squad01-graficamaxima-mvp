@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pencil, Trash2, UserPlus } from "lucide-react";
 import { mensagemErro } from "@/shared/services/api.js";
-import { Button, Modal } from "@/shared/components/ui";
+import { Button, ConfirmModal, Modal } from "@/shared/components/ui";
 import { PageHeader } from "@/shared/components/layout";
 import { useToast } from "@/shared/hooks/useToast.js";
 import { CustomerForm } from "@/features/customers/components/CustomerForm.jsx";
@@ -13,11 +13,11 @@ export default function Clientes() {
   const excluirMutation = useExcluirCliente();
   // null = fechado · {} = novo cliente · {id_cliente, ...} = edição
   const [emEdicao, setEmEdicao] = useState(null);
+  const [paraExcluir, setParaExcluir] = useState(null);
 
   function excluir(cliente) {
-    if (!window.confirm(`Excluir o cliente ${cliente.nome}?`)) return;
     excluirMutation.mutate(cliente.id_cliente, {
-      onSuccess: () => toast.success(`Cliente ${cliente.nome} excluído.`),
+      onSuccess: () => { toast.success(`Cliente ${cliente.nome} excluído.`); setParaExcluir(null); },
       onError: (erro) => toast.error(mensagemErro(erro)),
     });
   }
@@ -49,7 +49,7 @@ export default function Clientes() {
                 variant="subtle"
                 className="text-danger"
                 disabled={excluirMutation.isPending}
-                onClick={() => excluir(cliente)}
+                onClick={() => setParaExcluir(cliente)}
                 aria-label={`Excluir ${cliente.nome}`}
               >
                 <Trash2 size={16} aria-hidden="true" /> Excluir
@@ -79,6 +79,7 @@ export default function Clientes() {
           />
         </Modal>
       )}
+      {paraExcluir && <ConfirmModal title="Excluir cliente" description={`Excluir o cliente ${paraExcluir.nome}?`} action="Excluir cliente" onConfirm={() => excluir(paraExcluir)} onClose={() => setParaExcluir(null)} busy={excluirMutation.isPending} />}
     </>
   );
 }

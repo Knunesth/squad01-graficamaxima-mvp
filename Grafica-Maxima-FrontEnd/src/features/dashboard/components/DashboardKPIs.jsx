@@ -1,140 +1,88 @@
+import { Link } from "react-router-dom";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { StatusBadge, STATUS_OPCOES } from "@/shared/components/domain";
 import { inteiro, moeda } from "@/shared/utils/format.js";
 
-const compacto = new Intl.NumberFormat("pt-BR", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-const moedaCurta = (valor) => `R$ ${compacto.format(valor)}`;
-
-/** Menor teto "redondo" (1, 2, 5 ou 10 × potência de 10) acima do maior valor. */
-function tetoRedondo(maximo, contagem) {
-  if (maximo <= 0) return contagem ? 4 : 100;
-  const base = 10 ** Math.floor(Math.log10(maximo));
-  const passos = contagem ? [2, 4, 10] : [1, 2, 5, 10];
-  const teto = passos.map((p) => p * base).find((p) => p >= maximo);
-  return contagem ? Math.max(4, teto) : teto;
-}
-
-// Geometria do gráfico: 314 × 128, igual à dos wireframes.
-function WeeklyChart({ series = [], type = "bar", label, dinheiro = false }) {
-  const values = series.map((item) => Math.max(0, Number(item.valor) || 0));
-  const ceiling = tetoRedondo(Math.max(...values, 0), !dinheiro);
-  const formatar = dinheiro ? moedaCurta : inteiro;
-  const x = (index) =>
-    values.length <= 1 ? 174 : 64 + (index * 226) / (values.length - 1);
-  const y = (value) => 90 - (value / ceiling) * 76;
+function Comparacao({ atual, anterior, nota }) {
+  if (!anterior) return null;
+  const variacao = ((atual - anterior) / anterior) * 100;
+  const Icone = variacao >= 0 ? ArrowUpRight : ArrowDownRight;
   return (
-    <svg className="mini-chart" viewBox="0 0 314 128" role="img" aria-label={label}>
-      <title>
-        {label}:{" "}
-        {series.map((item, i) => `semana ${item.semana}: ${formatar(values[i])}`).join(", ") ||
-          "sem dados"}
-      </title>
-      {[ceiling, ceiling / 2, 0].map((value) => (
-        <g key={value}>
-          <line x1="44" x2="304" y1={y(value)} y2={y(value)} stroke="#e8e9f1" />
-          <text x="38" y={y(value) + 4} textAnchor="end" fill="#696d84" fontSize="10">
-            {formatar(value)}
-          </text>
-        </g>
-      ))}
-      {type === "line" && values.length > 0 && (
-        <polyline
-          points={values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
-          fill="none"
-          stroke="#333"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-      )}
-      {series.map((item, index) => (
-        <g key={item.semana}>
-          {type === "line" ? (
-            <circle cx={x(index)} cy={y(values[index])} r="4" fill="#333" />
-          ) : (
-            <>
-              <rect
-                x={x(index) - 16}
-                y={y(values[index])}
-                width="32"
-                height={90 - y(values[index])}
-                rx="3"
-              />
-              {values[index] > 0 && (
-                <text x={x(index)} y={y(values[index]) - 6} textAnchor="middle" fill="#20234f" fontSize="10" fontWeight="600">
-                  {formatar(values[index])}
-                </text>
-              )}
-            </>
-          )}
-          <text x={x(index)} y="112" textAnchor="middle" fill="#696d84" fontSize="10">
-            Sem. {item.semana}
-          </text>
-        </g>
-      ))}
-    </svg>
+    <small className="dashboard-comparison">
+      <Icone size={16} aria-hidden="true" />
+      {Math.abs(variacao).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% em relação ao mês anterior
+      {nota && <span>{nota}</span>}
+    </small>
   );
 }
 
-export function DashboardKPIs({ dados }) {
-  const series = (key) =>
-    (dados.semanas || []).map((item) => ({ semana: item.semana, valor: item[key] }));
-  const percent = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(
-    dados.novos ? (dados.aprovados / dados.novos) * 100 : 0,
+function Evolucao({ semanas = [] }) {
+  const maior = Math.max(0, ...semanas.flatMap((s) => [Number(s.valor) || 0, Number(s.valorAprovado) || 0]));
+  const teto = Math.max(1, Math.ceil(maior / 100) * 100);
+  const y = (valor) => 230 - (Number(valor || 0) / teto) * 190;
+  const descricao = semanas.map((s) => `semana ${s.semana}: orçado ${moeda(s.valor)}, aprovado ${moeda(s.valorAprovado)}`).join("; ");
+  return (
+    <section className="panel dashboard-evolution" aria-label="Evolução do mês">
+      <div className="dashboard-section-heading">
+        <h2>Evolução do mês</h2>
+        <div className="dashboard-legend"><span>Orçado</span><span>Aprovado</span></div>
+      </div>
+      <div className="dashboard-chart-scroll">
+        <svg viewBox="0 0 680 285" role="img" aria-label={`Valores por semana: ${descricao}`}>
+          <title>Valor orçado e aprovado por semana</title>
+          {[0, 0.5, 1].map((fracao) => (
+            <g key={fracao}>
+              <line className="chart-gridline" x1="108" x2="662" y1={y(teto * fracao)} y2={y(teto * fracao)} />
+              <text className="chart-axis" x="100" y={y(teto * fracao) + 4} textAnchor="end">{moeda(teto * fracao)}</text>
+            </g>
+          ))}
+          {semanas.map((semana, index) => {
+            const x = 132 + index * 108;
+            return (
+              <g key={semana.semana}>
+                <rect className="chart-budgeted" x={x} y={y(semana.valor)} width="30" height={230 - y(semana.valor)} rx="3" />
+                <rect className="chart-approved" x={x + 34} y={y(semana.valorAprovado)} width="30" height={230 - y(semana.valorAprovado)} rx="3" />
+                <text className="chart-axis" x={x + 32} y="254" textAnchor="middle">Sem. {semana.semana}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </section>
   );
-  const plural = (n, um, varios) => `${inteiro(n)} ${n === 1 ? um : varios}`;
-  const cards = [
-    {
-      title: "Em andamento",
-      value: moeda(dados.valorAtivo),
-      description: `${plural(dados.ativos, "orçamento aberto", "orçamentos abertos")}, de qualquer mês`,
-      chart: series("valor"),
-      type: "line",
-      dinheiro: true,
-      caption: "Valor orçado por semana, neste mês",
-    },
-    {
-      title: "Novos no mês",
-      value: inteiro(dados.novos),
-      description: `${moeda(dados.valorNovos)} em orçamentos criados`,
-      chart: series("novos"),
-      caption: "Orçamentos criados por semana",
-    },
-    {
-      title: "Aprovados no mês",
-      value: inteiro(dados.aprovados),
-      description: `${percent}% dos novos · ${moeda(dados.valorAprovados)}`,
-      chart: series("aprovados"),
-      caption: "Orçamentos aprovados por semana",
-    },
-  ];
-  const porStatus = STATUS_OPCOES.map((status) => ({
-    status,
-    ...(dados.statusCounts?.[status] || { count: 0, valor: 0 }),
-  }));
+}
 
+export function DashboardKPIs({ dados, semGrafico = false }) {
+  const atual = dados.totais || {};
+  const anterior = dados.anterior || {};
+  const taxa = atual.novos ? (atual.aprovados / atual.novos) * 100 : 0;
+  const taxaAnterior = anterior.novos ? (anterior.aprovados / anterior.novos) * 100 : 0;
+  const cards = [
+    { titulo: "Valor em aberto", valor: moeda(dados.valorAtivo), detalhe: `${inteiro(dados.ativos)} orçamentos de todos os meses`, comparacao: [atual.valorAbertosCriados, anterior.valorAbertosCriados], nota: "Abertos criados em cada mês" },
+    { titulo: "Aprovado no mês", valor: moeda(dados.valorAprovados), detalhe: `${inteiro(dados.aprovados)} orçamentos aprovados`, comparacao: [dados.valorAprovados, anterior.valorAprovados] },
+    { titulo: "Vendas finalizadas", valor: moeda(atual.valorFinalizados), detalhe: `${inteiro(atual.finalizados)} vendas no mês`, comparacao: [atual.valorFinalizados, anterior.valorFinalizados] },
+    { titulo: "Taxa de aprovação", valor: `${taxa.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`, detalhe: `${inteiro(dados.aprovados)} de ${inteiro(dados.novos)} orçamentos criados`, comparacao: [taxa, taxaAnterior] },
+  ];
   return (
     <>
-      <section className="metric-grid" aria-label="Indicadores dos orçamentos">
+      <section className="dashboard-metrics" aria-label="Indicadores dos orçamentos">
         {cards.map((card) => (
-          <article className="panel metric-card" key={card.title}>
-            <h2>{card.title}</h2>
-            <strong>{card.value}</strong>
-            <small>{card.description}</small>
-            <WeeklyChart series={card.chart} type={card.type} label={card.caption} dinheiro={card.dinheiro} />
-            <small>{card.caption}</small>
+          <article className="panel dashboard-metric" key={card.titulo}>
+            <h2>{card.titulo}</h2><strong>{card.valor}</strong><small>{card.detalhe}</small>
+            <Comparacao atual={card.comparacao[0]} anterior={card.comparacao[1]} nota={card.nota} />
           </article>
         ))}
       </section>
+      {!semGrafico && <Evolucao semanas={dados.semanas} />}
       <ul className="panel status-strip" aria-label="Orçamentos por status">
-        {porStatus.map((item) => (
-          <li key={item.status}>
-            <StatusBadge status={item.status} />
-            <strong>{inteiro(item.count)}</strong>
-            <small>{moeda(item.valor)}</small>
-          </li>
-        ))}
+        {STATUS_OPCOES.map((status) => {
+          const item = dados.statusCounts?.[status] || { count: 0, valor: 0 };
+          return (
+            <li key={status}><Link to={`/orcamentos?status=${encodeURIComponent(status)}`} aria-label={`${status}: ${inteiro(item.count)} orçamentos`}>
+              <StatusBadge status={status} /><strong>{inteiro(item.count)}</strong><small>{moeda(item.valor)}</small>
+            </Link></li>
+          );
+        })}
       </ul>
     </>
   );

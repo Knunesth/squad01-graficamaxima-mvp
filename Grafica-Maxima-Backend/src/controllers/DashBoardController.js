@@ -58,6 +58,7 @@ module.exports = async (req, res) => {
     aprovados: 0,
     ativos: 0,
     valor: 0,
+    valorAprovado: 0,
   }));
   let valorAtivo = 0;
   let ativos = 0;
@@ -81,6 +82,7 @@ module.exports = async (req, res) => {
     if (["Aprovado", "Finalizado"].includes(row.status)) {
       aprovados++;
       semana.aprovados++;
+      semana.valorAprovado += Number(row.valor_total);
       valorAprovados += Number(row.valor_total);
     }
     if (!["Inativo", "Finalizado"].includes(row.status))
@@ -137,7 +139,7 @@ module.exports = async (req, res) => {
               (o.data_validade AT TIME ZONE '${ZONA}')::date <= (now() AT TIME ZONE '${ZONA}')::date + 3
               THEN 'validade' ELSE 'negociacao' END AS motivo
      FROM orcamento o LEFT JOIN cliente c ON c.id_cliente = o.id_cliente
-     WHERE o.status NOT IN ('Inativo', 'Finalizado', 'Aprovado')
+     WHERE o.status NOT IN ('Inativo', 'Finalizado')
        AND ((o.data_validade IS NOT NULL AND
          (o.data_validade AT TIME ZONE '${ZONA}')::date <= (now() AT TIME ZONE '${ZONA}')::date + 3)
          OR (o.status = 'Em negociação' AND

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { aprovado, dataBR, dataISO, decimal, documentoBR, inteiro, moeda, telefoneBR } from '@/shared/utils/format.js';
-import * as formatoLegado from '@/shared/services/format.js';
-import { handleError } from '@/shared/utils/errorHandler.js';
+import { mensagemErro } from '@/shared/services/api.js';
 import { cn } from '@/shared/utils/cn.js';
 
 // Intl usa espaço não separável entre "R$" e o valor.
@@ -38,10 +37,6 @@ describe('format', () => {
     for (const status of ['Não aprovado', 'Em negociação', 'Inativo', 'aprovado', undefined]) expect(aprovado(status)).toBe(false);
   });
 
-  it('o caminho antigo services/format reexporta as mesmas funções', () => {
-    expect(formatoLegado.moeda).toBe(moeda);
-    expect(formatoLegado.dataBR).toBe(dataBR);
-  });
 });
 
 describe('format — máscaras', () => {
@@ -73,28 +68,24 @@ describe('format — máscaras', () => {
   });
 });
 
-describe('handleError', () => {
-  const padrao = 'Ocorreu um erro inesperado. Tente novamente.';
+describe('mensagemErro', () => {
+  const padrao = 'Não foi possível conectar ao servidor. Tente novamente.';
 
   it('prioriza a mensagem enviada pela API', () => {
-    expect(handleError({ response: { status: 422, data: { error: 'CPF ou CNPJ já cadastrado.' } } })).toBe('CPF ou CNPJ já cadastrado.');
+    expect(mensagemErro({ response: { status: 422, data: { error: 'CPF ou CNPJ já cadastrado.' } } })).toBe('CPF ou CNPJ já cadastrado.');
   });
 
   it('explica tempo esgotado', () => {
-    expect(handleError({ code: 'ECONNABORTED' })).toMatch(/demorou mais que o esperado/);
+    expect(mensagemErro({ code: 'ECONNABORTED' })).toMatch(/demorou mais que o esperado/);
   });
 
-  it('traduz status HTTP comuns', () => {
-    expect(handleError({ response: { status: 401 } })).toMatch(/sessão expirou/);
-    expect(handleError({ response: { status: 403 } })).toMatch(/não tem permissão/);
-    expect(handleError({ response: { status: 404 } })).toMatch(/não foi encontrado/);
-    for (const status of [500, 502, 503, 504]) expect(handleError({ response: { status } })).toMatch(/conectar ao servidor/);
+  it('usa mensagem de conexão quando a API não fornece detalhes', () => {
+    for (const status of [401, 403, 404, 500, 502, 503, 504]) expect(mensagemErro({ response: { status } })).toBe(padrao);
   });
 
-  it('usa a mensagem padrão (ou a informada) nos demais casos', () => {
-    expect(handleError(null)).toBe(padrao);
-    expect(handleError(new Error('falha interna'))).toBe(padrao);
-    expect(handleError({ response: { status: 418 } }, 'Não deu certo.')).toBe('Não deu certo.');
+  it('usa a mensagem padrão nos demais casos', () => {
+    expect(mensagemErro(new Error('falha interna'))).toBe(padrao);
+    expect(mensagemErro({ response: { status: 418 } })).toBe(padrao);
   });
 });
 

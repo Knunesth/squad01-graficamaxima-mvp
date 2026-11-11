@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { mensagemErro } from "@/shared/services/api.js";
-import { Feedback, Table } from "@/shared/components/ui";
+import { Button, Feedback, Table } from "@/shared/components/ui";
 import { documentoBR, telefoneBR } from "@/shared/utils/format.js";
 import { useClientes } from "@/features/customers/hooks/useCustomers.js";
 
@@ -18,6 +18,7 @@ const semAcento = (texto) =>
 export function CustomerTable({ acoes, colunaAcoes = "Ações", vazio }) {
   const { data: clientes, isLoading, error } = useClientes();
   const [busca, setBusca] = useState("");
+  const [pagina, setPagina] = useState(1);
 
   const filtrados = useMemo(() => {
     const termo = semAcento(busca.trim());
@@ -31,6 +32,9 @@ export function CustomerTable({ acoes, colunaAcoes = "Ações", vazio }) {
         (digitos && String(c.telefone || "").replace(/\D/g, "").includes(digitos)),
     );
   }, [clientes, busca]);
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / 20));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const visiveis = filtrados.slice((paginaAtual - 1) * 20, paginaAtual * 20);
 
   return (
     <div className="customer-table">
@@ -41,7 +45,7 @@ export function CustomerTable({ acoes, colunaAcoes = "Ações", vazio }) {
           aria-label="Buscar cliente"
           placeholder="Buscar por nome, e-mail, CPF/CNPJ ou telefone"
           value={busca}
-          onChange={(event) => setBusca(event.target.value)}
+          onChange={(event) => { setBusca(event.target.value); setPagina(1); }}
         />
         <small role="status">
           {isLoading
@@ -70,7 +74,7 @@ export function CustomerTable({ acoes, colunaAcoes = "Ações", vazio }) {
           </tr>
         </thead>
         <tbody>
-          {filtrados.map((cliente) => (
+          {visiveis.map((cliente) => (
             <tr key={cliente.id_cliente}>
               <td><strong>{cliente.nome}</strong></td>
               <td className="cell-number">{documentoBR(cliente.cpf_cnpj) || "—"}</td>
@@ -83,6 +87,12 @@ export function CustomerTable({ acoes, colunaAcoes = "Ações", vazio }) {
           ))}
         </tbody>
       </Table>
+      {filtrados.length > 20 && <div className="pagination">
+        <small role="status">{(paginaAtual - 1) * 20 + 1}–{Math.min(paginaAtual * 20, filtrados.length)} de {filtrados.length} clientes</small>
+        <Button variant="subtle" disabled={paginaAtual === 1} onClick={() => setPagina(paginaAtual - 1)}><ChevronLeft size={18} aria-hidden="true" /> Anterior</Button>
+        <span>Página {paginaAtual} de {totalPaginas}</span>
+        <Button variant="subtle" disabled={paginaAtual === totalPaginas} onClick={() => setPagina(paginaAtual + 1)}><ChevronRight size={18} aria-hidden="true" /> Próxima</Button>
+      </div>}
     </div>
   );
 }

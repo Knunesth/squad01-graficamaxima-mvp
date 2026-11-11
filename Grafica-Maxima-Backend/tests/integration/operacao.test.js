@@ -110,6 +110,14 @@ describe('API — calculadora de m² e dashboard', { skip: motivoParaPular() }, 
     assert.equal(d.valorNovos, 349.2 + 50 + 70);
     assert.equal(d.aprovados, 1);
     assert.equal(d.valorAprovados, 50);
+    assert.equal(d.totais.novos, d.novos);
+    assert.equal(d.totais.valorAprovados, d.valorAprovados);
+    assert.equal(d.totais.valorAbertosCriados, 349.2 + 50);
+    assert.equal(d.totais.finalizados, 0);
+    assert.equal(d.totais.valorFinalizados, 0);
+    assert.equal(typeof d.anterior.novos, 'number');
+    assert.ok(Array.isArray(d.precisamAtencao));
+    assert.equal(d.semanas.reduce((soma, semana) => soma + semana.valorAprovado, 0), d.valorAprovados);
     assert.equal(d.semanas.reduce((soma, semana) => soma + semana.valor, 0), d.valorNovos);
     assert.equal(d.statusCounts['Não aprovado'].count, 1);
     assert.equal(d.statusCounts.Aprovado.valor, 50);
@@ -126,6 +134,36 @@ describe('API — calculadora de m² e dashboard', { skip: motivoParaPular() }, 
     assert.equal(res.body.valorAprovados, 0);
     assert.deepEqual(res.body.orcamentosPeriodo, []);
     assert.equal(res.body.ativos, 2);
+    assert.equal(res.body.totais.finalizados, 0);
+    assert.equal(res.body.anterior.valorFinalizados, 0);
+  });
+
+  it('dashboard conta finalizações pela data de finalização e identifica validade próxima', async () => {
+    const criado = await ctx.req('/api/orcamentos', { method: 'POST', cookie: s.atendente, body: {
+      itens: [{ id_material: material, tipo_produto: 'x', quantidade: 1, valor_unitario: 25 }],
+    } });
+    const criadoAnterior = await ctx.req('/api/orcamentos', { method: 'POST', cookie: s.atendente, body: {
+      itens: [{ id_material: material, tipo_produto: 'x', quantidade: 1, valor_unitario: 40 }],
+    } });
+    const id = criado.body.id;
+    const idAnterior = criadoAnterior.body.id;
+    try {
+      await ctx.db.query("UPDATE orcamento SET status = 'Finalizado', data_criacao = now() - interval '2 months', data_finalizacao = now() WHERE id_orcamento = $1", [id]);
+      await ctx.db.query("UPDATE orcamento SET status = 'Finalizado', data_criacao = (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - interval '1 month' + interval '10 days') AT TIME ZONE 'America/Sao_Paulo', data_finalizacao = (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - interval '1 month' + interval '10 days') AT TIME ZONE 'America/Sao_Paulo' WHERE id_orcamento = $1", [idAnterior]);
+      const mes = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' }).format(new Date());
+      const atual = await ctx.req(`/api/dashboard?mes=${mes}`, { cookie: s.atendente });
+      assert.equal(atual.body.totais.finalizados, 1);
+      assert.equal(atual.body.totais.valorFinalizados, 25);
+      assert.equal(atual.body.anterior.finalizados, 1);
+      assert.equal(atual.body.anterior.valorFinalizados, 40);
+      assert.equal(atual.body.orcamentosPeriodo.some((item) => item.id_orcamento === id), false);
+      await ctx.db.query("UPDATE orcamento SET status = 'Em negociação', data_criacao = now() - interval '8 days', data_finalizacao = NULL, data_validade = now() + interval '2 days' WHERE id_orcamento = $1", [id]);
+      const atencao = await ctx.req(`/api/dashboard?mes=${mes}`, { cookie: s.atendente });
+      assert.equal(atencao.body.precisamAtencao.find((item) => item.id_orcamento === id)?.motivo, 'validade');
+    } finally {
+      await ctx.req(`/api/orcamentos/${id}`, { method: 'DELETE', cookie: s.admin });
+      await ctx.req(`/api/orcamentos/${idAnterior}`, { method: 'DELETE', cookie: s.admin });
+    }
   });
 
   it('dashboard valida o parâmetro mes', async () => {

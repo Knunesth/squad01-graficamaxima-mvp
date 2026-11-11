@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Eye, Pencil, Search } from "lucide-react";
 import { mensagemErro } from "@/shared/services/api.js";
 import { Button, Feedback, Table } from "@/shared/components/ui";
@@ -16,8 +16,10 @@ const FILTROS = [["", "Todos"], ...STATUS_OPCOES.map((status) => [status, status
 
 export default function Orcamentos() {
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusInicial = STATUS_OPCOES.includes(searchParams.get("status")) ? searchParams.get("status") : "";
   const [texto, setTexto] = useState("");
-  const [query, setQuery] = useState({ page: 1, busca: "", status: "" });
+  const [query, setQuery] = useState({ page: 1, busca: "" });
 
   // A busca é aplicada sozinha, pouco depois de a pessoa parar de digitar.
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function Orcamentos() {
     return () => clearTimeout(timer);
   }, [texto]);
 
-  const { data: result, isLoading, isFetching, error } = useOrcamentos(query);
+  const { data: result, isLoading, isFetching, error } = useOrcamentos({ ...query, status: statusInicial });
   const mudarStatus = useAlternarStatusOrcamento();
 
   function alterar(item, status) {
@@ -69,8 +71,11 @@ export default function Orcamentos() {
               key={rotulo}
               type="button"
               className="chip"
-              aria-pressed={query.status === valor}
-              onClick={() => setQuery((atual) => ({ ...atual, page: 1, status: valor }))}
+              aria-pressed={statusInicial === valor}
+              onClick={() => {
+                setQuery((atual) => ({ ...atual, page: 1 }));
+                setSearchParams(valor ? { status: valor } : {});
+              }}
             >
               {rotulo}
             </button>
@@ -84,7 +89,7 @@ export default function Orcamentos() {
           loading={isLoading}
           empty={!isLoading && !result?.itens.length}
           emptyMessage={
-            query.busca || query.status
+            query.busca || statusInicial
               ? "Nenhum orçamento corresponde aos filtros."
               : "Nenhum orçamento ainda. Use o botão Novo orçamento para criar o primeiro."
           }
