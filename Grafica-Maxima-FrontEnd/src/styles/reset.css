@@ -1,4 +1,3 @@
-/* src/styles/reset.css - Scoped to .gm-v2 for new pages */
 .gm-v2 *, .gm-v2 *::before, .gm-v2 *::after {
   box-sizing: border-box;
 }
