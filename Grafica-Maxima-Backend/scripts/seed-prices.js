@@ -1,6 +1,8 @@
 require('dotenv').config();
+const { assertSeedAllowed } = require('./guard-seed');
 const { Pool } = require('pg');
 
+assertSeedAllowed();
 if (!process.env.DATABASE_URL) throw new Error('Defina DATABASE_URL para cadastrar preços.');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const prices = [['banner', 48], ['adesivo', 36], ['lona', 42], ['papel', 22]];

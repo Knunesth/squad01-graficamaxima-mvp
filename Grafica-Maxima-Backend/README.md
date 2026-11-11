@@ -33,6 +33,8 @@ Para PostgreSQL instalado localmente, crie o banco e usuário conforme `DATABASE
 - `npm run migrate`: aplica migrations ainda pendentes; pode ser repetido.
 - `npm run seed`: carrega dados demonstrativos na base vazia.
 
+Os scripts `seed.js` e `scripts/seed-prices.js` recusam execução quando `NODE_ENV=production`. A exceção exige a variável explícita `ALLOW_SEED_IN_PRODUCTION=true`; use-a apenas em uma operação deliberada e controlada.
+
 O frontend continua em `../Grafica-Maxima-FrontEnd`, com build e lint próprios. O agendamento backend usa `REPORT_WEEKLY_CRON`, `REPORT_MONTHLY_CRON` e `REPORT_TIMEZONE`; os padrões são segunda às 8h, dia 1 às 8h e `America/Sao_Paulo`. A geração agendada consulta sempre a semana ou o mês anterior.
 
 ## Relatórios (administradores)

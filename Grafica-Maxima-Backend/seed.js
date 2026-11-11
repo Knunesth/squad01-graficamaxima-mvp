@@ -1,7 +1,9 @@
 require('dotenv').config();
+const { assertSeedAllowed } = require('./scripts/guard-seed');
 const { Pool } = require('pg');
 const { hashPassword } = require('./src/services/password');
 
+assertSeedAllowed();
 if (!process.env.DATABASE_URL) throw new Error('Defina DATABASE_URL para executar o seed.');
 if (!process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
   throw new Error('Defina ADMIN_PASSWORD e ATTENDANT_PASSWORD no ambiente antes do seed.');

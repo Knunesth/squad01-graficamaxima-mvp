@@ -1,10 +1,12 @@
 require('dotenv').config();
 const assert = require('node:assert/strict');
 const { randomBytes } = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 const { Pool } = require('pg');
 const { todayAtTimezone } = require('../src/services/reporting/period');
 const { sendReport } = require('../src/services/whatsapp/deliveryService');
 const { getCatchupTargets, runReportCatchup } = require('../src/services/reporting/reportScheduler');
+const { assertSeedAllowed } = require('./guard-seed');
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
   throw new Error('Defina DATABASE_URL, JWT_SECRET e senhas de admin e atendente antes do E2E.');
@@ -65,6 +67,18 @@ async function cleanup() {
 
 async function run() {
   try {
+    assert.throws(() => assertSeedAllowed({ NODE_ENV: 'production' }), /Seed bloqueado em produção/);
+    assert.doesNotThrow(() => assertSeedAllowed({ NODE_ENV: 'production', ALLOW_SEED_IN_PRODUCTION: 'true' }));
+    for (const script of ['seed.js', 'scripts/seed-prices.js']) {
+      const result = spawnSync(process.execPath, [script], {
+        encoding: 'utf8',
+        env: { ...process.env, NODE_ENV: 'production', ALLOW_SEED_IN_PRODUCTION: 'false' },
+      });
+      assert.equal(result.status, 1, `${script} deve recusar NODE_ENV=production`);
+      assert.match(`${result.stdout}${result.stderr}`, /Seed bloqueado em produção/);
+    }
+    console.log('Seeds de demonstração recusam produção sem exceção explícita.');
+
     const front = await fetch(frontUrl);
     assert.equal(front.status, 200);
     console.log('Frontend: 200');
