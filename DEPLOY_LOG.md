@@ -21,3 +21,11 @@
 - Validação final do código preparado: build/lint frontend passaram, build de sintaxe backend passou em 48 arquivos; migrations rodaram duas vezes no banco local já aplicado e em um banco temporário limpo; bootstrap idempotente e E2E passaram.
 - Ajuste de isolamento de arquivos: `.railwayignore` exclui SQL de dump/backup e preserva `database/migrations/*.sql`, necessários ao comando de release.
 - Sem acesso REST anon do Supabase, healthcheck público ou fluxo browser em produção: não há projeto/URL de produção autenticado para esses testes.
+
+## 2026-11-11 01:25 -03:00 — Validação final e encerramento
+
+- API frontend: produção usa sempre URL relativa; `VITE_API_URL` só se aplica em desenvolvimento. Build verificado sem URL `localhost:3301` e sem prefixos de token conhecidos.
+- Frontend: lint/build passaram. Backend: sintaxe verificada em 48 arquivos. E2E final passou, incluindo login/roles, orçamento/PDF, dashboard, relatórios, catch-up, idempotência e limites de destinatários.
+- Migrations: 7 aplicadas em banco temporário limpo e segunda execução sem alterações; RLS ligado em 19 tabelas da aplicação, zero policies; bootstrap admin criado uma vez e repetido sem duplicar.
+- Commits desta missão: `44fc167`, `1905d1d`, `f18971a`, `cccdc01`, `9e646df`, `d360ab3`; o ajuste same-origin desta seção será commitado separadamente.
+- Nenhuma CLI/provedor autenticado; sem uploads, recursos remotos, migrations de produção, admin de produção ou dados fake em produção. PDFs preexistentes continuam não rastreados.
