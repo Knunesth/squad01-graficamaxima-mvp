@@ -9,6 +9,7 @@ import {
   Users,
   Settings,
   LogOut,
+  ChartColumn,
 } from "lucide-react";
 import { SessionContext } from "@/app/SessionContext.js";
 import api, { mensagemErro } from "@/shared/services/api.js";
@@ -62,6 +63,17 @@ export function Sidebar() {
             {label}
           </NavLink>
         ))}
+        {usuario.tipo === "admin" && (
+          <NavLink
+            to="/relatorios"
+            className={({ isActive }) =>
+              `button ${isActive ? "button-primary" : "button-subtle"}`
+            }
+          >
+            <ChartColumn size={18} strokeWidth={1.8} aria-hidden="true" />
+            Relatórios
+          </NavLink>
+        )}
       </nav>
 
       <div className="sidebar-session">

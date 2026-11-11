@@ -12,6 +12,7 @@ import StatusOrcamento from "@/features/budgets/pages/BudgetStatusPage.jsx";
 import Usuarios from "@/features/users/pages/UsersPage.jsx";
 import Acesso from "@/features/auth/pages/AccessPage.jsx";
 import Clientes from "@/features/customers/pages/CustomersPage.jsx";
+import ReportsPage from "@/features/reports/pages/ReportsPage.jsx";
 
 export function AppRoutes({ usuario }) {
   return (
@@ -51,6 +52,10 @@ export function AppRoutes({ usuario }) {
             <Route path="/status-orcamento/:id" element={<StatusOrcamento />} />
             <Route path="/papel" element={<Papeis />} />
             <Route path="/configuracao" element={<Configuracao />} />
+            <Route
+              path="/relatorios"
+              element={usuario.tipo === "admin" ? <ReportsPage /> : <Navigate to="/" replace />}
+            />
             <Route
               path="/usuarios"
               element={
