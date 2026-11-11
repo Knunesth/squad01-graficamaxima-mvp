@@ -115,6 +115,12 @@
   font-weight: 600;
 }
 
+.report-metric-description {
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .report-delta {
   display: inline-flex;
   align-items: center;

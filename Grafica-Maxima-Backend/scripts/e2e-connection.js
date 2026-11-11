@@ -10,6 +10,7 @@ const { getCatchupTargets, runReportCatchup } = require('../src/services/reporti
 const { assertSeedAllowed } = require('./guard-seed');
 const { createLoginRateLimiter } = require('../src/middlewares/loginRateLimiter');
 const { parseTrustProxy } = require('../src/config/trustProxy');
+const { WhatsAppProvider } = require('../src/services/whatsapp/WhatsAppProvider');
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
   throw new Error('Defina DATABASE_URL, JWT_SECRET e senhas de admin e atendente antes do E2E.');
@@ -88,10 +89,42 @@ async function verifyLoginRateLimiter() {
   }
 }
 
+async function verifyWhatsAppProvider() {
+  const mockProvider = new WhatsAppProvider({ WHATSAPP_MODE: 'mock' });
+  const originalInfo = console.info;
+  let mockLog = '';
+  console.info = (message) => { mockLog = message; };
+  try {
+    await mockProvider.sendReport('+5561999999999', {
+      resumo: 'RESUMO_PRIVADO_E2E',
+      dados: { metrics: {} },
+    }, { deliveryId: 7654321 });
+  } finally {
+    console.info = originalInfo;
+  }
+  assert.match(mockLog, /envio 7654321: enviado/);
+  assert.match(mockLog, /\+55 61 \*\*\*\*\*-9999/);
+  assert.equal(mockLog.includes('RESUMO_PRIVADO_E2E'), false);
+
+  const cloudEnv = {
+    WHATSAPP_MODE: 'cloud',
+    WHATSAPP_ACCESS_TOKEN: 'test-token-never-log',
+    WHATSAPP_PHONE_NUMBER_ID: '123',
+    WHATSAPP_TEMPLATE_NAME: 'e2e_template',
+  };
+  const report = { tipo: 'weekly', data_inicio: '2026-11-02', data_fim: '2026-11-08', dados: { metrics: { finalizedSales: 2, revenue: 100, conversionRate: 50 } } };
+  const badRequest = new WhatsAppProvider(cloudEnv, async () => new Response('{"error":{"message":"invalid template"}}', { status: 400 }));
+  await assert.rejects(badRequest.sendReport('+5561999999999', report), (error) => error.status === 400 && error.retryable === false);
+  const throttled = new WhatsAppProvider(cloudEnv, async () => new Response('{"error":{"message":"rate limited"}}', { status: 429, headers: { 'Retry-After': '2' } }));
+  await assert.rejects(throttled.sendReport('+5561999999999', report), (error) => error.status === 429 && error.retryable === true && error.retryAfterMs === 2000);
+  console.log('WhatsApp mock sem resumo; HTTP 400 não repetível e Retry-After 429: OK.');
+}
+
 async function run() {
   try {
     await verifyLoginRateLimiter();
     console.log('Rate limit configurável e trust proxy: OK.');
+    await verifyWhatsAppProvider();
     assert.throws(() => assertSeedAllowed({ NODE_ENV: 'production' }), /Seed bloqueado em produção/);
     assert.doesNotThrow(() => assertSeedAllowed({ NODE_ENV: 'production', ALLOW_SEED_IN_PRODUCTION: 'true' }));
     for (const script of ['seed.js', 'scripts/seed-prices.js']) {
@@ -259,13 +292,64 @@ async function run() {
     assert.equal(recovered.body.results[0].status, 'sent');
     console.log('Reserva pendente antiga virou desconhecida; reenvio manual confirmado: OK.');
 
+    const waits = [];
+    let retryCalls = 0;
+    const originalSetTimeout = global.setTimeout;
+    global.setTimeout = (callback, milliseconds, ...args) => {
+      if ([1000, 4000, 15000].includes(milliseconds)) waits.push(milliseconds);
+      return originalSetTimeout(callback, 0, ...args);
+    };
+    let retryResult;
+    try {
+      retryResult = await sendReport(report.body, {
+        confirmResend: true,
+        providerFactory: () => ({
+          async sendReport() {
+            retryCalls += 1;
+            const error = new Error('temporary test failure');
+            error.retryable = true;
+            throw error;
+          },
+        }),
+      });
+    } finally {
+      global.setTimeout = originalSetTimeout;
+    }
+    assert.equal(retryCalls, 4);
+    assert.deepEqual(waits, [1000, 4000, 15000]);
+    assert.equal(retryResult.results[0].status, 'failed');
+    assert.equal(retryResult.results[0].tentativas, 4);
+    await request(`/api/reports/${report.body.id_relatorio}/send`, { method: 'POST', body: JSON.stringify({}) }, 409);
+    const retriedManually = await request(`/api/reports/${report.body.id_relatorio}/send`, {
+      method: 'POST', body: JSON.stringify({ confirmResend: true }),
+    });
+    assert.equal(retriedManually.body.results[0].status, 'sent');
+    console.log('Backoff após falha transitória: 1s, 4s, 15s; reenvio exige confirmação: OK.');
+
+    let validationCalls = 0;
+    const validationFailure = await sendReport(monthlyReport.body, {
+      providerFactory: () => ({
+        async sendReport() {
+          validationCalls += 1;
+          const error = new Error('invalid request');
+          error.retryable = false;
+          throw error;
+        },
+      }),
+    });
+    assert.equal(validationCalls, 1);
+    assert.equal(validationFailure.results[0].tentativas, 1);
+    deliveryIds.push(validationFailure.results[0].id_envio);
     const delivery = await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
       method: 'POST', body: JSON.stringify({}),
+    }, 409);
+    assert.equal(delivery.body.confirmationRequired, true);
+    const confirmedDelivery = await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
+      method: 'POST', body: JSON.stringify({ confirmResend: true }),
     });
-    assert.equal(delivery.body.mode, 'mock');
-    assert.equal(delivery.body.results[0].status, 'sent');
-    assert.equal(delivery.body.results[0].tentativas, 1);
-    deliveryIds.push(delivery.body.results[0].id_envio);
+    assert.equal(confirmedDelivery.body.mode, 'mock');
+    assert.equal(confirmedDelivery.body.results[0].status, 'sent');
+    assert.equal(confirmedDelivery.body.results[0].tentativas, 1);
     await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
       method: 'POST', body: JSON.stringify({}),
     }, 409);

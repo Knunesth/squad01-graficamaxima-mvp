@@ -48,12 +48,13 @@ function Delta({ change, percentagePoints = false }) {
   );
 }
 
-function MetricCard({ label, value, change, secondary, percentagePoints }) {
+function MetricCard({ label, value, change, secondary, description, percentagePoints }) {
   return (
     <article className="report-metric panel">
       <p className="report-metric-label">{label}</p>
       <strong className="report-metric-value">{value}</strong>
       {secondary ? <span className="report-metric-secondary">{secondary}</span> : null}
+      {description ? <small className="report-metric-description">{description}</small> : null}
       <Delta change={change} percentagePoints={percentagePoints} />
     </article>
   );
@@ -350,6 +351,7 @@ export default function ReportsPage() {
               label="Conversão"
               value={`${number.format(report.dados.metrics.conversionRate)}%`}
               change={report.dados.changes.conversionRate}
+              description="Sobre orçamentos criados no período"
               percentagePoints
             />
             <MetricCard
@@ -367,6 +369,7 @@ export default function ReportsPage() {
               value={`${number.format(report.dados.metrics.approvedProduction.count)} orçamento(s)`}
               secondary={brl.format(report.dados.metrics.approvedProduction.value)}
               change={report.dados.changes.approvedProduction.count}
+              description="Entre orçamentos criados no período"
             />
             <MetricCard
               label="Ticket médio finalizado"

@@ -4,6 +4,8 @@ const { WhatsAppProvider, isCloudConfigured } = require("./WhatsAppProvider");
 const e164 = /^\+[1-9]\d{7,14}$/;
 const STALE_PENDING_AFTER = "5 minutes";
 const RECIPIENT_LIMIT_LOCK = 781513206;
+const RETRY_DELAYS_MS = [1000, 4000, 15000];
+const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1;
 
 function configuredRecipientLimits(env = process.env) {
   const readLimit = (key, fallback) => {
@@ -149,7 +151,7 @@ async function reserveDelivery(report, recipient, { confirmResend, providerFacto
   let result;
   let lastError;
 
-  while (attempts < 2) {
+  while (attempts < MAX_ATTEMPTS) {
     attempts += 1;
     try {
       result = await provider.sendReport(recipient.telefone, report, { deliveryId: reservation.id_envio });
@@ -157,8 +159,8 @@ async function reserveDelivery(report, recipient, { confirmResend, providerFacto
       break;
     } catch (error) {
       lastError = error;
-      if (!error.retryable || attempts >= 4) break;
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!error.retryable || attempts >= MAX_ATTEMPTS) break;
+      await new Promise((resolve) => setTimeout(resolve, error.retryAfterMs ?? RETRY_DELAYS_MS[attempts - 1]));
     }
   }
 

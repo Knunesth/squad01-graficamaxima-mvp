@@ -10,17 +10,36 @@ function periodLabel(report) {
   return `relatório ${period}`;
 }
 
+function maskedPhone(value) {
+  const digits = String(value).replace(/\D/g, "");
+  const suffix = digits.slice(-4);
+  if (digits.startsWith("55") && digits.length >= 8) {
+    return `+55 ${digits.slice(2, 4)} *****-${suffix}`;
+  }
+  const prefixLength = Math.min(3, Math.max(1, digits.length - 4));
+  return `+${digits.slice(0, prefixLength)} *****-${suffix}`;
+}
+
+function retryAfterMilliseconds(response) {
+  const header = response.headers?.get("retry-after");
+  if (!header) return undefined;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds * 1000);
+  const date = Date.parse(header);
+  return Number.isNaN(date) ? undefined : Math.max(0, date - Date.now());
+}
+
 class WhatsAppProvider {
   constructor(env = process.env, fetchImpl = globalThis.fetch) {
     this.env = env;
     this.fetch = fetchImpl;
   }
 
-  async sendReport(to, report) {
+  async sendReport(to, report, { deliveryId } = {}) {
     const mode = isCloudConfigured(this.env) ? "cloud" : "mock";
     const metrics = report.dados.metrics;
     if (mode === "mock") {
-      console.info(`[WhatsApp mock] ${to}: ${report.resumo}`);
+      console.info(`[WhatsApp mock] envio ${deliveryId ?? "sem-id"}: enviado para ${maskedPhone(to)}`);
       return { mode, messageId: `mock-${Date.now()}` };
     }
     if (!this.env.WHATSAPP_TEMPLATE_NAME) {
@@ -72,10 +91,11 @@ class WhatsAppProvider {
       const error = new Error(payload.error?.message || `WhatsApp Cloud API respondeu HTTP ${response.status}.`);
       error.status = response.status;
       error.retryable = response.status === 429 || response.status >= 500;
+      if (response.status === 429) error.retryAfterMs = retryAfterMilliseconds(response);
       throw error;
     }
     return { mode, messageId: payload.messages?.[0]?.id || null };
   }
 }
 
-module.exports = { WhatsAppProvider, isCloudConfigured };
+module.exports = { WhatsAppProvider, isCloudConfigured, maskedPhone, retryAfterMilliseconds };
