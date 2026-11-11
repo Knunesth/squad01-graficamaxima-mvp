@@ -21,11 +21,14 @@ async function autenticar(req, res, next) {
   }
   try {
     const { rows: users } = await db.query(
-      "SELECT id_usuario, nome, login, tipo FROM usuario WHERE id_usuario = $1 AND ativo = true",
+      "SELECT id_usuario, nome, login, tipo, token_version FROM usuario WHERE id_usuario = $1 AND ativo = true",
       [payload.sub],
     );
     if (!users.length)
       return res.status(401).json({ error: "Sessão inválida." });
+    if ((payload.ver ?? 0) !== users[0].token_version)
+      return res.status(401).json({ error: "Sessão expirada. Entre novamente." });
+    delete users[0].token_version;
     req.usuario = users[0];
     next();
   } catch (error) {

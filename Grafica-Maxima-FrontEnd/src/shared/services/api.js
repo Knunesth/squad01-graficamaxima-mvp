@@ -13,6 +13,7 @@ api.interceptors.response.use(
       "/api/auth/login",
       "/api/auth/register",
       "/api/auth/me",
+      "/api/auth/password",
     ].includes(error.config?.url);
     if (error.response?.status === 401 && !publicAuthRequest)
       window.dispatchEvent(new Event("session-expired"));

@@ -7,12 +7,14 @@ import {
   useTiposCalculo,
   useSalvarTipoCalculo,
 } from "@/features/settings/hooks/useSettings.js";
+import { useTrocarSenha } from "@/features/users/hooks/useUsers.js";
 
 export default function Configuracao() {
   const { usuario } = useContext(SessionContext);
 
   const { data: precos, isLoading, error: queryError } = useTiposCalculo();
   const mutation = useSalvarTipoCalculo();
+  const passwordMutation = useTrocarSenha();
 
   const [message, setMessage] = useState("");
 
@@ -80,6 +82,23 @@ export default function Configuracao() {
           ))}
         </section>
       ) : null}
+      <section className="panel" aria-labelledby="password-heading">
+        <h2 id="password-heading">Alterar minha senha</h2>
+        <form onSubmit={(event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          passwordMutation.mutate({ senha_atual: form.get("senha_atual"), nova_senha: form.get("nova_senha") }, {
+            onSuccess: () => window.dispatchEvent(new Event("session-expired")),
+          });
+        }}>
+          <label htmlFor="senha-atual">Senha atual</label>
+          <input id="senha-atual" name="senha_atual" type="password" autoComplete="current-password" required />
+          <label htmlFor="senha-nova">Nova senha (mínimo 12 caracteres)</label>
+          <input id="senha-nova" name="nova_senha" type="password" minLength={12} maxLength={256} autoComplete="new-password" required />
+          <Feedback error={passwordMutation.error ? mensagemErro(passwordMutation.error) : ""} />
+          <Button type="submit" disabled={passwordMutation.isPending}>{passwordMutation.isPending ? "Salvando..." : "Alterar senha"}</Button>
+        </form>
+      </section>
     </>
   );
 }

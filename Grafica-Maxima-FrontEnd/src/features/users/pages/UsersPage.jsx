@@ -6,6 +6,7 @@ import { PageHeader } from "@/shared/components/layout";
 import {
   useUsuarios,
   useSalvarUsuario,
+  useRedefinirSenha,
 } from "@/features/users/hooks/useUsers.js";
 
 export default function Usuarios() {
@@ -13,11 +14,14 @@ export default function Usuarios() {
 
   const { data: users, isLoading, error: queryError } = useUsuarios();
   const mutation = useSalvarUsuario();
+  const resetMutation = useRedefinirSenha();
 
   const error = queryError
     ? mensagemErro(queryError)
     : mutation.error
       ? mensagemErro(mutation.error)
+      : resetMutation.error
+        ? mensagemErro(resetMutation.error)
       : "";
 
   async function salvar(u, tipo, ativo) {
@@ -79,6 +83,22 @@ export default function Usuarios() {
                     >
                       {u.ativo ? "Desativar" : "Liberar acesso"}
                     </Button>
+                    {u.id_usuario !== usuario.id_usuario && (
+                      <details>
+                        <summary>Redefinir senha</summary>
+                        <form onSubmit={(event) => {
+                          event.preventDefault();
+                          const form = new FormData(event.currentTarget);
+                          const nova_senha = form.get("nova_senha");
+                          event.currentTarget.reset();
+                          resetMutation.mutate({ id_usuario: u.id_usuario, nova_senha });
+                        }}>
+                          <label htmlFor={`nova-senha-${u.id_usuario}`}>Nova senha (mínimo 12 caracteres)</label>
+                          <input id={`nova-senha-${u.id_usuario}`} name="nova_senha" type="password" minLength={12} maxLength={256} autoComplete="new-password" required />
+                          <Button type="submit" disabled={resetMutation.isPending}>Confirmar redefinição</Button>
+                        </form>
+                      </details>
+                    )}
                   </td>
                 </tr>
               ))}

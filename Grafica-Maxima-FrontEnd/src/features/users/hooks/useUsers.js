@@ -25,3 +25,21 @@ export function useSalvarUsuario() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["usuarios"] }),
   });
 }
+
+export function useRedefinirSenha() {
+  return useMutation({
+    mutationFn: async ({ id_usuario, nova_senha }) => {
+      const { data } = await api.patch(`/api/auth/usuarios/${id_usuario}/senha`, { nova_senha });
+      return data;
+    },
+  });
+}
+
+export function useTrocarSenha() {
+  return useMutation({
+    mutationFn: async ({ senha_atual, nova_senha }) => {
+      const { data } = await api.post("/api/auth/password", { senha_atual, nova_senha });
+      return data;
+    },
+  });
+}
