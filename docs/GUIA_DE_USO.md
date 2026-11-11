@@ -22,7 +22,7 @@ Cliente é opcional. Cadastre somente os dados necessários para identificar e a
 
 ### Acompanhar e atualizar orçamentos
 
-Em **Orçamentos**, use a busca por ID, nome ou e-mail e filtre por status. Abra o número para ver os detalhes. O controle de aprovação alterna entre **Aprovado** e **Não aprovado**; o status **Inativo** permanece visível na lista. A tela de detalhe oferece edição, PDF e, conforme o estado, exclusão. A conclusão de venda é registrada como **Finalizado**; somente esse status entra na receita dos relatórios.
+Em **Orçamentos**, use a busca por ID, nome ou e-mail e filtre por status. Abra o número para ver os detalhes. O controle de aprovação alterna entre **Aprovado** e **Não aprovado**; o status **Inativo** permanece visível na lista. A tela de detalhe oferece edição, PDF e, conforme o estado, exclusão. Os relatórios contam como venda somente o status **Finalizado**, mas a interface atual não apresenta uma ação para marcar um orçamento como Finalizado. Esse passo ainda precisa de uma tela/ação antes de o fluxo operacional de fechamento ficar completo.
 
 ### Cadastrar clientes
 

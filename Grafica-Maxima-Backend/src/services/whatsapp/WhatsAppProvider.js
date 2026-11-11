@@ -1,5 +1,6 @@
 const formatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const logger = require("../../utils/logger");
 
 function isCloudConfigured(env) {
   return env.WHATSAPP_MODE === "cloud" && env.WHATSAPP_ACCESS_TOKEN && env.WHATSAPP_PHONE_NUMBER_ID;
@@ -39,7 +40,7 @@ class WhatsAppProvider {
     const mode = isCloudConfigured(this.env) ? "cloud" : "mock";
     const metrics = report.dados.metrics;
     if (mode === "mock") {
-      console.info(`[WhatsApp mock] envio ${deliveryId ?? "sem-id"}: enviado para ${maskedPhone(to)}`);
+      logger.info('whatsapp_mock_send', { deliveryId: deliveryId ?? 'sem-id', result: 'sent', maskedPhone: maskedPhone(to) });
       return { mode, messageId: `mock-${Date.now()}` };
     }
     if (!this.env.WHATSAPP_TEMPLATE_NAME) {

@@ -4,9 +4,10 @@ if (!process.env.JWT_SECRET) {
 }
 const { createApp } = require('./src/app');
 const { startReportScheduler } = require('./src/services/reporting/reportScheduler');
+const logger = require('./src/utils/logger');
 
 const port = Number(process.env.PORT) || 3301;
 startReportScheduler();
 createApp().listen(port, () => {
-  console.log(`Servidor Gráfica Máxima rodando na porta ${port}`);
+  logger.info('server_started', { port });
 });

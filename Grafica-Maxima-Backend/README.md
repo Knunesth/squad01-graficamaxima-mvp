@@ -55,3 +55,7 @@ O destinatário padrão é `WHATSAPP_DEFAULT_RECIPIENT`; outros números podem s
 # Importação do catálogo
 
 Use `npm run import-catalog -- --type <tipo> --file <arquivo.csv> [--dry-run]`. Tipos aceitos: `materiais`, `papeis`, `impressoes`, `acabamentos`, `cortes` e `precos-m2`. Modelos com os cabeçalhos esperados estão em `docs/modelos-catalogo/`. O importador valida cada linha, informa números de linha e usa as chaves naturais configuradas por tabela para atualizar registros em reimportações. Linhas com `exemplo=EXEMPLO` são ignoradas. Rode primeiro com `--dry-run`; o relatório de validação não grava dados.
+
+## E2E da Fase 7
+
+O ensaio cria uma schema aleatória, executa as migrations funcionais nela, testa o catálogo, troca/redefine senhas, invalidação de sessão, catch-up mock e healthcheck, e remove a schema no fim. Defina `PHASE7_TEST_DATABASE_URL` para um PostgreSQL local com permissão de criar schema e rode `npm run e2e:phase7`. O teste aceita somente `localhost`, `127.0.0.1` ou `::1`; não usa `DATABASE_URL` como fallback e recusa bancos remotos. A migration `007` não é aplicada pelo ensaio porque ela opera explicitamente nas tabelas do schema `public`.

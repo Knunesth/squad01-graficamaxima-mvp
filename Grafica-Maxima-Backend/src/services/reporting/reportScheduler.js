@@ -3,8 +3,11 @@ const db = require("../../config/db");
 const { getReport } = require("./reportService");
 const { addDays, parseDate, todayAtTimezone } = require("./period");
 const { sendReport } = require("../whatsapp/deliveryService");
+const logger = require("../../utils/logger");
 
 const REPORT_JOB_LOCK = 781513205;
+let schedulerActive = false;
+let activeTimezone = null;
 
 function scheduledDate(timezone) {
   const today = new Date(`${todayAtTimezone(timezone)}T00:00:00.000Z`);
@@ -124,21 +127,30 @@ function startReportScheduler(env = process.env) {
     return cron.schedule(expression, async () => {
       try {
         const result = await runScheduledPeriod(type, scheduledDate(timezone));
-        if (result.locked) console.info(`Relatório ${type} processado: ${result.value.reportId}`);
-        else console.info(`Relatório ${type} ignorado: outra instância está processando os agendamentos.`);
+        logger.info('scheduled_report_checked', { job: type, result: result.locked ? 'processed' : 'lock_unavailable' });
       } catch (error) {
-        console.error(`Falha ao processar relatório agendado ${type}:`, error.message);
+        logger.error('scheduled_report_failed', { job: type, code: error.code, errorType: error.name });
       }
     }, { timezone });
   });
 
   void runReportCatchup({ env }).then((result) => {
-    if (!result.locked) return console.info("Catch-up ignorado: outra instância está processando os agendamentos.");
-    console.info(`Catch-up concluído: ${result.value.length} período(s) verificado(s).`);
-  }).catch((error) => console.error("Falha no catch-up de relatórios:", error.message));
+    if (!result.locked) return logger.info('report_catchup_checked', { result: 'lock_unavailable' });
+    logger.info('report_catchup_checked', { result: 'completed', count: result.value.length });
+  }).catch((error) => logger.error('report_catchup_failed', { code: error.code, errorType: error.name }));
 
-  console.info(`Agendamentos de relatórios ativos (${timezone}).`);
-  return () => jobs.forEach((job) => job.stop());
+  schedulerActive = true;
+  activeTimezone = timezone;
+  logger.info('report_scheduler_started', { result: 'active' });
+  return () => {
+    jobs.forEach((job) => job.stop());
+    schedulerActive = false;
+    activeTimezone = null;
+  };
 }
 
-module.exports = { startReportScheduler, scheduledDate, getCatchupTargets, runReportCatchup, runScheduledPeriod };
+function getSchedulerStatus() {
+  return { active: schedulerActive, timezone: activeTimezone };
+}
+
+module.exports = { startReportScheduler, getSchedulerStatus, scheduledDate, getCatchupTargets, runReportCatchup, runScheduledPeriod };

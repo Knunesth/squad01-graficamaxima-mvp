@@ -21,3 +21,8 @@
 - O build Vite passa, mas emite aviso porque o bundle principal ultrapassa 500 kB após minificação. O bundle principal gerado nesta validação ficou em aproximadamente 503 kB; revisar divisão de código antes de tráfego elevado.
 - A integração com a Meta não foi exercitada; o E2E usa o provedor mock, conforme solicitado.
 - O rate limiter guarda estado em memória. Em produção, manter uma instância do backend ou integrar um store compartilhado antes de escalar horizontalmente.
+- Nenhum monitor externo foi configurado. Depois de publicar a API, cadastrar `GET /health` no serviço de uptime e alertas descrito em [DEPLOY.md](DEPLOY.md).
+- O aviso em [docs/PRIVACIDADE_RASCUNHO.md](docs/PRIVACIDADE_RASCUNHO.md) é apenas rascunho e precisa de revisão profissional e de preenchimento dos contatos, fornecedores e prazos de retenção antes de uso real.
+- A aplicação não automatiza retenção ou expurgo de dados e backups. A administração precisa aprovar e documentar os prazos aplicáveis antes da operação real.
+- A cópia de segurança foi testada com cliente PostgreSQL 17 em schema temporário. O `pg_dump` instalado no Windows local é 16; o script exige cliente igual ou mais novo que o servidor e o ambiente operacional deve fornecer a versão compatível.
+- A interface de orçamento não oferece ação para alterar um orçamento para `Finalizado`, embora os relatórios reconheçam esse status como venda. Adicionar e testar o fluxo operacional de finalização antes de depender da receita dos relatórios.

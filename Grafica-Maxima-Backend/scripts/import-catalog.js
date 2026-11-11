@@ -134,8 +134,10 @@ async function main() {
       else updated += 1;
     } catch (error) { failures.push({ line, errors: [error.code ? `erro de banco (${error.code})` : 'erro ao gravar registro'] }); }
   }
-  console.log(JSON.stringify({ tipo: options.type, modo: options.dryRun ? 'dry-run' : 'importacao', linhas: rows.length, inseridos: inserted, atualizados: updated, exemplosIgnorados: skipped, erros: failures }, null, 2));
+  const summary = { tipo: options.type, modo: options.dryRun ? 'dry-run' : 'importacao', linhas: rows.length, inseridos: inserted, atualizados: updated, exemplosIgnorados: skipped, erros: failures };
+  console.log(JSON.stringify(summary, null, 2));
   if (failures.length) process.exitCode = 1;
+  return summary;
 }
 
 if (require.main === module) {

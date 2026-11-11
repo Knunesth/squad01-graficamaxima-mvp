@@ -27,6 +27,10 @@ Configure os valores somente no cofre de variáveis de cada serviço. Nunca colo
 
 `railway.json` executa `npm run migrate` como pre-deploy, inicia com `npm start` e verifica `/health`. O código usa `PORT`; a escala deve permanecer em uma única instância, pois o rate limiter ainda usa memória. O agendador coordena seus jobs com advisory lock no PostgreSQL.
 
+O endpoint público `GET /health` verifica uma consulta ao PostgreSQL e se os jobs do agendador estão registrados. Retorna HTTP 200 com `status: ok` somente quando ambos estão ativos; em falha retorna HTTP 503 e `checks` indica `database` e `scheduler`. Configure um monitor externo (por exemplo, UptimeRobot, Better Stack ou serviço equivalente) para consultar a URL completa `/health` a cada 5 minutos, sem token, e alertar quando a resposta não for 200 ou não for JSON saudável. O endpoint não inclui conexão, credenciais, métricas de clientes nem dados de relatórios. Um healthcheck confirma disponibilidade, não substitui alarmes de erro e acompanhamento de backup.
+
+Os logs do backend são linhas JSON com timestamp, evento, request ID, método, status, duração, código de erro e resultado do job. Não registram IP, caminho, cabeçalhos, corpo, nomes, e-mails, documentos ou telefones completos. O modo mock do WhatsApp inclui somente ID do envio, resultado e telefone mascarado. Encaminhe logs para o provedor da API com retenção restrita; não habilite logs de payload HTTP em produção.
+
 **Netlify — frontend:**
 
 - Build: `npm run build`; publicação: `dist/` (`netlify.toml`).
@@ -46,7 +50,7 @@ Configure os valores somente no cofre de variáveis de cada serviço. Nunca colo
 Depois de disponibilizar tokens na sessão de CLI (`SUPABASE_ACCESS_TOKEN`, `RAILWAY_API_TOKEN`, `NETLIFY_AUTH_TOKEN`), confirme a identidade de cada conta antes de qualquer alteração. Para Railway, `RAILWAY_API_TOKEN` é o token de escopo de conta/workspace; `RAILWAY_TOKEN` é o token restrito a um projeto. Confira as instruções atuais em [Supabase CLI](https://supabase.com/docs/reference/cli/introduction), [Railway CLI](https://docs.railway.com/cli) e [Netlify CLI](https://docs.netlify.com/api-and-cli-guides/cli-guides/get-started-with-cli/).
 
 1. Liste as organizações e projetos Supabase. Reuse o projeto da aplicação se existir; senão crie somente um na organização existente, em `sa-east-1`. Gere senha Postgres aleatória de pelo menos 32 caracteres seguros para URL, configure-a via CLI/API do Supabase e mantenha-a somente no segredo Railway.
-2. Copie do painel a URL direta ou do pooler de sessão. Rode `npm run migrate` no backend apontado para produção duas vezes. O runner próprio aplica as migrations SQL versionadas `001`–`007` e registra cada arquivo em `schema_migrations`.
+2. Copie do painel a URL direta ou do pooler de sessão. Rode `npm run migrate` no backend apontado para produção duas vezes. O runner próprio aplica as migrations SQL versionadas `001`–`008` e registra cada arquivo em `schema_migrations`.
 3. Verifique no projeto Supabase: Data API desligada, exposição automática de tabelas desligada, RLS automático ligado. A migration `007` habilita RLS nas 19 tabelas da aplicação, sem policies permissivas; `schema_migrations` é interna e fica excluída. Confirme também que as tabelas futuras recebam RLS.
 4. Configure as variáveis Railway descritas acima, confira uma réplica, vincule somente o projeto Railway existente sem usar `--new`, e faça upload direto da pasta `Grafica-Maxima-Backend` com `railway up`. `railway.json` roda migrations e healthcheck. Ative o domínio Railway padrão e registre a URL em `DEPLOY_LOG.md`, sem segredos.
 5. Atualize `netlify.toml` com a regra proxy da API usando o domínio real Railway. Rode `npm ci`, `npm run lint`, `npm run build` e procure segredos no `dist/`. Vincule/crie o site Netlify e faça deploy da pasta `dist` com `netlify deploy --prod --dir=dist`. Não conecte repositório Git nem faça push.

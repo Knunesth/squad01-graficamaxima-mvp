@@ -1,3 +1,5 @@
+const logger = require('../utils/logger');
+
 module.exports = (error, req, res, next) => {
   if (res.headersSent) return next(error);
   const databaseStatuses = {
@@ -19,8 +21,11 @@ module.exports = (error, req, res, next) => {
     "22001": "Um dos campos excedeu o tamanho permitido.",
     "40001": "O registro mudou durante a operação. Tente novamente.",
   };
-  if (status >= 500)
-    console.error(`[${req.method} ${req.path}]`, error.code || error.message);
+  if (status >= 500) logger.error('request_failed', {
+    requestId: req.requestId,
+    statusCode: status,
+    code: typeof error.code === 'string' ? error.code : undefined,
+  });
   res
     .status(status)
     .json({

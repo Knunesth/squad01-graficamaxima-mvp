@@ -10,7 +10,8 @@
     "seed": "node seed.js",
     "bootstrap-admin": "node scripts/bootstrap-admin.js",
     "import-catalog": "node scripts/import-catalog.js",
-    "backup-db": "node scripts/backup-db.js"
+    "backup-db": "node scripts/backup-db.js",
+    "e2e:phase7": "node scripts/e2e-phase7.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
