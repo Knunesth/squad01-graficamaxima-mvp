@@ -82,7 +82,7 @@ Olá! Segue seu {{1}} da Gráfica Máxima, referente a {{2}}. Vendas finalizadas
 
 As variáveis são: tipo semanal/mensal, intervalo de datas, quantidade de vendas finalizadas, receita e conversão. A mensagem usa template para envio iniciado pelo negócio fora da janela de atendimento. Veja o exemplo oficial de envio de template no [Meta WhatsApp Business Platform Postman](https://www.postman.com/meta/whatsapp-business-platform/request/o65u5m5/send-message-template-text).
 
-Envios e falhas ficam registrados em `relatorio_envio`; falhas transitórias de rede, HTTP 429 e HTTP 5xx recebem uma segunda tentativa. O status `Enviado` significa que o provedor aceitou a requisição; confirmação de entrega via webhook não faz parte deste MVP.
+Envios e falhas ficam registrados em `relatorio_envio`. Falhas transitórias de rede e respostas HTTP 5xx recebem até três novas tentativas, com espera progressiva de 1, 4 e 15 segundos. Em HTTP 429, o sistema respeita o cabeçalho `Retry-After`. Erros HTTP 4xx de validação, exceto 429, não são repetidos. O status `Enviado` significa que o provedor aceitou a requisição; confirmação de entrega via webhook não faz parte deste MVP.
 
 ## Desenvolvimento e validação
 
@@ -97,4 +97,3 @@ Envios e falhas ficam registrados em `relatorio_envio`; falhas transitórias de 
 - Confirmação de entrega/resposta do WhatsApp por webhook.
 - Integração de produção com credenciais e template Meta aprovados (requer configuração da conta da gráfica).
 - Importação/migração dos antigos dados MySQL.
-- Conversão das rotas legadas não montadas.
