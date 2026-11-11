@@ -51,6 +51,8 @@ Acesse `http://localhost:5173`. O backend fica em `http://localhost:3301`. O see
 
 O guia [`EXECUCAO_LOCAL.md`](EXECUCAO_LOCAL.md) explica a alternativa com PostgreSQL instalado localmente e os scripts de validação.
 
+O estado e o procedimento de hospedagem estão em [`DEPLOY.md`](DEPLOY.md); a implantação segue bloqueada até as autenticações e verificações listadas em [`BLOCKERS.md`](BLOCKERS.md).
+
 ## Banco e migrations
 
 O schema oficial está em `Grafica-Maxima-Backend/database/migrations/`, em SQL versionado, aplicado pelo runner próprio do projeto. Cada migration fica registrada em `schema_migrations`; rodar `npm run migrate` novamente é seguro. A decisão de usar um runner pequeno, sem framework adicional, mantém o schema explícito e dispensa dependência extra.

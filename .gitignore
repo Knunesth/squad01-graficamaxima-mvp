@@ -43,3 +43,6 @@ Thumbs.db
 
 # Dados temporários do PostgreSQL local usado em validações
 tmp/phase1-pgdata/
+
+# Backups locais; podem conter dados pessoais/segredos de produção
+private-backups/
