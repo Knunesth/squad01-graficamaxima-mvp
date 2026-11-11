@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { FileDown, Pencil, Trash2 } from "lucide-react";
 import { SessionContext } from "@/app/SessionContext.js";
 import api, { mensagemErro } from "@/shared/services/api.js";
-import { Button, ConfirmModal, Feedback, Table, Spinner } from "@/shared/components/ui";
+import { Button, Feedback, Table, Spinner } from "@/shared/components/ui";
 import { PageHeader } from "@/shared/components/layout";
 import { StatusSelect } from "@/shared/components/domain";
 import { useToast } from "@/shared/hooks/useToast.js";
@@ -20,7 +20,6 @@ export default function StatusOrcamento() {
   const toast = useToast();
   const { usuario } = useContext(SessionContext);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
   const { data: quote, isLoading, error: queryError } = useOrcamento(id);
   const mudarStatus = useAlternarStatusOrcamento();
@@ -64,6 +63,7 @@ export default function StatusOrcamento() {
   }
 
   function excluir() {
+    if (!window.confirm("Excluir este orçamento e seus itens?")) return;
     deleteMutation.mutate(id, {
       onSuccess: () => {
         toast.success(`Orçamento #${id} excluído.`);
@@ -169,7 +169,7 @@ export default function StatusOrcamento() {
               <FileDown size={18} aria-hidden="true" /> {pdfBusy ? "Gerando..." : "Gerar PDF"}
             </Button>
             {usuario.tipo === "admin" && (
-              <Button variant="subtle" className="text-danger push-end" disabled={ocupado} onClick={() => setConfirmarExclusao(true)}>
+              <Button variant="subtle" className="text-danger push-end" disabled={ocupado} onClick={excluir}>
                 <Trash2 size={18} aria-hidden="true" /> {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
               </Button>
             )}
@@ -179,7 +179,6 @@ export default function StatusOrcamento() {
           )}
         </section>
       ) : null}
-      {confirmarExclusao && <ConfirmModal title="Excluir orçamento" description={`Excluir o orçamento #${id} e seus itens?`} action="Excluir orçamento" onConfirm={excluir} onClose={() => setConfirmarExclusao(false)} busy={deleteMutation.isPending} />}
     </>
   );
 }

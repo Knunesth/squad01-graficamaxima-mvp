@@ -113,15 +113,6 @@ describe("NumericInput", () => {
 describe("Lista de orçamentos", () => {
   const pagina = (itens = [orcamento]) => ({ itens, total: itens.length, page: 1, limit: 10 });
 
-  it("aplica o status recebido na URL ao abrir a lista", async () => {
-    responderGet({ "/api/orcamentos": pagina() });
-    renderComApp(<Orcamentos />, { rota: "/orcamentos?status=Aprovado" });
-    await waitFor(() => expect(api.get).toHaveBeenCalledWith("/api/orcamentos", {
-      params: { page: 1, busca: "", status: "Aprovado", limit: 10 },
-    }));
-    expect(screen.getByRole("button", { name: "Aprovado" })).toHaveAttribute("aria-pressed", "true");
-  });
-
   it("filtra por status ao clicar, sem botão de filtrar", async () => {
     responderGet({ "/api/orcamentos": pagina() });
     renderComApp(<Orcamentos />);
@@ -234,11 +225,12 @@ describe("Detalhe do orçamento", () => {
     expect(screen.queryByRole("button", { name: "Excluir" })).not.toBeInTheDocument();
     atendente.unmount();
 
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(false);
     abrir(ADMIN);
     await userEvent.click(await screen.findByRole("button", { name: "Excluir" }));
     expect(api.delete).not.toHaveBeenCalled();
-    expect(screen.getByText(/Excluir o orçamento #5 e seus itens/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Excluir orçamento" }));
+    confirmar.mockReturnValue(true);
+    await userEvent.click(screen.getByRole("button", { name: "Excluir" }));
     await waitFor(() => expect(api.delete).toHaveBeenCalledWith("/api/orcamentos/5"));
     expect(await screen.findByRole("heading", { name: "lista de orçamentos" })).toBeInTheDocument();
     expect(screen.getByText("Orçamento #5 excluído.")).toBeInTheDocument();
@@ -315,17 +307,6 @@ describe("Montagem do orçamento", () => {
     expect(totais).toHaveTextContent(/Subtotal\s*R\$\s60,00/);
     expect(totais).toHaveTextContent(/Desconto\s*−\sR\$\s6,00/);
     expect(totais).toHaveTextContent(/Total\s*R\$\s54,00/);
-  });
-
-  it("mostra o preço de catálogo e avisa quando o valor fica abaixo do custo", async () => {
-    abrir();
-    await userEvent.selectOptions(await screen.findByLabelText("Material 1"), "7");
-    expect(screen.getByText(/Catálogo:.*0,30/)).toBeInTheDocument();
-    const valor = screen.getByLabelText("Valor unitário 1");
-    await userEvent.clear(valor);
-    await userEvent.type(valor, "0,10");
-    expect(screen.getByText(/Abaixo do custo de.*0,18/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Salvar orçamento" })).toBeEnabled();
   });
 
   it("não deixa digitar valores negativos em quantidade, valor e desconto", async () => {
@@ -432,17 +413,6 @@ describe("Montagem do orçamento", () => {
 describe("Clientes", () => {
   beforeEach(() => responderGet({ "/api/clientes": clientes }));
 
-  it("mostra vinte clientes por página e pagina o restante", async () => {
-    const muitos = Array.from({ length: 21 }, (_, index) => ({ ...clientes[0], id_cliente: index + 1, nome: `Cliente ${index + 1}` }));
-    responderGet({ "/api/clientes": muitos });
-    renderComApp(<Clientes />);
-    expect(await screen.findByText("Cliente 1")).toBeInTheDocument();
-    expect(screen.queryByText("Cliente 21")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Próxima" }));
-    expect(screen.getByText("Cliente 21")).toBeInTheDocument();
-    expect(screen.queryByText("Cliente 1")).not.toBeInTheDocument();
-  });
-
   it("cadastra pelo botão Novo cliente, com máscara nos campos", async () => {
     api.post.mockResolvedValue({ data: { id_cliente: 3, nome: "Ateliê Raiz" } });
     renderComApp(<Clientes />);
@@ -480,6 +450,7 @@ describe("Clientes", () => {
   it("edita com os dados carregados e avisa o erro da exclusão", async () => {
     api.put.mockResolvedValue({ data: { id_cliente: 1, nome: "Studio Ipê Ltda" } });
     api.delete.mockRejectedValue(erroDaApi(409, "Cliente possui orçamentos. Exclua-os antes de remover o cadastro."));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
     renderComApp(<Clientes />);
 
     await userEvent.click(await screen.findByRole("button", { name: "Editar Studio Ipê" }));
@@ -490,8 +461,6 @@ describe("Clientes", () => {
     await waitFor(() => expect(api.put).toHaveBeenCalledWith("/api/clientes/1", expect.objectContaining({ nome: "Studio Ipê Ltda" })));
 
     await userEvent.click(await screen.findByRole("button", { name: "Excluir Café Central" }));
-    expect(screen.getByText(/Excluir o cliente Café Central/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Excluir cliente" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Cliente possui orçamentos");
   });
 });

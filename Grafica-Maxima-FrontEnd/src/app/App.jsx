@@ -1,9 +1,9 @@
-import { lazy, Suspense, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AppProviders } from "./AppProviders";
 import { AppRoutes } from "./AppRoutes";
 import { SessionContext } from "./SessionContext";
-const CalculadoraM2 = lazy(() => import("@/features/calculator/CalculatorM2.jsx"));
+import CalculadoraM2 from "@/features/calculator/CalculatorM2";
 
 function Application() {
   const { usuario } = useContext(SessionContext);
@@ -43,10 +43,10 @@ function Application() {
           </button>
           {calculadora && (
             <div className="calculator-window">
-            <Suspense fallback={<div role="status">Carregando calculadora…</div>}><CalculadoraM2 aoFechar={() => {
+            <CalculadoraM2 aoFechar={() => {
               setCalculadora(false);
               requestAnimationFrame(() => document.querySelector(".calculator-toggle")?.focus());
-            }} /></Suspense>
+            }} />
             </div>
           )}
         </>

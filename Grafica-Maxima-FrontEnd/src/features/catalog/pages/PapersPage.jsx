@@ -3,7 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { mensagemErro } from "@/shared/services/api.js";
 import { SessionContext } from "@/app/SessionContext.js";
-import { Button, ConfirmModal, Feedback, InputField, Modal, NumericInput, Spinner } from "@/shared/components/ui";
+import { Button, Feedback, InputField, Modal, NumericInput, Spinner } from "@/shared/components/ui";
 import { PageHeader } from "@/shared/components/layout";
 import { useToast } from "@/shared/hooks/useToast.js";
 import { decimal } from "@/shared/utils/format.js";
@@ -129,7 +129,6 @@ function MaterialModal({ material, categorias, fechar }) {
   const deleteMutation = useDeletarMaterial();
   const busy = mutation.isPending || deleteMutation.isPending;
   const [categoriaEscolhida, setCategoriaEscolhida] = useState(material.categoria || "");
-  const [confirmarRemocao, setConfirmarRemocao] = useState(false);
 
   const {
     register,
@@ -161,18 +160,18 @@ function MaterialModal({ material, categorias, fechar }) {
           );
           fechar();
         },
-        onError: (erro) => toast.error(mensagemErro(erro)),
       },
     );
   };
 
   function remover() {
+    if (!window.confirm("Remover este material do catálogo? Os orçamentos anteriores serão preservados."))
+      return;
     deleteMutation.mutate(material.id_material, {
       onSuccess: () => {
         toast.success(`${material.nome} removido do catálogo.`);
         fechar();
       },
-      onError: (erro) => toast.error(mensagemErro(erro)),
     });
   }
 
@@ -249,7 +248,7 @@ function MaterialModal({ material, categorias, fechar }) {
         )}
         <div className="form-actions span-2">
           {material.id_material && (
-            <Button variant="subtle" className="text-danger" disabled={busy} onClick={() => setConfirmarRemocao(true)}>
+            <Button variant="subtle" className="text-danger" disabled={busy} onClick={remover} style={{ marginRight: "auto" }}>
               <Trash2 size={18} aria-hidden="true" /> Remover
             </Button>
           )}
@@ -261,7 +260,6 @@ function MaterialModal({ material, categorias, fechar }) {
           </Button>
         </div>
       </form>
-      {confirmarRemocao && <ConfirmModal title="Remover material" description={`Remover ${material.nome} do catálogo? Os orçamentos anteriores serão preservados.`} action="Remover material" onConfirm={remover} onClose={() => setConfirmarRemocao(false)} busy={deleteMutation.isPending} />}
     </Modal>
   );
 }

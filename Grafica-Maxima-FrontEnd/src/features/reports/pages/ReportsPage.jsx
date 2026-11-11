@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowDownRight, ArrowUpRight, Plus, Printer, RefreshCw, Send, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowDownRight, ArrowUpRight, Check, Printer, RefreshCw, Send, Trash2 } from "lucide-react";
 import api, { mensagemErro } from "@/shared/services/api.js";
-import { Button, ConfirmModal, Feedback, Spinner } from "@/shared/components/ui";
-import { useToast } from "@/shared/hooks/useToast.js";
+import { Button, Spinner } from "@/shared/components/ui";
 import "../reports.css";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -115,7 +114,6 @@ function RevenueChart({ reports }) {
 }
 
 function RecipientsPanel({ reportId }) {
-  const toast = useToast();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -134,14 +132,11 @@ function RecipientsPanel({ reportId }) {
       setName("");
       setPhone("");
       await queryClient.invalidateQueries({ queryKey: ["report-recipients"] });
-      toast.success("Número adicionado.");
     },
-    onError: (erro) => toast.error(mensagemErro(erro)),
   });
   const removeRecipient = useMutation({
     mutationFn: async (id) => api.delete(`/api/reports/recipients/${id}`),
-    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["report-recipients"] }); toast.success("Número removido."); },
-    onError: (erro) => toast.error(mensagemErro(erro)),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["report-recipients"] }),
   });
   const recipientError = addRecipient.error || removeRecipient.error;
 
@@ -179,7 +174,6 @@ function RecipientsPanel({ reportId }) {
             <li key={recipient.id_destinatario || recipient.telefone}>
               <span><strong>{recipient.nome}</strong><small>{recipient.telefone}{recipient.origem === "env" ? " · padrão do .env" : ""}</small></span>
               {recipient.origem === "aplicacao" ? (
-                <div className="row-actions">
                 <Button
                   variant="subtle"
                   className="report-remove-recipient"
@@ -187,7 +181,6 @@ function RecipientsPanel({ reportId }) {
                   disabled={removeRecipient.isPending}
                   onClick={() => removeRecipient.mutate(recipient.id_destinatario)}
                 ><Trash2 size={15} aria-hidden="true" /><span>Remover</span></Button>
-                </div>
               ) : null}
             </li>
           ))}
@@ -219,11 +212,12 @@ function RecipientsPanel({ reportId }) {
           variant="neutral"
           disabled={addRecipient.isPending || recipientsQuery.data?.limites?.activeCount >= recipientsQuery.data?.limites?.activeMax || recipientsQuery.data?.limites?.totalCount >= recipientsQuery.data?.limites?.totalMax}
         >
-          <Plus size={16} aria-hidden="true" /> {addRecipient.isPending ? "Salvando…" : "Adicionar número"}
+          {addRecipient.isPending ? "Salvando…" : "Adicionar número"}
         </Button>
       </form>
 
-      {recipientError ? <Feedback error={mensagemErro(recipientError)} /> : null}
+      {recipientError ? <p className="report-form-error" role="alert">{mensagemErro(recipientError)}</p> : null}
+      {addRecipient.isSuccess ? <p className="report-form-success" role="status"><Check size={15} aria-hidden="true" /> Destinatário adicionado.</p> : null}
 
       <div className="report-deliveries">
         <h3>Envios deste relatório</h3>
@@ -248,10 +242,8 @@ function RecipientsPanel({ reportId }) {
 }
 
 export default function ReportsPage() {
-  const toast = useToast();
   const [type, setType] = useState("weekly");
   const [date, setDate] = useState(localDate);
-  const [reenviar, setReenviar] = useState(null);
   const queryClient = useQueryClient();
   const queryKey = ["reports", type, date];
   const reportsQuery = useQuery({
@@ -270,26 +262,19 @@ export default function ReportsPage() {
     onSuccess: async (current) => {
       await queryClient.invalidateQueries({ queryKey: ["reports", type] });
       queryClient.setQueryData(queryKey, (old) => ({ ...old, current }));
-      toast.success("Relatório atualizado.");
     },
-    onError: (erro) => toast.error(mensagemErro(erro)),
   });
   const sendNow = useMutation({
-    mutationFn: async ({ id, confirmResend = false }) => (await api.post(`/api/reports/${id}/send`, { confirmResend })).data,
-    onSuccess: async (data, variables) => {
-      setReenviar(null);
-      await queryClient.invalidateQueries({ queryKey: ["report-deliveries", variables.id] });
-      if (data.results?.length && data.results.every((result) => result.status === "failed"))
-        toast.error("O envio falhou para todos os destinatários. Confira o histórico.");
-      else if (data.results?.some((result) => result.status === "failed"))
-        toast.error("Alguns destinatários tiveram falha. Confira o histórico.");
-      else toast.success(data.mode === "mock" ? "Envio simulado registrado." : "Relatório enviado.");
+    mutationFn: async ({ id, confirmResend = false }) => {
+      try {
+        return (await api.post(`/api/reports/${id}/send`, { confirmResend })).data;
+      } catch (error) {
+        if (error.response?.status !== 409 || !error.response.data.confirmationRequired) throw error;
+        if (!window.confirm(error.response.data.message)) return { cancelled: true, results: [] };
+        return (await api.post(`/api/reports/${id}/send`, { confirmResend: true })).data;
+      }
     },
-    onError: (erro, variables) => {
-      if (erro.response?.status === 409 && erro.response.data.confirmationRequired) {
-        setReenviar({ id: variables.id, mensagem: erro.response.data.message });
-      } else toast.error(mensagemErro(erro));
-    },
+    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["report-deliveries", variables.id] }),
   });
   const report = reportsQuery.data?.current;
   const history = reportsQuery.data?.history || [];
@@ -306,7 +291,7 @@ export default function ReportsPage() {
           <h1 id="reports-title" tabIndex={-1} data-page-title>Relatórios</h1>
           <p>Visão de vendas, conversão e produção da Gráfica Máxima.</p>
         </div>
-        <div className="report-header-actions toolbar">
+        <div className="report-header-actions">
           <Button variant="primary" onClick={() => sendNow.mutate({ id: report.id_relatorio })} disabled={!report || sendNow.isPending}>
             <Send size={17} aria-hidden="true" /> {sendNow.isPending ? "Enviando…" : "Enviar por WhatsApp agora"}
           </Button>
@@ -344,10 +329,23 @@ export default function ReportsPage() {
         <div className="report-state report-state-error" role="alert">
           <AlertCircle size={20} aria-hidden="true" />
           <span>{mensagemErro(reportsQuery.error)}</span>
-          <Button variant="neutral" onClick={() => reportsQuery.refetch()}><RefreshCw size={16} aria-hidden="true" /> Tentar novamente</Button>
+          <Button variant="neutral" onClick={() => reportsQuery.refetch()}>Tentar novamente</Button>
         </div>
       ) : report ? (
         <>
+          {sendNow.isError && sendNow.variables?.id === report.id_relatorio ? <div className="report-state-error report-send-feedback" role="alert">{mensagemErro(sendNow.error)}</div> : null}
+          {sendNow.isSuccess && sendNow.variables?.id === report.id_relatorio && !sendNow.data.cancelled ? (
+            <div className="report-send-feedback" role="status">
+              {sendNow.data.results.length && sendNow.data.results.every((result) => result.status === "failed")
+                ? "O envio falhou para todos os destinatários; confira os erros no histórico abaixo."
+                : sendNow.data.mode === "mock"
+                  ? "Envio simulado e registrado. Configure as credenciais Meta para entrega real."
+                  : "Solicitação enviada aos destinatários ativos."}
+              {sendNow.data.results.some((result) => result.status === "failed") && sendNow.data.results.some((result) => result.status !== "failed")
+                ? " Um ou mais destinatários tiveram falha; confira o histórico abaixo."
+                : ""}
+            </div>
+          ) : null}
           <div className="report-period-heading">
             <div>
               <span className="report-eyebrow">{type === "weekly" ? "Resumo semanal" : "Resumo mensal"}</span>
@@ -461,7 +459,6 @@ export default function ReportsPage() {
       ) : (
         <div className="report-state">Nenhum dado disponível para este período.</div>
       )}
-      {reenviar && <ConfirmModal title="Reenviar relatório" description={`Relatório #${reenviar.id}. ${reenviar.mensagem}`} action="Reenviar relatório" icon={Send} onConfirm={() => sendNow.mutate({ id: reenviar.id, confirmResend: true })} onClose={() => setReenviar(null)} busy={sendNow.isPending} />}
     </section>
   );
 }

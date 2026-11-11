@@ -6,5 +6,4 @@ export * from "./Badge.jsx";
 export * from "./Spinner.jsx";
 export * from "./NumericInput.jsx";
 export * from "./Modal.jsx";
-export * from "./ConfirmModal.jsx";
 export * from "./Toast.jsx";

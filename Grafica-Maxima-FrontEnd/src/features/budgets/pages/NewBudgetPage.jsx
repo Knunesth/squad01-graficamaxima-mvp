@@ -287,9 +287,6 @@ function Producao({ catalogo, quote }) {
               const arquivado =
                 linha.id_material &&
                 !catalogo.some((m) => String(m.id_material) === String(linha.id_material));
-              const materialAtual = catalogo.find((m) => String(m.id_material) === String(linha.id_material));
-              const valorCatalogo = materialAtual ? Number(materialAtual.custo_unitario) + Number(materialAtual.lucro_unitario) : null;
-              const abaixoCusto = materialAtual && linha.valor_unitario !== "" && Number(linha.valor_unitario) < Number(materialAtual.custo_unitario);
               return (
                 <div className="material-row" key={field.id}>
                   <span className="material-number">{String(index + 1).padStart(2, "0")}</span>
@@ -330,7 +327,6 @@ function Producao({ catalogo, quote }) {
                       />
                     )}
                   />
-                  <div className="material-price">
                   <Controller
                     control={control}
                     name={`linhas.${index}.valor_unitario`}
@@ -351,9 +347,6 @@ function Producao({ catalogo, quote }) {
                       />
                     )}
                   />
-                  {materialAtual && <small>Catálogo: {moeda(valorCatalogo)}</small>}
-                  {abaixoCusto && <small className="material-price-warning" role="status">Abaixo do custo de {moeda(materialAtual.custo_unitario)}</small>}
-                  </div>
                   <output className="cell-number material-subtotal" aria-label={`Subtotal ${index + 1}`}>
                     {ativa ? moeda(numero(linha.quantidade) * numero(linha.valor_unitario)) : "—"}
                   </output>
