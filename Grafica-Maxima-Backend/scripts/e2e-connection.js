@@ -4,6 +4,7 @@ const { randomBytes } = require('node:crypto');
 const { Pool } = require('pg');
 const { todayAtTimezone } = require('../src/services/reporting/period');
 const { sendReport } = require('../src/services/whatsapp/deliveryService');
+const { getCatchupTargets, runReportCatchup } = require('../src/services/reporting/reportScheduler');
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
   throw new Error('Defina DATABASE_URL, JWT_SECRET e senhas de admin e atendente antes do E2E.');
@@ -152,6 +153,36 @@ async function run() {
     await request('/api/reports/recipients', {
       method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
     }, 409);
+
+    assert.equal(getCatchupTargets({ now: new Date('2026-11-09T10:30:00.000Z') }).some((item) => item.type === 'weekly'), false);
+    assert.equal(getCatchupTargets({ now: new Date('2026-11-01T10:30:00.000Z') }).some((item) => item.type === 'monthly'), false);
+    let catchupProviderCalls = 0;
+    const catchupProviderFactory = () => ({
+      async sendReport() {
+        catchupProviderCalls += 1;
+        return { mode: 'mock', messageId: `e2e-catchup-${catchupProviderCalls}` };
+      },
+    });
+    const simulatedBoot = await runReportCatchup({
+      now: new Date('2026-11-12T15:00:00.000Z'),
+      providerFactory: catchupProviderFactory,
+    });
+    assert.equal(simulatedBoot.locked, true);
+    assert.equal(simulatedBoot.value.length, 2);
+    assert.equal(catchupProviderCalls, 2);
+    const secondBoot = await runReportCatchup({
+      now: new Date('2026-11-12T15:00:00.000Z'),
+      providerFactory: catchupProviderFactory,
+    });
+    assert.equal(secondBoot.locked, true);
+    assert.equal(catchupProviderCalls, 2);
+    const catchupDeliveries = await pool.query(
+      "SELECT id_envio FROM relatorio_envio WHERE destinatario = $1 AND id_relatorio = ANY($2::int[])",
+      [testPhone, simulatedBoot.value.map((item) => item.reportId)],
+    );
+    assert.equal(catchupDeliveries.rowCount, 2);
+    deliveryIds.push(...catchupDeliveries.rows.map((row) => row.id_envio));
+    console.log('Catch-up de período perdido: criou/envio semanal e mensal; segundo boot sem reenvio.');
 
     let providerCalls = 0;
     const fakeProviderFactory = () => ({
