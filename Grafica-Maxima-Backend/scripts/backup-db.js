@@ -24,7 +24,15 @@ async function runBackup() {
   args.push('--file', output);
   let caDirectory;
   try {
-    const childEnv = { ...process.env, PGPASSWORD: password, PGSSLMODE: sslMode };
+    const childEnv = {
+      PATH: process.env.PATH,
+      SystemRoot: process.env.SystemRoot,
+      TEMP: process.env.TEMP,
+      TMP: process.env.TMP,
+      PGPASSWORD: password,
+      PGSSLMODE: sslMode,
+      PGAPPNAME: 'grafica-maxima-backup',
+    };
     if (process.env.DATABASE_SSL_CA?.trim()) {
       caDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'grafica-backup-ca-'));
       const caFile = path.join(caDirectory, 'root.crt');
