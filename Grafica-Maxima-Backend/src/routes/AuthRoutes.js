@@ -3,8 +3,10 @@ const auth = require("../controllers/AuthController");
 const { autenticar, apenasAdmin } = require("../middlewares/AuthRole");
 const db = require("../config/db");
 const { id, HttpError } = require("../utils/validation");
-router.post("/login", auth.limitarLogin, auth.login);
-router.post("/register", auth.limitarLogin, auth.registrar);
+const { createLoginRateLimiter } = require("../middlewares/loginRateLimiter");
+const loginRateLimiter = createLoginRateLimiter();
+router.post("/login", loginRateLimiter, auth.login);
+router.post("/register", loginRateLimiter, auth.registrar);
 router.post("/logout", auth.logout);
 router.get("/me", autenticar, (req, res) => res.json({ usuario: req.usuario }));
 router.get("/usuarios", autenticar, apenasAdmin, async (req, res) => {

@@ -3,9 +3,11 @@ const cors = require('cors');
 const { autenticar } = require('./middlewares/AuthRole');
 const errorHandler = require('./middlewares/errorHandler');
 const { getAllowedOrigins } = require('./config/cors');
+const { parseTrustProxy } = require('./config/trustProxy');
 function createApp() {
   const app = express();
   const origins = getAllowedOrigins();
+  app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
   app.disable('x-powered-by');
   app.use(cors({ origin: origins, credentials: true }));
   app.use((req, res, next) => {

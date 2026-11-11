@@ -9,20 +9,6 @@ const cookieOptions = () => ({
   path: "/",
   maxAge: 8 * 60 * 60 * 1000,
 });
-const attempts = new Map();
-function limitarLogin(req, res, next) {
-  const now = Date.now();
-  for (const [key, entry] of attempts)
-    if (entry.until < now) attempts.delete(key);
-  const key = req.ip;
-  const entry = attempts.get(key) || { count: 0, until: now + 15 * 60 * 1000 };
-  if (++entry.count > 20)
-    return res
-      .status(429)
-      .json({ error: "Muitas tentativas. Aguarde 15 minutos." });
-  attempts.set(key, entry);
-  next();
-}
 async function login(req, res) {
   const login = texto(
     req.body.login || req.body.email,
@@ -88,4 +74,4 @@ function logout(req, res) {
   res.clearCookie("grafica_session", { ...cookieOptions(), maxAge: undefined });
   res.json({ message: "Sessão encerrada." });
 }
-module.exports = { login, registrar, logout, limitarLogin };
+module.exports = { login, registrar, logout };

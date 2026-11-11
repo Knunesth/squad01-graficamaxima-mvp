@@ -6,6 +6,8 @@ API Node.js/Express conectada ao PostgreSQL pelo driver `pg`. O único sistema o
 
 Copie `.env.example` para `.env` e defina `DATABASE_URL`, `JWT_SECRET` (32 caracteres aleatórios ou mais), `ADMIN_PASSWORD` e `ATTENDANT_PASSWORD`. O backend não inicia sem `DATABASE_URL` e `JWT_SECRET`. `.env` é ignorado pelo Git.
 
+O login e o cadastro usam `LOGIN_RATE_LIMIT_WINDOW_MS` e `LOGIN_RATE_LIMIT_MAX`. Em produção atrás de Railway/Render, configure `TRUST_PROXY=1` quando houver um único proxy confiável; para outras topologias, informe o número de saltos ou as redes confiáveis. Não use `true` sem controlar quem pode alcançar o servidor diretamente. O limitador usa armazenamento em memória por padrão; com mais de uma instância, conecte um store compartilhado Redis ou equivalente usando a opção `store` da fábrica `createLoginRateLimiter` em `src/middlewares/loginRateLimiter.js`.
+
 ## Banco limpo e execução
 
 Na raiz do repositório:

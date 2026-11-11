@@ -3,10 +3,13 @@ const assert = require('node:assert/strict');
 const { randomBytes } = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const { Pool } = require('pg');
+const express = require('express');
 const { todayAtTimezone } = require('../src/services/reporting/period');
 const { sendReport } = require('../src/services/whatsapp/deliveryService');
 const { getCatchupTargets, runReportCatchup } = require('../src/services/reporting/reportScheduler');
 const { assertSeedAllowed } = require('./guard-seed');
+const { createLoginRateLimiter } = require('../src/middlewares/loginRateLimiter');
+const { parseTrustProxy } = require('../src/config/trustProxy');
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
   throw new Error('Defina DATABASE_URL, JWT_SECRET e senhas de admin e atendente antes do E2E.');
@@ -66,8 +69,29 @@ async function cleanup() {
   if (clientId) await pool.query('DELETE FROM cliente WHERE id_cliente = $1', [clientId]);
 }
 
+async function verifyLoginRateLimiter() {
+  const app = express();
+  app.set('trust proxy', parseTrustProxy('1'));
+  app.post('/limit', createLoginRateLimiter({
+    env: { LOGIN_RATE_LIMIT_WINDOW_MS: '60000', LOGIN_RATE_LIMIT_MAX: '1' },
+  }), (req, res) => res.sendStatus(204));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  try {
+    const url = `http://127.0.0.1:${server.address().port}/limit`;
+    const request = (ip) => fetch(url, { method: 'POST', headers: { 'X-Forwarded-For': ip } });
+    assert.equal((await request('198.51.100.10')).status, 204);
+    assert.equal((await request('198.51.100.10')).status, 429);
+    assert.equal((await request('198.51.100.11')).status, 204);
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+}
+
 async function run() {
   try {
+    await verifyLoginRateLimiter();
+    console.log('Rate limit configurável e trust proxy: OK.');
     assert.throws(() => assertSeedAllowed({ NODE_ENV: 'production' }), /Seed bloqueado em produção/);
     assert.doesNotThrow(() => assertSeedAllowed({ NODE_ENV: 'production', ALLOW_SEED_IN_PRODUCTION: 'true' }));
     for (const script of ['seed.js', 'scripts/seed-prices.js']) {
