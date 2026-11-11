@@ -4,7 +4,7 @@ API Node.js/Express conectada ao PostgreSQL pelo driver `pg`. O único sistema o
 
 ## Configuração
 
-Copie `.env.example` para `.env` e defina `DATABASE_URL`, `JWT_SECRET` (32 caracteres aleatórios ou mais), `ADMIN_PASSWORD` e `ATTENDANT_PASSWORD`. O backend não inicia sem `DATABASE_URL` e `JWT_SECRET`. `.env` é ignorado pelo Git.
+Copie `.env.example` para `.env` e defina `DATABASE_URL`, `JWT_SECRET` (32 caracteres aleatórios ou mais), `ADMIN_PASSWORD` e `ATTENDANT_PASSWORD`. O backend não inicia sem `DATABASE_URL` e `JWT_SECRET`. `.env` é ignorado pelo Git. Em produção, configure `DATABASE_SSL=verify-full`; se a cadeia da autoridade certificadora não estiver no trust store do Node.js, forneça o certificado raiz em `DATABASE_SSL_CA`. Não use `rejectUnauthorized: false`.
 
 O login e o cadastro usam `LOGIN_RATE_LIMIT_WINDOW_MS` e `LOGIN_RATE_LIMIT_MAX`. Em produção atrás de Railway/Render, configure `TRUST_PROXY=1` quando houver um único proxy confiável; para outras topologias, informe o número de saltos ou as redes confiáveis. Não use `true` sem controlar quem pode alcançar o servidor diretamente. O limitador usa armazenamento em memória por padrão; com mais de uma instância, conecte um store compartilhado Redis ou equivalente usando a opção `store` da fábrica `createLoginRateLimiter` em `src/middlewares/loginRateLimiter.js`.
 
@@ -34,6 +34,7 @@ Para PostgreSQL instalado localmente, crie o banco e usuário conforme `DATABASE
 - `npm start`: inicia em modo produção.
 - `npm run migrate`: aplica migrations ainda pendentes; pode ser repetido.
 - `npm run seed`: carrega dados demonstrativos na base vazia.
+- `npm run bootstrap-admin`: cria o primeiro admin de forma idempotente a partir de `BOOTSTRAP_ADMIN_LOGIN` e `BOOTSTRAP_ADMIN_PASSWORD`. Use somente como comando pontual de implantação; defina as variáveis no ambiente da CLI e não use o seed em produção.
 
 Os scripts `seed.js` e `scripts/seed-prices.js` recusam execução quando `NODE_ENV=production`. A exceção exige a variável explícita `ALLOW_SEED_IN_PRODUCTION=true`; use-a apenas em uma operação deliberada e controlada.
 

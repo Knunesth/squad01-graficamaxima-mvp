@@ -2,7 +2,7 @@ require('dotenv').config();
 const assert = require('node:assert/strict');
 const { randomBytes } = require('node:crypto');
 const { spawnSync } = require('node:child_process');
-const { Pool } = require('pg');
+const pool = require('../src/config/db');
 const express = require('express');
 const { todayAtTimezone } = require('../src/services/reporting/period');
 const { sendReport } = require('../src/services/whatsapp/deliveryService');
@@ -19,7 +19,6 @@ if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_P
 const apiUrl = `http://localhost:${Number(process.env.PORT) || 3301}`;
 const frontUrl = process.env.TEST_FRONT_URL || 'http://localhost:5173';
 const tag = `TESTE_${randomBytes(5).toString('hex')}`;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 let cookie;
 let clientId;
 let quoteId;

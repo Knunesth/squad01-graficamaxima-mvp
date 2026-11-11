@@ -1,13 +1,12 @@
 require('dotenv').config();
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const { Pool } = require('pg');
+const db = require('../src/config/db');
 
 if (!process.env.DATABASE_URL) throw new Error('Defina DATABASE_URL para executar as migrations.');
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function migrate() {
-  const client = await pool.connect();
+  const client = await db.getClient();
   try {
     await client.query('SELECT pg_advisory_lock($1)', [781513204]);
     await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -34,7 +33,7 @@ async function migrate() {
   } finally {
     try { await client.query('SELECT pg_advisory_unlock($1)', [781513204]); } finally {
       client.release();
-      await pool.end();
+      await db.end();
     }
   }
 }
