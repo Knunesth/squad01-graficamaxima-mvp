@@ -65,15 +65,16 @@ export default function Papeis() {
                     </Button>
                   )}
                 </header>
-                <div className="table-scroll">
+                <div className="table-scroll" role="region" aria-label={`Tabela de materiais da categoria ${categoria}`} tabIndex={0}>
                   <table>
+                    <caption className="sr-only">Custos e lucros de materiais da categoria {categoria}</caption>
                     <thead>
                       <tr>
-                        <th>Subcategoria</th>
-                        <th>Custo fixo</th>
-                        <th>Custo unit.</th>
-                        <th>Lucro fixo</th>
-                        <th>Lucro unit.</th>
+                        <th scope="col">Subcategoria</th>
+                        <th scope="col">Custo fixo</th>
+                        <th scope="col">Custo unit.</th>
+                        <th scope="col">Lucro fixo</th>
+                        <th scope="col">Lucro unit.</th>
                       </tr>
                     </thead>
                     <tbody>

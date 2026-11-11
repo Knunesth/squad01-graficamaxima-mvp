@@ -52,7 +52,8 @@ export default function Acesso({ cadastro = false }) {
   };
 
   return (
-    <div className="access-page">
+    <main className="access-page" id="main-content">
+      <a className="skip-link" href="#access-content">Pular para o conteúdo</a>
       <aside className="access-brand">
         <div className="access-brand-top">
           <img src="/logomarca-grafica-maxima.png" alt="Gráfica Máxima" />
@@ -60,7 +61,7 @@ export default function Acesso({ cadastro = false }) {
         </div>
         <div className="access-brand-copy">
           <span className="access-eyebrow">DA IDEIA À IMPRESSÃO</span>
-          <h1>Sua gráfica, no ritmo da sua criatividade.</h1>
+          <h2>Sua gráfica, no ritmo da sua criatividade.</h2>
           <p>
             Orçamentos e operação em um só lugar. Mais clareza para cuidar de
             cada detalhe e fazer bons trabalhos acontecerem.
@@ -82,13 +83,13 @@ export default function Acesso({ cadastro = false }) {
           <ArrowUpRight size={18} aria-hidden="true" />
         </div>
       </aside>
-      <section className="access-content">
+      <section className="access-content" id="access-content">
         <form className="access-form" onSubmit={handleSubmit(onSubmit)}>
           <small className="access-form-kicker">
             <span aria-hidden="true" />
             {cadastro ? "NOVO POR AQUI?" : "BEM-VINDO DE VOLTA"}
           </small>
-          <h1>{cadastro ? "Crie sua conta" : "Entre na sua conta"}</h1>
+          <h1 tabIndex={-1} data-page-title>{cadastro ? "Crie sua conta" : "Entre na sua conta"}</h1>
           <p>
             {cadastro
               ? "Escolha seus dados de acesso para começar."
@@ -131,6 +132,6 @@ export default function Acesso({ cadastro = false }) {
           </small>
         </form>
       </section>
-    </div>
+    </main>
   );
 }

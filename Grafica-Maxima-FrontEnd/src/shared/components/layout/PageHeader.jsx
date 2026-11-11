@@ -5,7 +5,7 @@ export function PageHeader({ title, subtitle, back, children }) {
   return (
     <header className="page-header">
       <div>
-        <h1>{title}</h1>
+        <h1 tabIndex={-1} data-page-title>{title}</h1>
         <p>{subtitle}</p>
       </div>
       {children ||

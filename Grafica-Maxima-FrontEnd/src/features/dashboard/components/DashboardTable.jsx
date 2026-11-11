@@ -12,6 +12,7 @@ export function DashboardTable({ recentes = [] }) {
         </Link>
       </header>
       <Table
+        caption="Últimos orçamentos, cliente, datas, status e valor"
         empty={!recentes.length}
         emptyMessage="Nenhum orçamento cadastrado."
       >
@@ -22,12 +23,12 @@ export function DashboardTable({ recentes = [] }) {
         </colgroup>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Data de criação</th>
-            <th>Validade</th>
-            <th>Status</th>
-            <th>Valor</th>
+            <th scope="col">ID</th>
+            <th scope="col">Cliente</th>
+            <th scope="col">Data de criação</th>
+            <th scope="col">Validade</th>
+            <th scope="col">Status</th>
+            <th scope="col">Valor</th>
           </tr>
         </thead>
         <tbody>

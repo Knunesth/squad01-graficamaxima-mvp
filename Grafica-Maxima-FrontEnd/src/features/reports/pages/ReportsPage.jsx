@@ -20,8 +20,11 @@ function localDate() {
 }
 
 function formatDate(value) {
+  const input = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? `${value}T12:00:00Z`
+    : value;
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(
-    new Date(`${value}T12:00:00Z`),
+    new Date(input),
   );
 }
 
@@ -92,6 +95,16 @@ function RevenueChart({ reports }) {
           </circle>
         ))}
       </svg>
+      <table className="sr-only">
+        <caption>Tabela textual da tendência de receita</caption>
+        <thead><tr><th scope="col">Período</th><th scope="col">Receita</th></tr></thead>
+        <tbody>{values.map((report) => (
+          <tr key={report.id_relatorio}>
+            <td>{`${formatDate(report.data_inicio)} a ${formatDate(report.data_fim)}`}</td>
+            <td>{brl.format(report.dados.metrics.revenue)}</td>
+          </tr>
+        ))}</tbody>
+      </table>
       <div className="report-chart-labels" aria-hidden="true">
         <span>{formatDate(values[0].data_inicio)}</span>
         <span>{formatDate(values.at(-1).data_inicio)}</span>
@@ -275,7 +288,7 @@ export default function ReportsPage() {
     <section className="reports-page" aria-labelledby="reports-title">
       <header className="page-header report-page-header">
         <div>
-          <h1 id="reports-title">Relatórios</h1>
+          <h1 id="reports-title" tabIndex={-1} data-page-title>Relatórios</h1>
           <p>Visão de vendas, conversão e produção da Gráfica Máxima.</p>
         </div>
         <div className="report-header-actions">
@@ -431,7 +444,6 @@ export default function ReportsPage() {
                     type="button"
                     key={item.id_relatorio}
                     onClick={() => setDate(item.data_inicio)}
-                    aria-label={`Abrir relatório de ${formatDate(item.data_inicio)} a ${formatDate(item.data_fim)}`}
                   >
                     <span><strong>{formatDate(item.data_inicio)} a {formatDate(item.data_fim)}</strong><small>{item.tipo === "weekly" ? "Semanal" : "Mensal"}</small></span>
                     <span>{brl.format(item.dados.metrics.revenue)}</span>

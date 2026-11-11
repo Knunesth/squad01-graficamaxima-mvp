@@ -147,6 +147,8 @@ export function ClienteFormulario({ novo = false }) {
               label="Telefone"
               {...register("telefone")}
               type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               error={errors.telefone?.message}
               maxLength={20}
               placeholder="(00) 00000-0000"
@@ -157,6 +159,7 @@ export function ClienteFormulario({ novo = false }) {
           label="E-mail"
           {...register("email")}
           type="email"
+          autoComplete="email"
           error={errors.email?.message}
           maxLength={100}
           placeholder="Digite o e-mail do cliente"
@@ -166,6 +169,8 @@ export function ClienteFormulario({ novo = false }) {
           {...register("cpf_cnpj")}
           error={errors.cpf_cnpj?.message}
           maxLength={20}
+          inputMode="numeric"
+          autoComplete="off"
           placeholder="Digite o CPF ou CNPJ"
         />
         <Feedback error={error} />

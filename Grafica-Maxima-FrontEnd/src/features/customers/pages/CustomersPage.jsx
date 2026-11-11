@@ -107,7 +107,9 @@ export default function Clientes() {
                   [key]: event.target.value,
                 }))
               }
-              type={key === "email" ? "email" : "text"}
+              type={key === "email" ? "email" : key === "telefone" ? "tel" : "text"}
+              inputMode={key === "telefone" ? "tel" : key === "cpf_cnpj" ? "numeric" : undefined}
+              autoComplete={{ nome: "name", telefone: "tel", email: "email", cpf_cnpj: "off" }[key]}
               maxLength={key === "nome" || key === "email" ? 100 : 20}
               required
             />
@@ -130,15 +132,16 @@ export default function Clientes() {
           </p>
         ) : (
           <Table
+            caption="Clientes cadastrados, e-mail, telefone e ações"
             empty={!clientes?.length}
             emptyMessage="Nenhum cliente cadastrado."
           >
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Telefone</th>
-                <th>Ações</th>
+                <th scope="col">Nome</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Telefone</th>
+                <th scope="col">Ações</th>
               </tr>
             </thead>
             <tbody>

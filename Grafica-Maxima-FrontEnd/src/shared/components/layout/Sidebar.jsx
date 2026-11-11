@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,6 +10,8 @@ import {
   Settings,
   LogOut,
   ChartColumn,
+  Menu,
+  X,
 } from "lucide-react";
 import { SessionContext } from "@/app/SessionContext.js";
 import api, { mensagemErro } from "@/shared/services/api.js";
@@ -27,6 +29,20 @@ export function Sidebar() {
   const { usuario, setUsuario } = useContext(SessionContext);
   const queryClient = useQueryClient();
   const [error, setError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [menuOpen]);
 
   async function sair() {
     try {
@@ -40,12 +56,26 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <img src="/logomarca-grafica-maxima.png" alt="Gráfica Máxima" />
-        <span>Gestão de impressão</span>
+      <div className="sidebar-topbar">
+        <div className="sidebar-brand">
+          <img src="/logomarca-grafica-maxima.png" alt="Gráfica Máxima" />
+          <span>Gestão de impressão</span>
+        </div>
+        <button
+          ref={menuButtonRef}
+          className="sidebar-menu-toggle"
+          type="button"
+          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+        </button>
       </div>
 
-      <nav aria-label="Navegação principal">
+      <div className={`sidebar-drawer${menuOpen ? " is-open" : ""}`}>
+      <nav id="primary-navigation" aria-label="Navegação principal" onClick={() => setMenuOpen(false)}>
         {links.map(([path, label, Icon]) => (
           <NavLink
             key={path}
@@ -76,7 +106,7 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="sidebar-session">
+      <div className="sidebar-session" onClick={() => setMenuOpen(false)}>
         <span className="session-user">
           <span className="session-avatar" aria-hidden="true">
             {usuario.nome?.trim().charAt(0).toUpperCase() || "G"}
@@ -110,6 +140,7 @@ export function Sidebar() {
           <LogOut size={18} strokeWidth={1.5} /> Sair
         </Button>
         <Feedback error={error} />
+      </div>
       </div>
     </aside>
   );

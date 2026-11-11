@@ -46,12 +46,12 @@ export default function Usuarios() {
         </div>
       ) : users ? (
         <div className="panel">
-          <Table>
+          <Table caption="Usuários, perfil e estado de acesso">
             <thead>
               <tr>
-                <th>Login</th>
-                <th>Perfil</th>
-                <th>Acesso</th>
+                <th scope="col">Login</th>
+                <th scope="col">Perfil</th>
+                <th scope="col">Acesso</th>
               </tr>
             </thead>
             <tbody>

@@ -6,12 +6,15 @@ export const InputField = forwardRef(function InputField(
 ) {
   const autoId = useId();
   const fieldId = id || autoId;
+  const errorId = error ? `${fieldId}-error` : undefined;
+  const describedBy = [props["aria-describedby"], errorId].filter(Boolean).join(" ") || undefined;
   return (
     <div className={`field ${className}`}>
       <label htmlFor={fieldId}>{label}</label>
-      <input id={fieldId} ref={ref} aria-invalid={!!error} {...props} />
+      <input {...props} id={fieldId} ref={ref} aria-invalid={error ? "true" : undefined} aria-describedby={describedBy} />
       {error && (
         <small
+          id={errorId}
           role="alert"
           className="error-text"
           style={{

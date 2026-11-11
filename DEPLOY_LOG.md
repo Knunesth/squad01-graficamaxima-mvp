@@ -29,3 +29,12 @@
 - Migrations: 7 aplicadas em banco temporário limpo e segunda execução sem alterações; RLS ligado em 19 tabelas da aplicação, zero policies; bootstrap admin criado uma vez e repetido sem duplicar.
 - Commits desta missão: `44fc167`, `1905d1d`, `f18971a`, `cccdc01`, `9e646df`, `d360ab3`; o ajuste same-origin desta seção será commitado separadamente.
 - Nenhuma CLI/provedor autenticado; sem uploads, recursos remotos, migrations de produção, admin de produção ou dados fake em produção. PDFs preexistentes continuam não rastreados.
+
+## 2026-11-11 — Fase 0C: design, responsividade e acessibilidade
+
+- Preservadas a marca, Inter local e paleta existente; ampliados os tokens CSS para estados, escala de espaço/tipo, foco, sombras, raios e camadas.
+- Menu móvel recolhível, reflow sem overflow de 320 a 1920 px, áreas roláveis acessíveis por teclado, semântica/títulos por rota, erros associados aos campos, tabela textual para gráfico e calculadora com `<dialog>` nativo.
+- Ferramentas de QA são exclusivamente devDependencies: `@axe-core/playwright` 4.14.0 (MPL-2.0), `playwright` 1.65.0 (Apache-2.0) e `lighthouse` 13.6.0 (Apache-2.0). Foram adicionadas para cumprir axe/Chromium, automação de teclado/capturas e Lighthouse; nenhuma delas entra no bundle/runtime de produção.
+- Comparação de QA em schema temporário e seed fictício: antes, 54 capturas, 2 telas com overflow; axe baseline 18 estados em 390 px, 18 violações (2 críticas, 16 sérias). Depois, 108 capturas, zero overflow, zero violações axe em 108 estados e sete fluxos de teclado aprovados.
+- Lighthouse antes/depois (login/dashboard, celular/desktop): acessibilidade 98→100 em todas as telas; melhores práticas 96 sem alteração; desempenho 52→52 celular login, 53→53 celular dashboard, 44→44 desktop login e 44→43 desktop dashboard. FCP cerca de 0,64 s, CLS abaixo de 0,001; LCP reportado entre 73,5 e 74,1 s, anômalo em Vite dev e pendente de repetição em build/produção.
+- Capturas, resumos, baseline axe e relatório detalhado em `qa-evidence/design/` e `RELATORIO_DESIGN_ACESSIBILIDADE.md`. Sem leitor de tela real, aparelho físico, Safari, zoom 200% ou teste em produção.

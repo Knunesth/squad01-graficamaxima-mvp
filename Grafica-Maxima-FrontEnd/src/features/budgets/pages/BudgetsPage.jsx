@@ -69,19 +69,20 @@ export default function Orcamentos() {
       <Feedback error={errorMessage} message={location.state?.message} />
       <section className="panel quotes-table">
         <Table
+          caption="Orçamentos cadastrados com cliente, data, valor, status e ações"
           loading={isLoading}
           empty={!isLoading && (!result || !result.itens.length)}
           emptyMessage="Nenhum orçamento encontrado."
         >
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Cliente</th>
-              <th>E-mail</th>
-              <th>Data de criação</th>
-              <th>Valor</th>
-              <th>Status</th>
-              <th className="quote-actions">Ações</th>
+              <th scope="col">ID</th>
+              <th scope="col">Cliente</th>
+              <th scope="col">E-mail</th>
+              <th scope="col">Data de criação</th>
+              <th scope="col">Valor</th>
+              <th scope="col">Status</th>
+              <th scope="col" className="quote-actions">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -101,7 +102,7 @@ export default function Orcamentos() {
                     variant="neutral"
                     disabled={toggleStatus.isPending}
                     onClick={() => alternar(item)}
-                    aria-label={`Alterar aprovação do orçamento ${item.id_orcamento}`}
+                    aria-label={`${aprovado(item.status) ? "Aprovado" : item.status === "Inativo" ? "Inativo" : "Não aprovado"}. Alterar aprovação do orçamento ${item.id_orcamento}`}
                   >
                     {toggleStatus.isPending &&
                     toggleStatus.variables?.id === item.id_orcamento ? (

@@ -103,13 +103,13 @@ export default function StatusOrcamento() {
               Status: <StatusBadge status={quote.status} />
             </p>
           </div>
-          <Table>
+          <Table caption={`Itens do orçamento ${id}, quantidade e valores`}>
             <thead>
               <tr>
-                <th>Material</th>
-                <th>Quantidade</th>
-                <th>Valor unitário</th>
-                <th>Subtotal</th>
+                <th scope="col">Material</th>
+                <th scope="col">Quantidade</th>
+                <th scope="col">Valor unitário</th>
+                <th scope="col">Subtotal</th>
               </tr>
             </thead>
             <tbody>

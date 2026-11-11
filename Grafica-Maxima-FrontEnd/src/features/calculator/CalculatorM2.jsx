@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import api from "@/shared/services/api.js";
 import { useParams } from "react-router-dom";
 
 const CalculadoraM2 = ({ aoFechar }) => {
   const { id } = useParams();
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
 
   const [tiposDisponiveis, setTiposDisponiveis] = useState([]);
   const [tipoServico, setTipoServico] = useState("");
@@ -95,32 +101,36 @@ const CalculadoraM2 = ({ aoFechar }) => {
   };
 
   return (
-    <div className="modal-overlay">
+    <dialog ref={dialogRef} className="calculator-dialog" aria-labelledby="calculator-title" onCancel={(event) => { event.preventDefault(); aoFechar(); }}>
       <div className="modal-calculadora">
         <button
           className="btn-fechar-modal"
+          type="button"
           onClick={aoFechar}
           title="Fechar Calculadora"
+          aria-label="Fechar calculadora"
         >
           ×
         </button>
 
-        <h3>
+        <h2 id="calculator-title">
           {id ? `Vincular Item ao Orçamento #${id}` : "Calculadora de M²"}
-        </h3>
+        </h2>
         <hr style={{ borderColor: "#34495e", margin: "10px 0" }} />
 
         {erro && (
           <div
-            style={{ color: "#e74c3c", fontSize: "13px", marginBottom: "10px" }}
+            className="calculator-error"
+            role="alert"
           >
             ⚠️ {erro}
           </div>
         )}
 
         <form onSubmit={processarCalculo}>
-          <label>Tipo de Serviço / Produto:</label>
+          <label htmlFor="calculator-service">Tipo de Serviço / Produto:</label>
           <select
+            id="calculator-service"
             value={tipoServico}
             onChange={(e) => setTipoServico(e.target.value)}
             style={{
@@ -143,20 +153,26 @@ const CalculadoraM2 = ({ aoFechar }) => {
 
           <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
             <div>
-              <label>Largura (m):</label>
+              <label htmlFor="calculator-width">Largura (m):</label>
               <input
+                id="calculator-width"
                 type="number"
                 step="0.01"
+                inputMode="decimal"
+                autoComplete="off"
                 value={largura}
                 onChange={(e) => setLargura(e.target.value)}
                 placeholder="0.00"
               />
             </div>
             <div>
-              <label>Altura (m):</label>
+              <label htmlFor="calculator-height">Altura (m):</label>
               <input
+                id="calculator-height"
                 type="number"
                 step="0.01"
+                inputMode="decimal"
+                autoComplete="off"
                 value={altura}
                 onChange={(e) => setAltura(e.target.value)}
                 placeholder="0.00"
@@ -164,10 +180,13 @@ const CalculadoraM2 = ({ aoFechar }) => {
             </div>
           </div>
 
-          <label>Quantidade:</label>
+          <label htmlFor="calculator-quantity">Quantidade:</label>
           <input
+            id="calculator-quantity"
             type="number"
             min="1"
+            inputMode="numeric"
+            autoComplete="off"
             value={quantidade}
             onChange={(e) => setQuantidade(e.target.value)}
           />
@@ -182,15 +201,7 @@ const CalculadoraM2 = ({ aoFechar }) => {
         </form>
 
         {resultado && (
-          <div
-            style={{
-              marginTop: "15px",
-              background: "#27ae60",
-              padding: "12px",
-              borderRadius: "4px",
-              fontSize: "14px",
-            }}
-          >
+          <div className="calculator-result" role="status" aria-live="polite">
             <p style={{ margin: "3px 0" }}>
               📐 Total Área:{" "}
               <strong>
@@ -225,7 +236,7 @@ const CalculadoraM2 = ({ aoFechar }) => {
           </div>
         )}
       </div>
-    </div>
+    </dialog>
   );
 };
 
