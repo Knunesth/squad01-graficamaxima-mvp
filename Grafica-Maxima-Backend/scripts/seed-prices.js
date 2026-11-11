@@ -1,41 +1,31 @@
 require('dotenv').config();
-const path = require('node:path');
-const fs = require('node:fs');
-const db = require('../src/config/db');
+const { assertSeedAllowed } = require('./guard-seed');
+const { Pool } = require('pg');
 
-async function loadPrices(connection) {
-  const file = path.join(__dirname, '../src/services/precos.json');
-  const prices = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const entries = Object.entries(prices);
-  if (!entries.length || entries.some(([type, price]) => !type || !Number.isFinite(Number(price)) || Number(price) <= 0)) {
-    throw new Error('Catálogo de preços de m² inválido.');
-  }
-
-  for (const [type, price] of entries) {
-    await connection.query(
-      'INSERT IGNORE INTO preco_m2 (tipo, preco_base_m2) VALUES (?, ?)',
-      [type, Number(price)]
-    );
-  }
-  return entries.length;
-}
+assertSeedAllowed();
+if (!process.env.DATABASE_URL) throw new Error('Defina DATABASE_URL para cadastrar preços.');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prices = [['banner', 48], ['adesivo', 36], ['lona', 42], ['papel', 22]];
 
 async function seedPrices() {
-  const connection = await db.getConnection();
+  const client = await pool.connect();
   try {
-    const count = await loadPrices(connection);
-    console.log(`Preços de m² verificados: ${count}. Valores existentes preservados.`);
+    await client.query('BEGIN');
+    for (const [tipo, price] of prices) {
+      await client.query(
+        'INSERT INTO preco_m2 (tipo, preco_base_m2) VALUES ($1, $2) ON CONFLICT (tipo) DO NOTHING',
+        [tipo, price],
+      );
+    }
+    await client.query('COMMIT');
+    console.log(`Preços por m² verificados: ${prices.length}. Valores existentes preservados.`);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
   } finally {
-    connection.release();
-    await db.end();
+    client.release();
+    await pool.end();
   }
 }
 
-if (require.main === module) {
-  seedPrices().catch(error => {
-    console.error('Falha ao carregar preços de m²:', error.code || error.message);
-    process.exitCode = 1;
-  });
-}
-
-module.exports = { loadPrices };
+seedPrices().catch((error) => { console.error(error.message); process.exitCode = 1; });

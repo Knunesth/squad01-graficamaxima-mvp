@@ -1,0 +1,71 @@
+.gm-v2 *,
+.gm-v2 *::before,
+.gm-v2 *::after {
+  box-sizing: border-box;
+}
+
+.gm-v2 h1,
+.gm-v2 h2,
+.gm-v2 h3,
+.gm-v2 h4,
+.gm-v2 h5,
+.gm-v2 h6,
+.gm-v2 p,
+.gm-v2 ul,
+.gm-v2 ol,
+.gm-v2 figure {
+  margin: 0;
+  padding: 0;
+}
+
+.gm-v2 h1,
+.gm-v2 h2,
+.gm-v2 h3,
+.gm-v2 h4,
+.gm-v2 h5,
+.gm-v2 h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  overflow-wrap: break-word;
+}
+
+.gm-v2 img,
+.gm-v2 picture,
+.gm-v2 video,
+.gm-v2 canvas,
+.gm-v2 svg {
+  display: block;
+  max-width: 100%;
+}
+
+.gm-v2 input,
+.gm-v2 textarea,
+.gm-v2 select {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.gm-v2 button:not(.button) {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.gm-v2 button:not(.button) {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.gm-v2 ul,
+.gm-v2 ol {
+  list-style: none;
+}
+
+.gm-v2 a:not(.button) {
+  text-decoration: none;
+  color: inherit;
+}

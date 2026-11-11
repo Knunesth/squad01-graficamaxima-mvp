@@ -7,7 +7,7 @@
 | **Nome** | Gráfica Máxima — Squad 01 |
 | **Contexto** | Projeto de Residência em Software — Porto Digital / UCB |
 | **Objetivo** | Centralizar orçamentos, substituir processos manuais e melhorar o controle financeiro de uma gráfica |
-| **Stack** | React 19 (Vite) + Node.js/Express 5 + MariaDB (XAMPP) |
+| **Stack** | React 19 (Vite) + Node.js/Express 5 + PostgreSQL |
 | **Repo** | `github.com/llannkkj/squad01-graficamaxima-mvp` |
 
 ---
@@ -37,7 +37,7 @@ graph TB
         S_PDF["orcamentoPdf.service"]
     end
 
-    subgraph Database["Banco de Dados (MariaDB)"]
+    subgraph Database["Banco de Dados (PostgreSQL)"]
         TB_ORC["orcamento"]
         TB_CLI["cliente"]
         TB_ITEM["item"]
@@ -66,7 +66,7 @@ O backend segue uma organização em **camadas MVC** (routes → controllers →
 
 ## 3. Modelo de Dados (Banco)
 
-O banco `graficamaxima` possui **12 tabelas** com relacionamentos via FK:
+O schema PostgreSQL atual do banco `graficamaxima` é definido por migrations SQL versionadas em `Grafica-Maxima-Backend/database/migrations/` e possui 16 tabelas com relacionamentos via FK:
 
 ```mermaid
 erDiagram
@@ -117,7 +117,7 @@ erDiagram
 ### 5.1 ✅ Pontos Positivos
 
 - **Transações ACID** no `criarOrcamento` — usa `beginTransaction`, `commit` e `rollback`
-- **Conexão resiliente** ao banco — tenta porta 3306, falha? Tenta 3312 automaticamente
+- **Pool PostgreSQL** configurado por `DATABASE_URL`, sem fallback de credenciais em memória
 - **Blindagem de FK** — verifica/insere registros padrão de `papel` e `impressao` para evitar erros 500
 - **Fallback na listagem** — se o JOIN falhar, faz SELECT simples como contingência
 - **Formatação BR** — moeda, datas e números formatados com `Intl.NumberFormat`

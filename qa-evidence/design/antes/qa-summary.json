@@ -1,0 +1,149 @@
+{
+  "stage": "antes",
+  "baseUrl": "http://127.0.0.1:55443",
+  "dimensions": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "evidence": [
+    "qa-evidence/design/antes/login__390x844.png",
+    "qa-evidence/design/antes/cadastro__390x844.png",
+    "qa-evidence/design/antes/login__768x1024.png",
+    "qa-evidence/design/antes/cadastro__768x1024.png",
+    "qa-evidence/design/antes/login__1440x900.png",
+    "qa-evidence/design/antes/cadastro__1440x900.png",
+    "qa-evidence/design/antes/dashboard__390x844.png",
+    "qa-evidence/design/antes/orcamentos__390x844.png",
+    "qa-evidence/design/antes/novo-orcamento__390x844.png",
+    "qa-evidence/design/antes/buscar-cliente-orcamento__390x844.png",
+    "qa-evidence/design/antes/novo-cliente-orcamento__390x844.png",
+    "qa-evidence/design/antes/montar-orcamento__390x844.png",
+    "qa-evidence/design/antes/editar-orcamento__390x844.png",
+    "qa-evidence/design/antes/detalhe-orcamento__390x844.png",
+    "qa-evidence/design/antes/clientes__390x844.png",
+    "qa-evidence/design/antes/catalogo__390x844.png",
+    "qa-evidence/design/antes/configuracoes__390x844.png",
+    "qa-evidence/design/antes/relatorios__390x844.png",
+    "qa-evidence/design/antes/usuarios__390x844.png",
+    "qa-evidence/design/antes/calculadora-aberta__390x844.png",
+    "qa-evidence/design/antes/modal-material__390x844.png",
+    "qa-evidence/design/antes/orcamentos-vazio__390x844.png",
+    "qa-evidence/design/antes/dashboard__768x1024.png",
+    "qa-evidence/design/antes/orcamentos__768x1024.png",
+    "qa-evidence/design/antes/novo-orcamento__768x1024.png",
+    "qa-evidence/design/antes/buscar-cliente-orcamento__768x1024.png",
+    "qa-evidence/design/antes/novo-cliente-orcamento__768x1024.png",
+    "qa-evidence/design/antes/montar-orcamento__768x1024.png",
+    "qa-evidence/design/antes/editar-orcamento__768x1024.png",
+    "qa-evidence/design/antes/detalhe-orcamento__768x1024.png",
+    "qa-evidence/design/antes/clientes__768x1024.png",
+    "qa-evidence/design/antes/catalogo__768x1024.png",
+    "qa-evidence/design/antes/configuracoes__768x1024.png",
+    "qa-evidence/design/antes/relatorios__768x1024.png",
+    "qa-evidence/design/antes/usuarios__768x1024.png",
+    "qa-evidence/design/antes/calculadora-aberta__768x1024.png",
+    "qa-evidence/design/antes/modal-material__768x1024.png",
+    "qa-evidence/design/antes/orcamentos-vazio__768x1024.png",
+    "qa-evidence/design/antes/dashboard__1440x900.png",
+    "qa-evidence/design/antes/orcamentos__1440x900.png",
+    "qa-evidence/design/antes/novo-orcamento__1440x900.png",
+    "qa-evidence/design/antes/buscar-cliente-orcamento__1440x900.png",
+    "qa-evidence/design/antes/novo-cliente-orcamento__1440x900.png",
+    "qa-evidence/design/antes/montar-orcamento__1440x900.png",
+    "qa-evidence/design/antes/editar-orcamento__1440x900.png",
+    "qa-evidence/design/antes/detalhe-orcamento__1440x900.png",
+    "qa-evidence/design/antes/clientes__1440x900.png",
+    "qa-evidence/design/antes/catalogo__1440x900.png",
+    "qa-evidence/design/antes/configuracoes__1440x900.png",
+    "qa-evidence/design/antes/relatorios__1440x900.png",
+    "qa-evidence/design/antes/usuarios__1440x900.png",
+    "qa-evidence/design/antes/calculadora-aberta__1440x900.png",
+    "qa-evidence/design/antes/modal-material__1440x900.png",
+    "qa-evidence/design/antes/orcamentos-vazio__1440x900.png"
+  ],
+  "overflow": [
+    {
+      "screen": "catalogo",
+      "width": 390,
+      "documentWidth": 419
+    },
+    {
+      "screen": "modal-material",
+      "width": 390,
+      "documentWidth": 419
+    }
+  ],
+  "accessibility": [],
+  "lighthouse": [
+    {
+      "route": "/login",
+      "device": "mobile",
+      "scores": {
+        "performance": 52,
+        "accessibility": 98,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 641.1927000000001,
+        "largest-contentful-paint": 73654.62172499995,
+        "cumulative-layout-shift": 0.00316365638987925,
+        "speed-index": 1484.9062620036025
+      }
+    },
+    {
+      "route": "/",
+      "device": "mobile",
+      "scores": {
+        "performance": 53,
+        "accessibility": 98,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 641.5239000000001,
+        "largest-contentful-paint": 74054.42625000002,
+        "cumulative-layout-shift": 0.00316365638987925,
+        "speed-index": 1464.1146399999834
+      }
+    },
+    {
+      "route": "/login",
+      "device": "desktop",
+      "scores": {
+        "performance": 44,
+        "accessibility": 98,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 643.6886,
+        "largest-contentful-paint": 73936.19820000009,
+        "cumulative-layout-shift": 0.0001171559526105967,
+        "speed-index": 1532.8759480010517
+      }
+    },
+    {
+      "route": "/",
+      "device": "desktop",
+      "scores": {
+        "performance": 44,
+        "accessibility": 98,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 640.9917,
+        "largest-contentful-paint": 73547.03497499993,
+        "cumulative-layout-shift": 0.0001171559526105967,
+        "speed-index": 1508.848313999899
+      }
+    }
+  ]
+}

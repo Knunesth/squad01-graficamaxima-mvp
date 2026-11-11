@@ -1,6 +1,5 @@
 //Cadastro de Orçamento
 
-
 // Dados do Cliente
 const cliente = "";
 const telefone = "";
@@ -8,7 +7,7 @@ const email = "";
 const CPF = "";
 const CNPJ = "";
 
-// Dados do Cliente (Empresa) Sistema que puxe os dados do usuário com base no CEP 
+// Dados do Cliente (Empresa) Sistema que puxe os dados do usuário com base no CEP
 
 const CEP = "";
 

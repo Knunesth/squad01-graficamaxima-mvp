@@ -1,0 +1,3 @@
+tipo,descricao,valor_fixo,custo_unitario,lucro_fixo,lucro_unitario,exemplo
+Corte reto,Corte padrão,2,0.05,1,0.03,EXEMPLO
+Corte especial,Corte personalizado,5,0.15,2,0.1,EXEMPLO

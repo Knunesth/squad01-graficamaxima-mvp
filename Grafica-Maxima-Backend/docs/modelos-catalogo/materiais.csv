@@ -1,0 +1,3 @@
+categoria,nome,custo_fixo,custo_unitario,lucro_fixo,lucro_unitario,ativo,origem,origem_id,exemplo
+Couchê 64,Papel Couchê 300g,0,1.25,0,0.35,true,,,EXEMPLO
+Kraft,Papel Kraft,0,0.18,0,0.07,true,,,EXEMPLO

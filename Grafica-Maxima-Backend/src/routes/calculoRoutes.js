@@ -1,16 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { autenticar, apenasAdmin } = require('../middlewares/AuthRole');
+const { autenticar, apenasAdmin } = require("../middlewares/AuthRole");
 
 // Aponta corretamente para o controller do Back-end
-const metroQuadradoController = require('../controllers/MetroQuadradoController');
+const metroQuadradoController = require("../controllers/MetroQuadradoController");
 
 // 📥 Rotas de Leitura e Processamento
-router.get('/tipos', metroQuadradoController.listarTipos);
-router.post('/metro-quadrado/simulacao', metroQuadradoController.simular);
-router.post('/metro-quadrado', metroQuadradoController.calcular);
+router.get("/tipos", metroQuadradoController.listarTipos);
+router.post("/metro-quadrado/simulacao", metroQuadradoController.simular);
+router.post("/metro-quadrado", metroQuadradoController.calcular);
 
 // 🚀 NOVA ROTA ADICIONADA: Permite que a tela de Configurações atualize o precos.json
-router.put('/tipos/atualizar', [autenticar, apenasAdmin], metroQuadradoController.atualizarPreco);
+router.put(
+  "/tipos/atualizar",
+  [autenticar, apenasAdmin],
+  metroQuadradoController.atualizarPreco,
+);
 
 module.exports = router;

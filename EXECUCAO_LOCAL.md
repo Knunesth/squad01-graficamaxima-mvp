@@ -1,12 +1,65 @@
-# Executar localmente
+# Executar localmente no Windows
 
-1. Inicie o MySQL e configure `Grafica-Maxima-Backend/.env` com `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`, `PORT`, `FRONTEND_URL` e `JWT_SECRET`. Use `.env.example` como lista de variáveis; defina um segredo próprio para `JWT_SECRET`.
-2. Configure `Grafica-Maxima-FrontEnd/.env` com `VITE_API_URL` apontando para a origem do backend. O exemplo usa a porta padrão 3301.
-3. Em um terminal, dentro de `Grafica-Maxima-Backend`, execute `npm install` se necessário e `npm start` (ou `npm run dev`). Confira `GET /health`.
-4. Em outro terminal, dentro de `Grafica-Maxima-FrontEnd`, execute `npm install` se necessário e `npm run dev`. A porta padrão é 5173. Entre com uma conta ativa do banco.
+## Com Docker Desktop
 
-O navegador envia o cookie de sessão ao backend por CORS. Se a porta ou origem do frontend mudar, inclua a origem em `FRONTEND_URL` ou `CORS_ORIGINS` no backend e reinicie ambos os servidores após alterar `.env`.
+1. Na raiz do projeto, copie `.env.example` para `.env` e substitua `POSTGRES_PASSWORD`.
+2. Copie `Grafica-Maxima-Backend/.env.example` para `Grafica-Maxima-Backend/.env`. Use a mesma senha na `DATABASE_URL`, configure um `JWT_SECRET` aleatório com pelo menos 32 caracteres e defina senhas fortes para `ADMIN_PASSWORD` e `ATTENDANT_PASSWORD`.
+3. Na raiz do projeto:
 
-Em um banco que já contém dados, não execute `npm run setup` nem `npm run seed`: esses comandos atualizam a conta administradora. Para preencher apenas preços de m² ausentes, use `npm run db:seed-prices`; preços já cadastrados são preservados.
+   ```powershell
+   docker compose up -d postgres
+   docker compose ps
+   ```
 
-Verificação: com os dois servidores ativos, execute `node scripts/e2e-connection.js` dentro do backend. O script cria registros `TESTE_`, testa login, CORS, consultas, cálculo e CRUD, e remove os registros ao terminar. No frontend, execute `npm run build` e `npm run lint`.
+   O Compose publica o PostgreSQL na porta `55432` do Windows para coexistir com uma instalação local na porta `5432`. O `.env.example` do backend já aponta para essa porta.
+
+4. Em um terminal:
+
+   ```powershell
+   Set-Location Grafica-Maxima-Backend
+   npm ci
+   npm run migrate
+   npm run seed
+   npm run dev
+   ```
+
+   Para testar que migrations são idempotentes, rode `npm run migrate` novamente; não deve aplicar migrations já registradas.
+
+5. Em outro terminal:
+
+   ```powershell
+   Set-Location Grafica-Maxima-FrontEnd
+   npm ci
+   Copy-Item .env.example .env -Force
+   npm run dev
+   ```
+
+   Acesse `http://localhost:5173`. O admin usa `ADMIN_LOGIN`/`ADMIN_PASSWORD` e o atendente usa `ATTENDANT_LOGIN`/`ATTENDANT_PASSWORD` definidos no arquivo `Grafica-Maxima-Backend/.env`.
+
+## PostgreSQL instalado localmente
+
+Para usar uma instalação local, confirme que o serviço PostgreSQL 16 ou superior está ativo na porta 5432 e ajuste a porta da `DATABASE_URL` para `5432`. No PowerShell, conecte como administrador do PostgreSQL:
+
+```powershell
+psql -U postgres -h localhost -p 5432
+```
+
+No prompt `psql`, crie um usuário e uma base vazia (use a mesma senha em `DATABASE_URL` do `.env` do backend):
+
+```sql
+CREATE ROLE grafica LOGIN PASSWORD 'substitua-por-uma-senha-forte';
+CREATE DATABASE graficamaxima OWNER grafica;
+\q
+```
+
+Confirme que `DATABASE_URL` aponta para `postgresql://grafica:SENHA@localhost:5432/graficamaxima`. Se a senha tiver caracteres reservados de URL, aplique percent-encoding. Depois execute os passos 4 e 5 acima. As migrations criam o schema; o seed requer uma base sem usuários.
+
+## Operação
+
+- `npm run migrate` é seguro para repetir; migrations concluídas ficam registradas em `schema_migrations`.
+- `npm run seed` é destinado à base vazia de desenvolvimento e exige senhas definidas no ambiente.
+- `npm run build` no backend verifica a sintaxe JavaScript; no frontend, gera os arquivos Vite.
+- `npm start` inicia o backend em produção e falha se `JWT_SECRET` ou `DATABASE_URL` não estiver definida.
+- O E2E local é executado por `node scripts/e2e-connection.js` dentro da pasta do backend, com backend e frontend ativos; ele cria e remove registros `TESTE_` e testa relatórios e WhatsApp em modo mock.
+- Os relatórios são exclusivos para admin. O agendamento gera e envia a semana anterior segunda às 8h e o mês anterior no dia 1 às 8h, conforme fuso/cron no `.env` do backend.
+- Sem credenciais da Meta, o WhatsApp fica em modo mock. Para entrega real, configure as credenciais e o template aprovado no WhatsApp Manager; veja o README da raiz.

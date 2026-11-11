@@ -1,0 +1,3 @@
+nome,tipo,descricao,custo,tipo_cobranca,custo_fixo,lucro_fixo,lucro_unitario,exemplo
+Laminação fosca,Laminação,Acabamento fosco,0.4,unitário,0,0,0.2,EXEMPLO
+Grampo,Encadernação,Grampo metálico,0.08,unitário,0,0,0.05,EXEMPLO

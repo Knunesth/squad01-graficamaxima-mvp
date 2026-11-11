@@ -1,0 +1,785 @@
+{
+  "stage": "depois",
+  "baseUrl": "http://127.0.0.1:59849",
+  "dimensions": [
+    {
+      "width": 320,
+      "height": 568
+    },
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "evidence": [
+    "qa-evidence/design/depois/login__320x568.png",
+    "qa-evidence/design/depois/cadastro__320x568.png",
+    "qa-evidence/design/depois/login__390x844.png",
+    "qa-evidence/design/depois/cadastro__390x844.png",
+    "qa-evidence/design/depois/login__768x1024.png",
+    "qa-evidence/design/depois/cadastro__768x1024.png",
+    "qa-evidence/design/depois/login__1024x768.png",
+    "qa-evidence/design/depois/cadastro__1024x768.png",
+    "qa-evidence/design/depois/login__1440x900.png",
+    "qa-evidence/design/depois/cadastro__1440x900.png",
+    "qa-evidence/design/depois/login__1920x1080.png",
+    "qa-evidence/design/depois/cadastro__1920x1080.png",
+    "qa-evidence/design/depois/dashboard__320x568.png",
+    "qa-evidence/design/depois/orcamentos__320x568.png",
+    "qa-evidence/design/depois/novo-orcamento__320x568.png",
+    "qa-evidence/design/depois/buscar-cliente-orcamento__320x568.png",
+    "qa-evidence/design/depois/novo-cliente-orcamento__320x568.png",
+    "qa-evidence/design/depois/montar-orcamento__320x568.png",
+    "qa-evidence/design/depois/editar-orcamento__320x568.png",
+    "qa-evidence/design/depois/detalhe-orcamento__320x568.png",
+    "qa-evidence/design/depois/clientes__320x568.png",
+    "qa-evidence/design/depois/catalogo__320x568.png",
+    "qa-evidence/design/depois/configuracoes__320x568.png",
+    "qa-evidence/design/depois/relatorios__320x568.png",
+    "qa-evidence/design/depois/usuarios__320x568.png",
+    "qa-evidence/design/depois/calculadora-aberta__320x568.png",
+    "qa-evidence/design/depois/modal-material__320x568.png",
+    "qa-evidence/design/depois/orcamentos-vazio__320x568.png",
+    "qa-evidence/design/depois/dashboard__390x844.png",
+    "qa-evidence/design/depois/orcamentos__390x844.png",
+    "qa-evidence/design/depois/novo-orcamento__390x844.png",
+    "qa-evidence/design/depois/buscar-cliente-orcamento__390x844.png",
+    "qa-evidence/design/depois/novo-cliente-orcamento__390x844.png",
+    "qa-evidence/design/depois/montar-orcamento__390x844.png",
+    "qa-evidence/design/depois/editar-orcamento__390x844.png",
+    "qa-evidence/design/depois/detalhe-orcamento__390x844.png",
+    "qa-evidence/design/depois/clientes__390x844.png",
+    "qa-evidence/design/depois/catalogo__390x844.png",
+    "qa-evidence/design/depois/configuracoes__390x844.png",
+    "qa-evidence/design/depois/relatorios__390x844.png",
+    "qa-evidence/design/depois/usuarios__390x844.png",
+    "qa-evidence/design/depois/calculadora-aberta__390x844.png",
+    "qa-evidence/design/depois/modal-material__390x844.png",
+    "qa-evidence/design/depois/orcamentos-vazio__390x844.png",
+    "qa-evidence/design/depois/dashboard__768x1024.png",
+    "qa-evidence/design/depois/orcamentos__768x1024.png",
+    "qa-evidence/design/depois/novo-orcamento__768x1024.png",
+    "qa-evidence/design/depois/buscar-cliente-orcamento__768x1024.png",
+    "qa-evidence/design/depois/novo-cliente-orcamento__768x1024.png",
+    "qa-evidence/design/depois/montar-orcamento__768x1024.png",
+    "qa-evidence/design/depois/editar-orcamento__768x1024.png",
+    "qa-evidence/design/depois/detalhe-orcamento__768x1024.png",
+    "qa-evidence/design/depois/clientes__768x1024.png",
+    "qa-evidence/design/depois/catalogo__768x1024.png",
+    "qa-evidence/design/depois/configuracoes__768x1024.png",
+    "qa-evidence/design/depois/relatorios__768x1024.png",
+    "qa-evidence/design/depois/usuarios__768x1024.png",
+    "qa-evidence/design/depois/calculadora-aberta__768x1024.png",
+    "qa-evidence/design/depois/modal-material__768x1024.png",
+    "qa-evidence/design/depois/orcamentos-vazio__768x1024.png",
+    "qa-evidence/design/depois/dashboard__1024x768.png",
+    "qa-evidence/design/depois/orcamentos__1024x768.png",
+    "qa-evidence/design/depois/novo-orcamento__1024x768.png",
+    "qa-evidence/design/depois/buscar-cliente-orcamento__1024x768.png",
+    "qa-evidence/design/depois/novo-cliente-orcamento__1024x768.png",
+    "qa-evidence/design/depois/montar-orcamento__1024x768.png",
+    "qa-evidence/design/depois/editar-orcamento__1024x768.png",
+    "qa-evidence/design/depois/detalhe-orcamento__1024x768.png",
+    "qa-evidence/design/depois/clientes__1024x768.png",
+    "qa-evidence/design/depois/catalogo__1024x768.png",
+    "qa-evidence/design/depois/configuracoes__1024x768.png",
+    "qa-evidence/design/depois/relatorios__1024x768.png",
+    "qa-evidence/design/depois/usuarios__1024x768.png",
+    "qa-evidence/design/depois/calculadora-aberta__1024x768.png",
+    "qa-evidence/design/depois/modal-material__1024x768.png",
+    "qa-evidence/design/depois/orcamentos-vazio__1024x768.png",
+    "qa-evidence/design/depois/dashboard__1440x900.png",
+    "qa-evidence/design/depois/orcamentos__1440x900.png",
+    "qa-evidence/design/depois/novo-orcamento__1440x900.png",
+    "qa-evidence/design/depois/buscar-cliente-orcamento__1440x900.png",
+    "qa-evidence/design/depois/novo-cliente-orcamento__1440x900.png",
+    "qa-evidence/design/depois/montar-orcamento__1440x900.png",
+    "qa-evidence/design/depois/editar-orcamento__1440x900.png",
+    "qa-evidence/design/depois/detalhe-orcamento__1440x900.png",
+    "qa-evidence/design/depois/clientes__1440x900.png",
+    "qa-evidence/design/depois/catalogo__1440x900.png",
+    "qa-evidence/design/depois/configuracoes__1440x900.png",
+    "qa-evidence/design/depois/relatorios__1440x900.png",
+    "qa-evidence/design/depois/usuarios__1440x900.png",
+    "qa-evidence/design/depois/calculadora-aberta__1440x900.png",
+    "qa-evidence/design/depois/modal-material__1440x900.png",
+    "qa-evidence/design/depois/orcamentos-vazio__1440x900.png",
+    "qa-evidence/design/depois/dashboard__1920x1080.png",
+    "qa-evidence/design/depois/orcamentos__1920x1080.png",
+    "qa-evidence/design/depois/novo-orcamento__1920x1080.png",
+    "qa-evidence/design/depois/buscar-cliente-orcamento__1920x1080.png",
+    "qa-evidence/design/depois/novo-cliente-orcamento__1920x1080.png",
+    "qa-evidence/design/depois/montar-orcamento__1920x1080.png",
+    "qa-evidence/design/depois/editar-orcamento__1920x1080.png",
+    "qa-evidence/design/depois/detalhe-orcamento__1920x1080.png",
+    "qa-evidence/design/depois/clientes__1920x1080.png",
+    "qa-evidence/design/depois/catalogo__1920x1080.png",
+    "qa-evidence/design/depois/configuracoes__1920x1080.png",
+    "qa-evidence/design/depois/relatorios__1920x1080.png",
+    "qa-evidence/design/depois/usuarios__1920x1080.png",
+    "qa-evidence/design/depois/calculadora-aberta__1920x1080.png",
+    "qa-evidence/design/depois/modal-material__1920x1080.png",
+    "qa-evidence/design/depois/orcamentos-vazio__1920x1080.png"
+  ],
+  "overflow": [],
+  "accessibility": [
+    {
+      "screen": "login",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "cadastro",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "login",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "cadastro",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "login",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "cadastro",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "login",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "cadastro",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "login",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "cadastro",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "login",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "cadastro",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "dashboard",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "novo-orcamento",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "buscar-cliente-orcamento",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "novo-cliente-orcamento",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "montar-orcamento",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "editar-orcamento",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "detalhe-orcamento",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "clientes",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "catalogo",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "configuracoes",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "relatorios",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "usuarios",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "calculadora-aberta",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "modal-material",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos-vazio",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "dashboard",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "novo-orcamento",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "buscar-cliente-orcamento",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "novo-cliente-orcamento",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "montar-orcamento",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "editar-orcamento",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "detalhe-orcamento",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "clientes",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "catalogo",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "configuracoes",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "relatorios",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "usuarios",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "calculadora-aberta",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "modal-material",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos-vazio",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "screen": "dashboard",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "novo-orcamento",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "buscar-cliente-orcamento",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "novo-cliente-orcamento",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "montar-orcamento",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "editar-orcamento",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "detalhe-orcamento",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "clientes",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "catalogo",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "configuracoes",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "relatorios",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "usuarios",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "calculadora-aberta",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "modal-material",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos-vazio",
+      "width": 768,
+      "violations": []
+    },
+    {
+      "screen": "dashboard",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "novo-orcamento",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "buscar-cliente-orcamento",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "novo-cliente-orcamento",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "montar-orcamento",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "editar-orcamento",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "detalhe-orcamento",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "clientes",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "catalogo",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "configuracoes",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "relatorios",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "usuarios",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "calculadora-aberta",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "modal-material",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos-vazio",
+      "width": 1024,
+      "violations": []
+    },
+    {
+      "screen": "dashboard",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "novo-orcamento",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "buscar-cliente-orcamento",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "novo-cliente-orcamento",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "montar-orcamento",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "editar-orcamento",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "detalhe-orcamento",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "clientes",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "catalogo",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "configuracoes",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "relatorios",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "usuarios",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "calculadora-aberta",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "modal-material",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos-vazio",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "dashboard",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "novo-orcamento",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "buscar-cliente-orcamento",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "novo-cliente-orcamento",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "montar-orcamento",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "editar-orcamento",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "detalhe-orcamento",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "clientes",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "catalogo",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "configuracoes",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "relatorios",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "usuarios",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "calculadora-aberta",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "modal-material",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "screen": "orcamentos-vazio",
+      "width": 1920,
+      "violations": []
+    }
+  ],
+  "keyboard": [
+    {
+      "flow": "criar cliente",
+      "result": "passou",
+      "method": "teclado"
+    },
+    {
+      "flow": "criar orçamento",
+      "result": "passou",
+      "method": "teclado"
+    },
+    {
+      "flow": "mudar status do orçamento",
+      "result": "passou",
+      "method": "teclado"
+    },
+    {
+      "flow": "gerar relatório",
+      "result": "passou",
+      "method": "teclado"
+    },
+    {
+      "flow": "enviar relatório mock",
+      "result": "passou",
+      "method": "teclado"
+    },
+    {
+      "flow": "modal da calculadora (foco e Esc)",
+      "result": "passou",
+      "method": "teclado"
+    },
+    {
+      "flow": "menu mobile (abrir e Esc)",
+      "result": "passou",
+      "method": "teclado"
+    }
+  ],
+  "runtimeErrors": [
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "lighthouse": [
+    {
+      "route": "/login",
+      "device": "mobile",
+      "scores": {
+        "performance": 52,
+        "accessibility": 100,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 643.1332,
+        "largest-contentful-paint": 73815.7016,
+        "cumulative-layout-shift": 0.0002591647478264363,
+        "speed-index": 1496.0461460017177
+      }
+    },
+    {
+      "route": "/",
+      "device": "mobile",
+      "scores": {
+        "performance": 53,
+        "accessibility": 100,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 640.1522,
+        "largest-contentful-paint": 73505.43555000004,
+        "cumulative-layout-shift": 0.0002591647478264363,
+        "speed-index": 1671.6386320021586
+      }
+    },
+    {
+      "route": "/login",
+      "device": "desktop",
+      "scores": {
+        "performance": 44,
+        "accessibility": 100,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 642.6248,
+        "largest-contentful-paint": 74009.85860000005,
+        "cumulative-layout-shift": 0.00011659955311213995,
+        "speed-index": 1547.5210939967615
+      }
+    },
+    {
+      "route": "/",
+      "device": "desktop",
+      "scores": {
+        "performance": 43,
+        "accessibility": 100,
+        "best-practices": 96
+      },
+      "metrics": {
+        "first-contentful-paint": 641.6851999999999,
+        "largest-contentful-paint": 73785.9989,
+        "cumulative-layout-shift": 0.0001171559526105967,
+        "speed-index": 1767.3663800002814
+      }
+    }
+  ]
+}

@@ -1,0 +1,457 @@
+/* Shared geometry from the eight Gráfica Máxima wireframes (1440px desktop). */
+input,
+select {
+  height: 40px;
+}
+.sidebar-session .button {
+  padding-inline: 12px;
+  font-size: 14px;
+}
+.sidebar-session svg {
+  flex-shrink: 0;
+}
+.page-header p {
+  white-space: pre-wrap;
+}
+.app-shell {
+  display: block;
+}
+.workspace {
+  min-width: 0;
+  padding: 40px;
+  overflow: visible;
+}
+.sidebar {
+  background: #f2f2f2;
+}
+.sidebar nav .button {
+  justify-content: center;
+}
+.page-header h1 {
+  font-weight: 700;
+}
+.page-header > .button-primary {
+  min-width: 206px;
+}
+h2,
+h3 {
+  font-weight: 600;
+}
+.choice-grid h3 {
+  font-size: 23px;
+}
+.field label {
+  font-weight: 400;
+}
+input::placeholder {
+  color: #b3b3b3;
+}
+.client-form {
+  min-height: 470px;
+  margin-top: 56px;
+}
+.client-form-new {
+  min-height: 670px;
+}
+.client-form .field {
+  min-height: 70px;
+}
+.access-form {
+  position: relative;
+  overflow: visible;
+}
+.access-link {
+  position: absolute;
+  top: calc(100% + 24px);
+  width: 100%;
+}
+.access-form .field {
+  min-height: 70px;
+}
+.table-container {
+  border: 0;
+  border-radius: 0;
+}
+.table th,
+.table td {
+  padding: 14px 16px;
+  border: 0;
+  color: var(--ink);
+}
+.table th {
+  background: var(--surface);
+  font-weight: 600;
+}
+.recent-quotes .table {
+  min-width: 800px;
+}
+.recent-quotes .table td {
+  height: 50px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.recent-quotes .table tbody tr:first-child td {
+  padding-top: 28px;
+  height: 66px;
+}
+.recent-quotes .table tbody tr:last-child td {
+  padding-bottom: 28px;
+  height: 66px;
+}
+.quotes-table .table {
+  min-width: 1000px;
+}
+.quotes-table .table td {
+  font-size: 13px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.quotes-table .table tbody tr:first-child td {
+  padding-top: 22px;
+}
+.quotes-table .table tbody tr:last-child td {
+  padding-bottom: 22px;
+}
+.quotes-table .pagination {
+  margin-top: 16px;
+}
+.quotes-table .pagination .button {
+  min-width: 120px;
+}
+.quote-filters {
+  padding-right: 32px;
+}
+.dashboard-period {
+  justify-content: flex-start;
+  gap: 16px;
+}
+.dashboard-period > span {
+  flex: 1;
+}
+.period-control {
+  position: relative;
+  margin-right: 54px;
+}
+.period-control > .button {
+  width: 210px;
+}
+.period-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  width: 260px;
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 18px #0002;
+}
+.period-popover input {
+  width: 100%;
+}
+.dashboard-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 40px;
+}
+.metric-card {
+  height: 310px;
+  min-width: 0;
+}
+.mini-chart {
+  display: block;
+  flex-shrink: 0;
+  margin: 0;
+}
+.materials h2 {
+  line-height: 32px;
+}
+.category-card th {
+  font-weight: 400;
+}
+.calculator-toggle {
+  width: auto;
+  height: auto;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+  .workspace {
+    padding: 28px;
+  }
+  .period-control {
+    margin-right: 0;
+  }
+  .quote-filters {
+    padding-right: 0;
+    grid-template-columns: minmax(0, 1fr) 200px 130px;
+  }
+}
+@media (max-width: 800px) {
+  .workspace {
+    padding: 20px;
+  }
+  .sidebar {
+    position: static;
+    width: 100%;
+  }
+  .page-header {
+    gap: 16px;
+  }
+  .page-header h1 {
+    line-height: 1.3;
+  }
+  .dashboard-period {
+    flex-wrap: wrap;
+  }
+  .dashboard-period > span {
+    flex-basis: 100%;
+  }
+  .period-popover {
+    left: 0;
+    right: auto;
+  }
+  .quote-filters {
+    grid-template-columns: 1fr;
+  }
+  .client-form {
+    min-height: 0;
+  }
+  .choice-grid .panel {
+    min-width: 0;
+  }
+  .access-content {
+    padding-bottom: 80px;
+  }
+  .metric-card {
+    height: auto;
+    min-height: 310px;
+  }
+  .calculator-toggle {
+    bottom: 12px;
+    right: 12px;
+  }
+}
+
+/* Faster quote entry: one clear shortcut, followed by optional customer choices. */
+.client-choice {
+  padding: 28px 0 0;
+  max-width: 940px;
+  margin: 0 auto;
+  text-align: left;
+}
+.client-choice > h2 {
+  font-size: 26px;
+  line-height: 1.3;
+}
+.client-choice > p {
+  margin: 10px 0 24px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.quick-quote {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color 150ms,
+    background 150ms;
+}
+.quick-quote:hover {
+  background: #e9e9e9;
+  border-color: var(--ink);
+}
+.quick-quote:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+.quick-quote-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+.quick-quote-copy strong {
+  font-size: 21px;
+  font-weight: 600;
+}
+.quick-quote-copy > span:last-child {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.quick-quote-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.client-choice .choice-grid {
+  margin: 20px 0;
+  gap: 20px;
+}
+.client-choice .choice-grid .panel {
+  padding: 26px;
+  min-height: 220px;
+  gap: 14px;
+}
+.client-choice .choice-grid h3 {
+  font-size: 19px;
+}
+.client-choice .choice-grid p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.client-choice .choice-grid .button {
+  margin-top: auto;
+  min-width: 0;
+}
+.workspace:has(.production-grid) {
+  min-height: 100vh;
+}
+.production-grid .materials {
+  min-height: 0;
+  padding: 24px;
+}
+.production-grid .quote-summary {
+  min-height: 0;
+}
+.materials-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.materials-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.materials-actions small {
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 800px) {
+  .quick-quote {
+    flex-wrap: wrap;
+    padding: 20px;
+    gap: 14px;
+  }
+  .quick-quote-copy {
+    flex-basis: 100%;
+  }
+  .quick-quote-copy strong {
+    font-size: 19px;
+  }
+  .quick-quote-action {
+    flex-basis: 100%;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .client-choice .choice-grid {
+    grid-template-columns: 1fr;
+  }
+  .client-choice .choice-grid .panel {
+    min-height: 0;
+  }
+  .production-grid .materials {
+    padding: 16px;
+  }
+}
+
+.material-row {
+  grid-template-columns: 32px minmax(160px, 1.65fr) minmax(75px, 0.9fr) minmax(
+      96px,
+      1fr
+    ) minmax(90px, 1fr) 36px;
+  min-width: 708px;
+}
+.remove-material {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.remove-material:hover:not(:disabled) {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+.remove-material:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.remove-material:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.remove-material-dialog {
+  width: min(440px, calc(100vw - 40px));
+  margin: auto;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 20px 60px #0002;
+}
+.remove-material-dialog::backdrop {
+  background: #0006;
+}
+.remove-material-dialog h2 {
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+.remove-material-dialog p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0;
+}
+.remove-material-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.quotes-table .table .quote-actions {
+  width: 96px;
+  min-width: 96px;
+  text-align: center;
+  vertical-align: middle;
+}
+.quotes-table .quote-actions .button {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}

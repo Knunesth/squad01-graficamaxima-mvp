@@ -1,4 +1,4 @@
-import { moeda } from "../../../lib/format";
+import { moeda } from "@/shared/utils/format.js";
 
 // Dynamic data uses the wireframe's 314 × 128 chart geometry.
 function WeeklyChart({ series = [], type = "bar", label }) {

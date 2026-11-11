@@ -1,0 +1,43 @@
+.gm-v2 {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.gm-v2 h1,
+.gm-v2 h2,
+.gm-v2 h3,
+.gm-v2 h4,
+.gm-v2 h5,
+.gm-v2 h6 {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.gm-v2 p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+}
+
+a:not(.button) {
+  color: var(--color-primary);
+  transition: color var(--transition-fast);
+}
+
+a:not(.button):hover {
+  color: var(--color-primary-hover);
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.workspace {
+  flex: 1;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+  background-color: var(--color-background);
+}
