@@ -1,17 +1,17 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { AppShell } from "../components/layout";
-import Dashboard from "../features/dashboard";
-import Orcamentos from "../features/orcamentos/Orcamentos.jsx";
+import { AppShell } from "@/shared/components/layout";
+import Dashboard from "@/features/dashboard/pages/DashboardPage.jsx";
+import Orcamentos from "@/features/budgets/pages/BudgetsPage.jsx";
 import NovoOrcamentos, {
   ClienteFormulario,
   EscolherCliente,
-} from "../features/orcamentos/NovoOrcamentos.jsx";
-import Papeis from "../features/catalogo/Papeis.jsx";
-import Configuracao from "../features/configuracoes/Configuracao.jsx";
-import StatusOrcamento from "../features/orcamentos/StatusOrcamento.jsx";
-import Usuarios from "../features/usuarios/Usuarios.jsx";
-import Acesso from "../features/auth/Acesso.jsx";
-import Clientes from "../features/clientes/Clientes.jsx";
+} from "@/features/budgets/pages/NewBudgetPage.jsx";
+import Papeis from "@/features/catalog/pages/PapersPage.jsx";
+import Configuracao from "@/features/settings/pages/SettingsPage.jsx";
+import StatusOrcamento from "@/features/budgets/pages/BudgetStatusPage.jsx";
+import Usuarios from "@/features/users/pages/UsersPage.jsx";
+import Acesso from "@/features/auth/pages/AccessPage.jsx";
+import Clientes from "@/features/customers/pages/CustomersPage.jsx";
 
 export function AppRoutes({ usuario }) {
   return (

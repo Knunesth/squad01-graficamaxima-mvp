@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { Table } from "../../../components/ui";
-import { dataBR, moeda } from "../../../lib/format";
+import { Table } from "@/shared/components/ui";
+import { dataBR, moeda } from "@/shared/utils/format.js";
 
 export function DashboardTable({ recentes = [] }) {
   return (

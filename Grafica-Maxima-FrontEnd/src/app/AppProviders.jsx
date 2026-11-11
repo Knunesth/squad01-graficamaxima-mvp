@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SessionContext } from "../services/session";
-import api from "../services/api";
+import { SessionContext } from "./SessionContext";
+import api from "@/shared/services/api";
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { PageHeader } from "../../../components/layout";
-import { Button } from "../../../components/ui";
+import { PageHeader } from "@/shared/components/layout";
+import { Button } from "@/shared/components/ui";
 
 export function DashboardHeader({ mes, setMes }) {
   const [open, setOpen] = useState(false);
