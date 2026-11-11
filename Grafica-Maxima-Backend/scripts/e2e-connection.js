@@ -148,6 +148,9 @@ async function run() {
       method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
     }, 201);
     recipientId = testRecipient.body.id_destinatario;
+    await request('/api/reports/recipients', {
+      method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
+    }, 409);
     const delivery = await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
       method: 'POST', body: JSON.stringify({}),
     });
@@ -167,6 +170,10 @@ async function run() {
     await request('/api/reports/history', {}, 403);
     cookie = adminCookie;
     console.log('Acesso de atendente a relatórios bloqueado: OK');
+    cookie = null;
+    await request('/api/reports/history', {}, 401);
+    cookie = adminCookie;
+    console.log('Relatórios sem sessão: bloqueados.');
 
     await request(`/api/orcamentos/${quoteId}`, { method: 'DELETE' }, 200);
     quoteId = null;

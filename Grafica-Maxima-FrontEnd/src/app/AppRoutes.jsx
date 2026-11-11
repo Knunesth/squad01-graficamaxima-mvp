@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/shared/components/layout";
 import Dashboard from "@/features/dashboard/pages/DashboardPage.jsx";
@@ -12,7 +13,7 @@ import StatusOrcamento from "@/features/budgets/pages/BudgetStatusPage.jsx";
 import Usuarios from "@/features/users/pages/UsersPage.jsx";
 import Acesso from "@/features/auth/pages/AccessPage.jsx";
 import Clientes from "@/features/customers/pages/CustomersPage.jsx";
-import ReportsPage from "@/features/reports/pages/ReportsPage.jsx";
+const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage.jsx"));
 
 export function AppRoutes({ usuario }) {
   return (
@@ -54,7 +55,15 @@ export function AppRoutes({ usuario }) {
             <Route path="/configuracao" element={<Configuracao />} />
             <Route
               path="/relatorios"
-              element={usuario.tipo === "admin" ? <ReportsPage /> : <Navigate to="/" replace />}
+              element={
+                usuario.tipo === "admin" ? (
+                  <Suspense fallback={<div role="status">Carregando relatórios…</div>}>
+                    <ReportsPage />
+                  </Suspense>
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
             />
             <Route
               path="/usuarios"
