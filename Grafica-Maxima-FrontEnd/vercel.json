@@ -1,4 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "squad01-graficamaxima-mvp-production.up.railway.app"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
