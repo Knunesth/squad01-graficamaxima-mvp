@@ -23,6 +23,7 @@ function createApp() {
   app.use('/api/clientes', require('./routes/clientesRoutes'));
   app.use('/api/materiais', require('./routes/materiaisRoutes'));
   app.use('/api/calculo', require('./routes/calculoRoutes'));
+  app.use('/api/reports', require('./routes/reportRoutes'));
   app.get('/api/dashboard', require('./controllers/DashBoardController'));
   app.use((req, res) => res.status(404).json({ error: 'Rota não encontrada.' }));
   app.use(errorHandler);

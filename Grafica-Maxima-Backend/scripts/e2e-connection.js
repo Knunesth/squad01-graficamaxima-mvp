@@ -2,6 +2,7 @@ require('dotenv').config();
 const assert = require('node:assert/strict');
 const { randomBytes } = require('node:crypto');
 const { Pool } = require('pg');
+const { todayAtTimezone } = require('../src/services/reporting/period');
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD) {
   throw new Error('Defina DATABASE_URL, JWT_SECRET e ADMIN_PASSWORD antes do E2E.');
@@ -14,6 +15,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 let cookie;
 let clientId;
 let quoteId;
+let reportDate;
 
 async function request(path, options = {}, expected = 200) {
   const response = await fetch(`${apiUrl}${path}`, {
@@ -109,10 +111,35 @@ async function run() {
     assert.ok(pdf.body.subarray(0, 4).toString() === '%PDF');
     console.log(`Orçamento ${quoteId}: criação, aprovação, finalização e PDF OK`);
 
+    reportDate = todayAtTimezone();
+    const report = await request('/api/reports/generate', {
+      method: 'POST', body: JSON.stringify({ type: 'weekly', date: reportDate }),
+    }, 201);
+    assert.ok(report.body.id_relatorio);
+    assert.ok(report.body.resumo.includes('Semana de'));
+    assert.ok(report.body.dados.metrics.finalizedSales >= 1);
+    assert.ok(report.body.dados.metrics.revenue > 0);
+    await request(`/api/reports/${report.body.id_relatorio}`);
+    const history = await request('/api/reports/history?type=weekly');
+    assert.ok(history.body.itens.some((item) => item.id_relatorio === report.body.id_relatorio));
+    console.log(`Relatório semanal ${report.body.id_relatorio}: métricas, resumo e histórico OK`);
+    const monthlyReport = await request('/api/reports/generate', {
+      method: 'POST', body: JSON.stringify({ type: 'monthly', date: reportDate }),
+    }, 201);
+    assert.ok(monthlyReport.body.dados.metrics.finalizedSales >= 1);
+    assert.ok(monthlyReport.body.resumo.includes('Mês de'));
+    console.log(`Relatório mensal ${monthlyReport.body.id_relatorio}: comparação de período OK`);
+
     await request(`/api/orcamentos/${quoteId}`, { method: 'DELETE' }, 200);
     quoteId = null;
     await request(`/api/clientes/${clientId}`, { method: 'DELETE' }, 200);
     clientId = null;
+    await request('/api/reports/generate', {
+      method: 'POST', body: JSON.stringify({ type: 'weekly', date: reportDate }),
+    }, 201);
+    await request('/api/reports/generate', {
+      method: 'POST', body: JSON.stringify({ type: 'monthly', date: reportDate }),
+    }, 201);
     console.log(`E2E concluído; admin ${adminId}; dados TESTE_ removidos.`);
   } finally {
     await cleanup();

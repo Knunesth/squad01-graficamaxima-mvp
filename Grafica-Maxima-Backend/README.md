@@ -32,4 +32,15 @@ Para PostgreSQL instalado localmente, crie o banco e usuário conforme `DATABASE
 - `npm run migrate`: aplica migrations ainda pendentes; pode ser repetido.
 - `npm run seed`: carrega dados demonstrativos na base vazia.
 
-O frontend continua em `../Grafica-Maxima-FrontEnd`, com build e lint próprios. Os relatórios, integração real WhatsApp e agendamento serão desenvolvidos em fases posteriores.
+O frontend continua em `../Grafica-Maxima-FrontEnd`, com build e lint próprios. O agendamento backend usa `REPORT_WEEKLY_CRON`, `REPORT_MONTHLY_CRON` e `REPORT_TIMEZONE`; os padrões são segunda às 8h, dia 1 às 8h e `America/Sao_Paulo`. A geração agendada consulta sempre a semana ou o mês anterior.
+
+## Relatórios (administradores)
+
+Todas as rotas de relatórios exigem login e role `admin`; atendentes e clientes não têm acesso. As seis métricas são orçamentos criados, conversão (Aprovado + Finalizado), vendas Finalizadas, receita apenas de Finalizados, Aprovados/em produção em bloco separado e ticket médio. A comparação semanal/mensal usa o período imediatamente anterior. A receita usa `data_finalizacao`.
+
+- `GET /api/reports?type=weekly|monthly&date=YYYY-MM-DD`: obtém ou gera o relatório para o período que contém a data.
+- `POST /api/reports/generate` com `{ "type": "weekly|monthly", "date": "YYYY-MM-DD" }`: recalcula e persiste o período.
+- `GET /api/reports/history?type=weekly|monthly&limit=12`: lista relatórios salvos.
+- `GET /api/reports/:id`: carrega um relatório do histórico.
+
+Relatórios são salvos em `relatorio` como snapshot de métricas e resumo em português. O WhatsApp e a interface administrativa serão adicionados nas próximas fases.
