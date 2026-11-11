@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const { calculateReport } = require("./reportService");
 const { addDays, todayAtTimezone } = require("./period");
+const { sendReport } = require("../whatsapp/deliveryService");
 
 function scheduledDate(timezone) {
   const today = new Date(`${todayAtTimezone(timezone)}T00:00:00.000Z`);
@@ -25,6 +26,12 @@ function startReportScheduler(env = process.env) {
         try {
           const report = await calculateReport(type, scheduledDate(timezone));
           console.info(`Relatório ${type} gerado: ${report.id_relatorio}`);
+          try {
+            const delivery = await sendReport(report, { skipSent: true });
+            console.info(`Relatório ${type}: ${delivery.results.length} envio(s) registrado(s).`);
+          } catch (error) {
+            console.error(`Falha no envio agendado do relatório ${type}:`, error.message);
+          }
         } catch (error) {
           console.error(`Falha ao gerar relatório ${type}:`, error.message);
         }

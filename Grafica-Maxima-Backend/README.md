@@ -28,6 +28,7 @@ Para PostgreSQL instalado localmente, crie o banco e usuário conforme `DATABASE
 ## Scripts
 
 - `npm run dev`: backend com nodemon.
+- `npm run build`: verifica a sintaxe de todos os arquivos JavaScript do backend.
 - `npm start`: inicia em modo produção.
 - `npm run migrate`: aplica migrations ainda pendentes; pode ser repetido.
 - `npm run seed`: carrega dados demonstrativos na base vazia.
@@ -43,4 +44,6 @@ Todas as rotas de relatórios exigem login e role `admin`; atendentes e clientes
 - `GET /api/reports/history?type=weekly|monthly&limit=12`: lista relatórios salvos.
 - `GET /api/reports/:id`: carrega um relatório do histórico.
 
-Relatórios são salvos em `relatorio` como snapshot de métricas e resumo em português. O WhatsApp e a interface administrativa serão adicionados nas próximas fases.
+Relatórios são salvos em `relatorio` como snapshot de métricas e resumo em português. O envio pela WhatsApp Cloud API usa templates aprovados; sem token e phone number id, o provedor opera em mock. Os admins gerenciam destinatários e consultam os status no painel. As instruções para cadastrar o template da Meta estão no README da raiz.
+
+O destinatário padrão é `WHATSAPP_DEFAULT_RECIPIENT`; outros números podem ser cadastrados na tela administrativa. Defina `WHATSAPP_MODE=cloud`, token, phone number id, versão e nome/idioma de um template aprovado para ativar envios reais. Sem as credenciais, o modo mock persiste o registro e escreve a mensagem no log. O agendador gera e envia relatórios aos destinatários ativos; evita repetir os que já foram registrados como enviados naquela semana/mês.

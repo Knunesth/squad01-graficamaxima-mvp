@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowDownRight, ArrowUpRight, Printer, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowDownRight, ArrowUpRight, Check, Printer, RefreshCw, Send, Trash2 } from "lucide-react";
 import api, { mensagemErro } from "@/shared/services/api.js";
 import { Button, Spinner } from "@/shared/components/ui";
 import "../reports.css";
@@ -99,6 +99,125 @@ function RevenueChart({ reports }) {
   );
 }
 
+function RecipientsPanel({ reportId }) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const recipientsQuery = useQuery({
+    queryKey: ["report-recipients"],
+    queryFn: async () => (await api.get("/api/reports/recipients")).data,
+  });
+  const deliveriesQuery = useQuery({
+    queryKey: ["report-deliveries", reportId],
+    enabled: Boolean(reportId),
+    queryFn: async () => (await api.get(`/api/reports/${reportId}/deliveries`)).data.itens,
+  });
+  const addRecipient = useMutation({
+    mutationFn: async (recipient) => (await api.post("/api/reports/recipients", recipient)).data,
+    onSuccess: async () => {
+      setName("");
+      setPhone("");
+      await queryClient.invalidateQueries({ queryKey: ["report-recipients"] });
+    },
+  });
+  const removeRecipient = useMutation({
+    mutationFn: async (id) => api.delete(`/api/reports/recipients/${id}`),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["report-recipients"] }),
+  });
+  const recipientError = addRecipient.error || removeRecipient.error;
+
+  function submit(event) {
+    event.preventDefault();
+    addRecipient.mutate({ nome: name.trim(), telefone: phone.trim() });
+  }
+
+  return (
+    <section className="report-panel panel report-recipients-panel" aria-labelledby="report-recipients-title">
+      <div className="report-panel-heading">
+        <div>
+          <h2 id="report-recipients-title">Destinatários e envios</h2>
+          <p>Os números configurados recebem os relatórios desta administradora.</p>
+        </div>
+        {recipientsQuery.data ? (
+          <span className={`report-mode-badge ${recipientsQuery.data.mode}`}>
+            {recipientsQuery.data.mode === "mock" ? "Modo de teste" : "WhatsApp Cloud API"}
+          </span>
+        ) : null}
+      </div>
+
+      {recipientsQuery.isLoading ? (
+        <p className="report-empty" role="status">Carregando destinatários…</p>
+      ) : recipientsQuery.isError ? (
+        <p className="report-form-error" role="alert">{mensagemErro(recipientsQuery.error)}</p>
+      ) : (
+        <ul className="report-recipients-list">
+          {recipientsQuery.data.itens.map((recipient) => (
+            <li key={recipient.id_destinatario || recipient.telefone}>
+              <span><strong>{recipient.nome}</strong><small>{recipient.telefone}{recipient.origem === "env" ? " · padrão do .env" : ""}</small></span>
+              {recipient.origem === "aplicacao" ? (
+                <Button
+                  variant="subtle"
+                  className="report-remove-recipient"
+                  aria-label={`Remover ${recipient.nome}`}
+                  disabled={removeRecipient.isPending}
+                  onClick={() => removeRecipient.mutate(recipient.id_destinatario)}
+                ><Trash2 size={15} aria-hidden="true" /><span>Remover</span></Button>
+              ) : null}
+            </li>
+          ))}
+          {!recipientsQuery.data.itens.length ? <li className="report-empty">Nenhum número configurado.</li> : null}
+        </ul>
+      )}
+
+      <form className="report-recipient-form" onSubmit={submit}>
+        <label className="field">
+          <span>Nome</span>
+          <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required />
+        </label>
+        <label className="field">
+          <span>WhatsApp com código do país</span>
+          <input
+            type="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="+5561999999999"
+            pattern="[+][1-9][0-9]{7,14}"
+            title="Use o formato internacional, incluindo + e código do país."
+            maxLength={16}
+            required
+          />
+        </label>
+        <Button type="submit" variant="neutral" disabled={addRecipient.isPending}>
+          {addRecipient.isPending ? "Salvando…" : "Adicionar número"}
+        </Button>
+      </form>
+
+      {recipientError ? <p className="report-form-error" role="alert">{mensagemErro(recipientError)}</p> : null}
+      {addRecipient.isSuccess ? <p className="report-form-success" role="status"><Check size={15} aria-hidden="true" /> Destinatário adicionado.</p> : null}
+
+      <div className="report-deliveries">
+        <h3>Envios deste relatório</h3>
+        {deliveriesQuery.isLoading ? <p className="report-empty" role="status">Carregando histórico de envios…</p> : null}
+        {deliveriesQuery.isError ? <p className="report-form-error" role="alert">{mensagemErro(deliveriesQuery.error)}</p> : null}
+        {deliveriesQuery.data?.length ? (
+          <ul className="report-delivery-list">
+            {deliveriesQuery.data.map((delivery) => (
+              <li key={delivery.id_envio}>
+                <span><strong>{delivery.destinatario}</strong><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(delivery.criado_em))} · {delivery.modo === "mock" ? "teste" : "Cloud API"} · {delivery.tentativas} tentativa(s)</small></span>
+                <span className={`report-delivery-status ${delivery.status}`}>
+                  {delivery.status === "sent" ? "Enviado" : delivery.status === "failed" ? "Falhou" : "Pendente"}
+                  {delivery.erro ? <small>{delivery.erro}</small> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : deliveriesQuery.isSuccess ? <p className="report-empty">Nenhum envio registrado.</p> : null}
+      </div>
+    </section>
+  );
+}
+
 export default function ReportsPage() {
   const [type, setType] = useState("weekly");
   const [date, setDate] = useState(localDate);
@@ -122,6 +241,10 @@ export default function ReportsPage() {
       queryClient.setQueryData(queryKey, (old) => ({ ...old, current }));
     },
   });
+  const sendNow = useMutation({
+    mutationFn: async (id) => (await api.post(`/api/reports/${id}/send`)).data,
+    onSuccess: async (_, id) => queryClient.invalidateQueries({ queryKey: ["report-deliveries", id] }),
+  });
   const report = reportsQuery.data?.current;
   const history = reportsQuery.data?.history || [];
   const chartData = history;
@@ -137,9 +260,14 @@ export default function ReportsPage() {
           <h1 id="reports-title">Relatórios</h1>
           <p>Visão de vendas, conversão e produção da Gráfica Máxima.</p>
         </div>
-        <Button variant="neutral" onClick={abrirImpressao} disabled={!report}>
-          <Printer size={17} aria-hidden="true" /> Imprimir / salvar PDF
-        </Button>
+        <div className="report-header-actions">
+          <Button variant="primary" onClick={() => sendNow.mutate(report.id_relatorio)} disabled={!report || sendNow.isPending}>
+            <Send size={17} aria-hidden="true" /> {sendNow.isPending ? "Enviando…" : "Enviar por WhatsApp agora"}
+          </Button>
+          <Button variant="neutral" onClick={abrirImpressao} disabled={!report}>
+            <Printer size={17} aria-hidden="true" /> Imprimir / salvar PDF
+          </Button>
+        </div>
       </header>
 
       <div className="report-controls panel">
@@ -174,6 +302,19 @@ export default function ReportsPage() {
         </div>
       ) : report ? (
         <>
+          {sendNow.isError && sendNow.variables === report.id_relatorio ? <div className="report-state-error report-send-feedback" role="alert">{mensagemErro(sendNow.error)}</div> : null}
+          {sendNow.isSuccess && sendNow.variables === report.id_relatorio ? (
+            <div className="report-send-feedback" role="status">
+              {sendNow.data.results.length && sendNow.data.results.every((result) => result.status === "failed")
+                ? "O envio falhou para todos os destinatários; confira os erros no histórico abaixo."
+                : sendNow.data.mode === "mock"
+                  ? "Envio simulado e registrado. Configure as credenciais Meta para entrega real."
+                  : "Solicitação enviada aos destinatários ativos."}
+              {sendNow.data.results.some((result) => result.status === "failed") && sendNow.data.results.some((result) => result.status !== "failed")
+                ? " Um ou mais destinatários tiveram falha; confira o histórico abaixo."
+                : ""}
+            </div>
+          ) : null}
           <div className="report-period-heading">
             <div>
               <span className="report-eyebrow">{type === "weekly" ? "Resumo semanal" : "Resumo mensal"}</span>
@@ -281,6 +422,7 @@ export default function ReportsPage() {
               <p className="report-empty">Nenhum relatório salvo para este filtro.</p>
             )}
           </section>
+          <RecipientsPanel reportId={report.id_relatorio} />
         </>
       ) : (
         <div className="report-state">Nenhum dado disponível para este período.</div>

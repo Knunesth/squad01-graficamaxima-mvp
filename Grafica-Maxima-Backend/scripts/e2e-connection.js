@@ -4,8 +4,8 @@ const { randomBytes } = require('node:crypto');
 const { Pool } = require('pg');
 const { todayAtTimezone } = require('../src/services/reporting/period');
 
-if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD) {
-  throw new Error('Defina DATABASE_URL, JWT_SECRET e ADMIN_PASSWORD antes do E2E.');
+if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
+  throw new Error('Defina DATABASE_URL, JWT_SECRET e senhas de admin e atendente antes do E2E.');
 }
 
 const apiUrl = `http://localhost:${Number(process.env.PORT) || 3301}`;
@@ -16,6 +16,9 @@ let cookie;
 let clientId;
 let quoteId;
 let reportDate;
+let recipientId;
+const deliveryIds = [];
+const testPhone = `+1${Array.from(randomBytes(10)).map((value) => value % 10).join('')}`;
 
 async function request(path, options = {}, expected = 200) {
   const response = await fetch(`${apiUrl}${path}`, {
@@ -40,6 +43,12 @@ async function request(path, options = {}, expected = 200) {
 }
 
 async function cleanup() {
+  if (deliveryIds.length) {
+    await pool.query('DELETE FROM relatorio_envio WHERE id_envio = ANY($1::int[])', [deliveryIds]);
+  }
+  if (recipientId) {
+    await pool.query('UPDATE whatsapp_destinatario SET ativo = false WHERE id_destinatario = $1', [recipientId]);
+  }
   if (quoteId) {
     await pool.query('DELETE FROM acabamento_item WHERE id_item IN (SELECT id_item FROM item WHERE id_orcamento = $1)', [quoteId]);
     await pool.query('DELETE FROM item_corte WHERE id_item IN (SELECT id_item FROM item WHERE id_orcamento = $1)', [quoteId]);
@@ -130,10 +139,41 @@ async function run() {
     assert.ok(monthlyReport.body.resumo.includes('Mês de'));
     console.log(`Relatório mensal ${monthlyReport.body.id_relatorio}: comparação de período OK`);
 
+    const recipients = await request('/api/reports/recipients');
+    assert.equal(recipients.body.mode, 'mock');
+    await request('/api/reports/recipients', {
+      method: 'POST', body: JSON.stringify({ nome: tag, telefone: '61999999999' }),
+    }, 422);
+    const testRecipient = await request('/api/reports/recipients', {
+      method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
+    }, 201);
+    recipientId = testRecipient.body.id_destinatario;
+    const delivery = await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
+      method: 'POST', body: JSON.stringify({}),
+    });
+    assert.equal(delivery.body.mode, 'mock');
+    assert.equal(delivery.body.results[0].status, 'sent');
+    assert.equal(delivery.body.results[0].tentativas, 1);
+    deliveryIds.push(delivery.body.results[0].id_envio);
+    const deliveryHistory = await request(`/api/reports/${monthlyReport.body.id_relatorio}/deliveries`);
+    assert.ok(deliveryHistory.body.itens.some((item) => deliveryIds.includes(item.id_envio)));
+    console.log('WhatsApp mock: envio registrado e histórico persistido.');
+
+    const adminCookie = cookie;
+    const attendantLogin = await request('/api/auth/login', {
+      method: 'POST', body: JSON.stringify({ login: process.env.ATTENDANT_LOGIN || 'atendente', senha: process.env.ATTENDANT_PASSWORD }),
+    });
+    cookie = attendantLogin.response.headers.get('set-cookie')?.split(';')[0];
+    await request('/api/reports/history', {}, 403);
+    cookie = adminCookie;
+    console.log('Acesso de atendente a relatórios bloqueado: OK');
+
     await request(`/api/orcamentos/${quoteId}`, { method: 'DELETE' }, 200);
     quoteId = null;
     await request(`/api/clientes/${clientId}`, { method: 'DELETE' }, 200);
     clientId = null;
+    await request(`/api/reports/recipients/${recipientId}`, { method: 'DELETE' }, 200);
+    recipientId = null;
     await request('/api/reports/generate', {
       method: 'POST', body: JSON.stringify({ type: 'weekly', date: reportDate }),
     }, 201);
