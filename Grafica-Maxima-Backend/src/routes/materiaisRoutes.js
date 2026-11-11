@@ -15,33 +15,33 @@ function dados(body) {
   ];
 }
 router.get("/", autenticar, async (req, res) => {
-  const [itens] = await db.query(
-    "SELECT * FROM material WHERE ativo = 1 ORDER BY categoria, nome",
+  const { rows: itens } = await db.query(
+    "SELECT * FROM material WHERE ativo = true ORDER BY categoria, nome",
   );
   res.json({ categorias, itens });
 });
 router.post("/", [autenticar, apenasAdmin], async (req, res) => {
-  const [result] = await db.query(
-    "INSERT INTO material (categoria, nome, custo_fixo, custo_unitario, lucro_fixo, lucro_unitario) VALUES (?, ?, ?, ?, ?, ?)",
+  const { rows } = await db.query(
+    "INSERT INTO material (categoria, nome, custo_fixo, custo_unitario, lucro_fixo, lucro_unitario) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_material",
     dados(req.body),
   );
-  res.status(201).json({ id_material: result.insertId });
+  res.status(201).json({ id_material: rows[0].id_material });
 });
 router.put("/:id", [autenticar, apenasAdmin], async (req, res) => {
-  const [result] = await db.query(
-    "UPDATE material SET categoria = ?, nome = ?, custo_fixo = ?, custo_unitario = ?, lucro_fixo = ?, lucro_unitario = ? WHERE id_material = ? AND ativo = 1",
+  const { rowCount } = await db.query(
+    "UPDATE material SET categoria = $1, nome = $2, custo_fixo = $3, custo_unitario = $4, lucro_fixo = $5, lucro_unitario = $6 WHERE id_material = $7 AND ativo = true",
     [...dados(req.body), id(req.params.id)],
   );
-  if (!result.affectedRows)
+  if (!rowCount)
     throw new HttpError(404, "Material não encontrado.");
   res.json({ message: "Material atualizado." });
 });
 router.delete("/:id", [autenticar, apenasAdmin], async (req, res) => {
-  const [result] = await db.query(
-    "UPDATE material SET ativo = 0 WHERE id_material = ? AND ativo = 1",
+  const { rowCount } = await db.query(
+    "UPDATE material SET ativo = false WHERE id_material = $1 AND ativo = true",
     [id(req.params.id)],
   );
-  if (!result.affectedRows)
+  if (!rowCount)
     throw new HttpError(404, "Material não encontrado.");
   res.json({
     message:

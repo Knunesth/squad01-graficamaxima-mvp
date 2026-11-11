@@ -50,6 +50,7 @@ const STATUS = [
   "Aberto",
   "Pré-Orçamento",
   "Em análise",
+  "Em negociação",
   "Aprovado",
   "Não aprovado",
   "Finalizado",

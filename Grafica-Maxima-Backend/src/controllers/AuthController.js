@@ -31,8 +31,8 @@ async function login(req, res) {
     true,
   ).toLowerCase();
   const senha = texto(req.body.senha, "Senha", 256, true);
-  const [rows] = await db.query(
-    "SELECT id_usuario, nome, login, tipo, ativo, senha_hash FROM usuario WHERE login = ? OR email = ? LIMIT 1",
+  const { rows } = await db.query(
+    "SELECT id_usuario, nome, login, tipo, ativo, senha_hash FROM usuario WHERE login = $1 OR email = $2 LIMIT 1",
     [login, login],
   );
   const user = rows[0];
@@ -67,14 +67,14 @@ async function registrar(req, res) {
     );
   if (senha.length < 12)
     throw new HttpError(422, "A senha deve ter pelo menos 12 caracteres.");
-  const [existing] = await db.query(
-    "SELECT id_usuario FROM usuario WHERE login = ?",
+  const { rows: existing } = await db.query(
+    "SELECT id_usuario FROM usuario WHERE login = $1",
     [login],
   );
   if (existing.length)
     throw new HttpError(409, "Esse login já está cadastrado.");
   await db.query(
-    "INSERT INTO usuario (nome, login, senha_hash, tipo, ativo) VALUES (?, ?, ?, ?, 0)",
+    "INSERT INTO usuario (nome, login, email, senha_hash, tipo, ativo) VALUES ($1, $2, $2, $3, $4, false)",
     [login, login, await hashPassword(senha), "atendente"],
   );
   res

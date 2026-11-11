@@ -8,7 +8,7 @@ router.post("/register", auth.limitarLogin, auth.registrar);
 router.post("/logout", auth.logout);
 router.get("/me", autenticar, (req, res) => res.json({ usuario: req.usuario }));
 router.get("/usuarios", autenticar, apenasAdmin, async (req, res) => {
-  const [rows] = await db.query(
+  const { rows } = await db.query(
     "SELECT id_usuario, nome, login, tipo, ativo FROM usuario ORDER BY id_usuario DESC",
   );
   res.json(rows);
@@ -25,11 +25,11 @@ router.patch("/usuarios/:id", autenticar, apenasAdmin, async (req, res) => {
     typeof req.body.ativo !== "boolean"
   )
     throw new HttpError(422, "Permissões inválidas.");
-  const [result] = await db.query(
-    "UPDATE usuario SET tipo = ?, ativo = ? WHERE id_usuario = ?",
+  const { rowCount } = await db.query(
+    "UPDATE usuario SET tipo = $1, ativo = $2 WHERE id_usuario = $3",
     [req.body.tipo, req.body.ativo, userId],
   );
-  if (!result.affectedRows) throw new HttpError(404, "Usuário não encontrado.");
+  if (!rowCount) throw new HttpError(404, "Usuário não encontrado.");
   res.json({ message: "Permissões atualizadas." });
 });
 module.exports = router;

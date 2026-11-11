@@ -5,11 +5,11 @@ module.exports = async (req, res) => {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes))
     throw new HttpError(422, "Mês inválido.");
   const start = `${mes}-01`;
-  const [rows] = await db.query(
-    `SELECT id_orcamento, data_criacao, status, valor_total FROM orcamento WHERE data_criacao >= ? AND data_criacao < DATE_ADD(?, INTERVAL 1 MONTH) ORDER BY data_criacao`,
+  const { rows } = await db.query(
+    `SELECT id_orcamento, data_criacao, status, valor_total FROM orcamento WHERE data_criacao >= $1 AND data_criacao < $2::date + interval '1 month' ORDER BY data_criacao`,
     [start, start],
   );
-  const [activeRows] = await db.query(
+  const { rows: activeRows } = await db.query(
     `SELECT id_orcamento, status, valor_total FROM orcamento WHERE status NOT IN ('Inativo', 'Finalizado')`,
   );
 
@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
       semanas[
         Math.min(
           4,
-          Math.floor((Number(String(row.data_criacao).slice(8, 10)) - 1) / 7),
+          Math.floor((new Date(row.data_criacao).getDate() - 1) / 7),
         )
       ];
     semana.novos++;
@@ -68,15 +68,15 @@ module.exports = async (req, res) => {
     statusCounts[s].valor += Number(row.valor_total);
   }
 
-  const [recentes] = await db.query(
+  const { rows: recentes } = await db.query(
     "SELECT o.*,c.nome AS nome_cliente FROM orcamento o LEFT JOIN cliente c ON c.id_cliente=o.id_cliente ORDER BY o.id_orcamento DESC LIMIT 4",
   );
 
-  const [orcamentosPeriodo] = await db.query(
+  const { rows: orcamentosPeriodo } = await db.query(
     `SELECT o.*, c.nome AS nome_cliente 
      FROM orcamento o 
      LEFT JOIN cliente c ON c.id_cliente=o.id_cliente 
-     WHERE o.data_criacao >= ? AND o.data_criacao < DATE_ADD(?, INTERVAL 1 MONTH) 
+     WHERE o.data_criacao >= $1 AND o.data_criacao < $2::date + interval '1 month'
      ORDER BY o.id_orcamento DESC 
      LIMIT 50`,
     [start, start],

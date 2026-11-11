@@ -20,8 +20,8 @@ async function autenticar(req, res, next) {
       .json({ error: "Entre na sua conta para continuar." });
   }
   try {
-    const [users] = await db.query(
-      "SELECT id_usuario, nome, login, tipo FROM usuario WHERE id_usuario = ? AND ativo = 1",
+    const { rows: users } = await db.query(
+      "SELECT id_usuario, nome, login, tipo FROM usuario WHERE id_usuario = $1 AND ativo = true",
       [payload.sub],
     );
     if (!users.length)

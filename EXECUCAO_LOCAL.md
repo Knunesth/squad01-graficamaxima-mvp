@@ -1,12 +1,47 @@
-# Executar localmente
+# Executar localmente no Windows
 
-1. Inicie o MySQL e configure `Grafica-Maxima-Backend/.env` com `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`, `PORT`, `FRONTEND_URL` e `JWT_SECRET`. Use `.env.example` como lista de variáveis; defina um segredo próprio para `JWT_SECRET`.
-2. Configure `Grafica-Maxima-FrontEnd/.env` com `VITE_API_URL` apontando para a origem do backend. O exemplo usa a porta padrão 3301.
-3. Em um terminal, dentro de `Grafica-Maxima-Backend`, execute `npm install` se necessário e `npm start` (ou `npm run dev`). Confira `GET /health`.
-4. Em outro terminal, dentro de `Grafica-Maxima-FrontEnd`, execute `npm install` se necessário e `npm run dev`. A porta padrão é 5173. Entre com uma conta ativa do banco.
+## Com Docker Desktop
 
-O navegador envia o cookie de sessão ao backend por CORS. Se a porta ou origem do frontend mudar, inclua a origem em `FRONTEND_URL` ou `CORS_ORIGINS` no backend e reinicie ambos os servidores após alterar `.env`.
+1. Na raiz do projeto, copie `.env.example` para `.env` e substitua `POSTGRES_PASSWORD`.
+2. Copie `Grafica-Maxima-Backend/.env.example` para `Grafica-Maxima-Backend/.env`. Use a mesma senha na `DATABASE_URL`, configure um `JWT_SECRET` aleatório com pelo menos 32 caracteres e defina senhas fortes para `ADMIN_PASSWORD` e `ATTENDANT_PASSWORD`.
+3. Na raiz do projeto:
 
-Em um banco que já contém dados, não execute `npm run setup` nem `npm run seed`: esses comandos atualizam a conta administradora. Para preencher apenas preços de m² ausentes, use `npm run db:seed-prices`; preços já cadastrados são preservados.
+   ```powershell
+   docker compose up -d postgres
+   docker compose ps
+   ```
 
-Verificação: com os dois servidores ativos, execute `node scripts/e2e-connection.js` dentro do backend. O script cria registros `TESTE_`, testa login, CORS, consultas, cálculo e CRUD, e remove os registros ao terminar. No frontend, execute `npm run build` e `npm run lint`.
+4. Em um terminal:
+
+   ```powershell
+   Set-Location Grafica-Maxima-Backend
+   npm ci
+   npm run migrate
+   npm run seed
+   npm run dev
+   ```
+
+   Para testar que migrations são idempotentes, rode `npm run migrate` novamente; não deve aplicar migrations já registradas.
+
+5. Em outro terminal:
+
+   ```powershell
+   Set-Location Grafica-Maxima-FrontEnd
+   npm ci
+   $env:VITE_API_URL = 'http://localhost:3301'
+   npm run dev
+   ```
+
+   Acesse `http://localhost:5173`. O admin usa `ADMIN_LOGIN`/`ADMIN_PASSWORD` e o atendente usa `ATTENDANT_LOGIN`/`ATTENDANT_PASSWORD` definidos no arquivo `Grafica-Maxima-Backend/.env`.
+
+## PostgreSQL instalado localmente
+
+Instale PostgreSQL 16 ou superior e confirme que o serviço está ativo na porta 5432. Crie o usuário e o banco conforme `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB` no `.env` raiz, ou ajuste `DATABASE_URL` no `.env` do backend para suas credenciais. Depois execute os passos 4 e 5 acima. As migrations criam o schema; o seed requer uma base vazia.
+
+## Operação
+
+- `npm run migrate` é seguro para repetir; migrations concluídas ficam registradas em `schema_migrations`.
+- `npm run seed` é destinado à base vazia de desenvolvimento e exige senhas definidas no ambiente.
+- `npm start` inicia o backend em produção e falha se `JWT_SECRET` ou `DATABASE_URL` não estiver definida.
+- O E2E local, quando configurado, é executado por `node scripts/e2e-connection.js`; ele cria e remove registros `TESTE_`.
+- A integração real com WhatsApp, os relatórios e o agendamento ainda não fazem parte desta fase. As variáveis correspondentes ficam documentadas para as fases seguintes.

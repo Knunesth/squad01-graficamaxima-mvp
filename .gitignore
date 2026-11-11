@@ -41,3 +41,6 @@ Thumbs.db
 # Verificação local de interface
 /tmp/ui-check/
 /tmp/visual-review/
+
+# Dados temporários do PostgreSQL local usado em validações
+tmp/phase1-pgdata/
