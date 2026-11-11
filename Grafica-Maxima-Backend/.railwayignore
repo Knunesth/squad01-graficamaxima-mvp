@@ -1,0 +1,25 @@
+# Env files are never needed in uploads; production secrets belong in Railway variables.
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Documentation and SQL exports are not part of the service runtime.
+docs/
+**/docs/
+**/*.sql
+**/*.dump
+**/*.backup
+**/*.bak
+**/*.pdf
+
+# Local dependencies, generated output, logs, and temporary files.
+node_modules/
+**/node_modules/
+dist/
+build/
+logs/
+**/logs/
+**/*.log
+tmp/
+**/tmp/

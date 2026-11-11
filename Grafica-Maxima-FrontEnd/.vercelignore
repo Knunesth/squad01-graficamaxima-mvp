@@ -1,0 +1,24 @@
+# Env files are never needed in uploads; production secrets belong in project variables.
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Local documentation and database exports are not frontend assets.
+docs/
+**/docs/
+**/*.sql
+**/*.dump
+**/*.backup
+**/*.bak
+
+# Local dependencies, prebuilt output, logs, and temporary files.
+node_modules/
+**/node_modules/
+dist/
+build/
+logs/
+**/logs/
+**/*.log
+tmp/
+**/tmp/

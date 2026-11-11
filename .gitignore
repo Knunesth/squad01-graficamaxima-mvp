@@ -5,10 +5,9 @@ node_modules/
 
 # Variáveis de ambiente (NUNCA commitar!)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!/.env.example
+!**/.env.example
 
 # Logs
 npm-debug.log*
