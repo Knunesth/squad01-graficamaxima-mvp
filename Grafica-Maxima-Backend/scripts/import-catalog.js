@@ -3,13 +3,14 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const db = require('../src/config/db');
+const materialCategories = require('../src/config/catalogo');
 
 const specs = {
   materiais: {
-    table: 'material', key: ['categoria', 'nome'], fields: ['categoria', 'nome', 'custo_fixo', 'custo_unitario', 'lucro_fixo', 'lucro_unitario', 'ativo', 'origem', 'origem_id'], required: ['categoria', 'nome'], numeric: ['custo_fixo', 'custo_unitario', 'lucro_fixo', 'lucro_unitario', 'origem_id'], boolean: ['ativo'], defaults: { custo_fixo: '0', custo_unitario: '0', lucro_fixo: '0', lucro_unitario: '0', ativo: 'true' }, id: 'id_material',
+    table: 'material', key: ['categoria', 'nome'], fields: ['categoria', 'nome', 'custo_fixo', 'custo_unitario', 'lucro_fixo', 'lucro_unitario', 'ativo', 'origem', 'origem_id'], required: ['categoria', 'nome'], numeric: ['custo_fixo', 'custo_unitario', 'lucro_fixo', 'lucro_unitario', 'origem_id'], integer: ['origem_id'], allowed: { categoria: materialCategories }, boolean: ['ativo'], defaults: { custo_fixo: '0', custo_unitario: '0', lucro_fixo: '0', lucro_unitario: '0', ativo: 'true' }, id: 'id_material',
   },
   papeis: {
-    table: 'papel', key: ['nome', 'tipo'], fields: ['nome', 'tipo', 'largura_folha', 'altura_folha', 'custo_por_folha'], required: ['nome', 'tipo', 'largura_folha', 'altura_folha', 'custo_por_folha'], numeric: ['largura_folha', 'altura_folha', 'custo_por_folha'], id: 'id_papel',
+    table: 'papel', key: ['nome', 'tipo'], fields: ['nome', 'tipo', 'largura_folha', 'altura_folha', 'custo_por_folha'], required: ['nome', 'tipo', 'largura_folha', 'altura_folha', 'custo_por_folha'], numeric: ['largura_folha', 'altura_folha', 'custo_por_folha'], positive: ['largura_folha', 'altura_folha'], id: 'id_papel',
   },
   impressoes: {
     table: 'impressao', key: ['tipo'], fields: ['tipo', 'custo_por_folha'], required: ['tipo', 'custo_por_folha'], numeric: ['custo_por_folha'], id: 'id_impressao',
@@ -59,9 +60,13 @@ function normalizeRow(spec, row) {
     let value = row[field] ?? spec.defaults?.[field] ?? '';
     if (typeof value === 'string') value = value.trim();
     if (spec.required.includes(field) && !String(value).trim()) errors.push(`campo obrigatório: ${field}`);
+    if (spec.allowed?.[field] && !spec.allowed[field].includes(value)) errors.push(`${field} inválido; valores aceitos: ${spec.allowed[field].join(', ')}`);
     if (spec.numeric.includes(field) && value !== '') {
       const normalized = String(value).replace(',', '.');
       if (!/^-?\d+(\.\d+)?$/.test(normalized) || !Number.isFinite(Number(normalized))) errors.push(`${field} deve ser numérico`);
+      else if (Number(normalized) < 0) errors.push(`${field} não pode ser negativo`);
+      else if (spec.positive?.includes(field) && Number(normalized) <= 0) errors.push(`${field} deve ser maior que zero`);
+      else if (spec.integer?.includes(field) && !Number.isInteger(Number(normalized))) errors.push(`${field} deve ser inteiro`);
       else value = normalized;
     }
     if (spec.boolean?.includes(field) && value !== '') {
