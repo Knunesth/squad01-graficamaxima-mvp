@@ -90,6 +90,9 @@ Envios e falhas ficam registrados em `relatorio_envio`. Falhas transitórias de 
 
 - Backend: `npm run dev`, `npm run build`, `npm start`, `npm run migrate`, `npm run seed`.
 - Frontend: `npm run dev`, `npm run build`, `npm run lint`.
+- Testes do backend: `npm test` roda os testes unitários, sem banco. `npm run test:integration` exercita a API contra um PostgreSQL local indicado em `TEST_DATABASE_URL` (só aceita loopback e usa um schema temporário, removido ao final). `npm run test:all` roda tudo e `npm run test:coverage` mostra a cobertura.
+- Testes do frontend: `npm test` (Vitest + Testing Library), na pasta `Grafica-Maxima-FrontEnd/tests/`.
+- Visão geral do sistema, resultados e achados: [RELATORIO_SISTEMA.md](RELATORIO_SISTEMA.md).
 - E2E local: com banco, backend e frontend ativos, rode `node scripts/e2e-connection.js` na pasta do backend. O roteiro testa login, clientes, orçamento, status, PDF, cálculo por m², dashboard, relatórios, bloqueio de atendentes e envio mock.
 - O backend não possui transpilação; `npm run build` verifica a sintaxe dos arquivos JavaScript.
 

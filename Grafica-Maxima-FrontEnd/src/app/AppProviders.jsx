@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionContext } from "./SessionContext";
 import api from "@/shared/services/api";
+import { ToastProvider } from "@/shared/components/ui/Toast.jsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,7 +43,9 @@ export function AppProviders({ children }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionContext.Provider value={{ usuario, setUsuario }}>
-        <BrowserRouter>{children}</BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>{children}</BrowserRouter>
+        </ToastProvider>
       </SessionContext.Provider>
     </QueryClientProvider>
   );

@@ -4,10 +4,12 @@ const categorias = require("../config/catalogo");
 const { autenticar, apenasAdmin } = require("../middlewares/AuthRole");
 const { texto, numero, id, HttpError } = require("../utils/validation");
 function dados(body) {
-  if (!categorias.includes(body.categoria))
+  // Além das categorias padrão, o administrador pode criar categorias novas.
+  const categoria = typeof body.categoria === "string" ? body.categoria.trim() : "";
+  if (categoria.length < 2 || categoria.length > 50)
     throw new HttpError(422, "Categoria inválida.");
   return [
-    body.categoria,
+    categoria,
     texto(body.nome, "Subcategoria", 100, true),
     ...["custo_fixo", "custo_unitario", "lucro_fixo", "lucro_unitario"].map(
       (key) => numero(body[key] ?? 0, key),
@@ -18,7 +20,10 @@ router.get("/", autenticar, async (req, res) => {
   const { rows: itens } = await db.query(
     "SELECT * FROM material WHERE ativo = true ORDER BY categoria, nome",
   );
-  res.json({ categorias, itens });
+  res.json({
+    categorias: [...new Set([...categorias, ...itens.map((item) => item.categoria)])],
+    itens,
+  });
 });
 router.post("/", [autenticar, apenasAdmin], async (req, res) => {
   const { rows } = await db.query(

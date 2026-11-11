@@ -1,9 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import api from "@/shared/services/api.js";
 
 async function fetchOrcamentos(query) {
   const { data } = await api.get("/api/orcamentos", {
-    params: { ...query, limit: 4 },
+    params: { ...query, limit: 10 },
   });
   return data;
 }
@@ -12,7 +17,7 @@ export function useOrcamentos(query) {
   return useQuery({
     queryKey: ["orcamentos", query],
     queryFn: () => fetchOrcamentos(query),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 }
 

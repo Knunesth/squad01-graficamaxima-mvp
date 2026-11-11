@@ -11,7 +11,11 @@
     "bootstrap-admin": "node scripts/bootstrap-admin.js",
     "import-catalog": "node scripts/import-catalog.js",
     "backup-db": "node scripts/backup-db.js",
-    "e2e:phase7": "node scripts/e2e-phase7.js"
+    "e2e:phase7": "node scripts/e2e-phase7.js",
+    "test": "node --test \"tests/unit/**/*.test.js\"",
+    "test:integration": "node --test --test-concurrency=1 \"tests/integration/**/*.test.js\"",
+    "test:all": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
+    "test:coverage": "node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=src/** --test-coverage-include=scripts/** \"tests/**/*.test.js\""
   },
   "dependencies": {
     "cors": "^2.8.6",

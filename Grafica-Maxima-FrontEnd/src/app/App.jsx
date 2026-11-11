@@ -14,7 +14,7 @@ function Application() {
     const titles = {
       "/": "Dashboard", "/orcamentos": "Orçamentos", "/clientes": "Clientes",
       "/orcamentos/novo": "Novo orçamento", "/orcamentos/novo/cliente": "Selecionar cliente",
-      "/orcamentos/novo/cadastro": "Cadastrar cliente", "/orcamentos/novo/producao": "Montar orçamento",
+      "/orcamentos/novo/cadastro": "Cadastrar cliente", "/orcamentos/novo/producao": "Novo orçamento",
       "/papel": "Papel", "/configuracao": "Configurações", "/relatorios": "Relatórios",
       "/usuarios": "Usuários", "/login": "Entrar", "/cadastro": "Criar conta",
     };

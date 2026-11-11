@@ -37,6 +37,11 @@ function texto(value, campo, max = 255, obrigatorio = false) {
 }
 function data(value) {
   if (value == null || value === "") return null;
+  // A API devolve datas como data-hora ISO ("2026-12-15T03:00:00.000Z");
+  // aceitar o mesmo formato na entrada evita que um valor lido não possa
+  // ser reenviado. Só a parte da data é usada.
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
+    value = value.slice(0, 10);
   if (
     typeof value !== "string" ||
     !/^\d{4}-\d{2}-\d{2}$/.test(value) ||

@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 
+import { useMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "@/shared/services/api.js";
-import { useParams } from "react-router-dom";
+import { useToast } from "@/shared/hooks/useToast.js";
 
 const CalculadoraM2 = ({ aoFechar }) => {
-  const { id } = useParams();
+  // A calculadora fica fora das <Routes>, então useParams() não enxerga o
+  // :id. O orçamento aberto (em edição ou no detalhe) é lido do endereço.
+  const emEdicao = useMatch("/orcamentos/:id/editar");
+  const noDetalhe = useMatch("/status-orcamento/:id");
+  const id = emEdicao?.params.id || noDetalhe?.params.id;
+  const queryClient = useQueryClient();
+  const toast = useToast();
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -73,7 +81,12 @@ const CalculadoraM2 = ({ aoFechar }) => {
       if (dadosCalculados) {
         setResultado(dadosCalculados);
         if (id) {
-          alert("Item calculado e inserido no orçamento com sucesso!");
+          // O orçamento mudou no servidor (novo item, totais e versão):
+          // recarrega as telas que o exibem.
+          queryClient.invalidateQueries({ queryKey: ["orcamento", String(id)] });
+          queryClient.invalidateQueries({ queryKey: ["orcamentos"] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+          toast.success(`Item adicionado ao orçamento #${id}.`);
         }
       } else {
         setErro("O servidor não retornou dados válidos.");

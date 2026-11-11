@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { Table } from "@/shared/components/ui";
+import { StatusBadge } from "@/shared/components/domain";
 import { dataBR, moeda } from "@/shared/utils/format.js";
 
 export function DashboardTable({ recentes = [] }) {
@@ -8,7 +10,7 @@ export function DashboardTable({ recentes = [] }) {
       <header>
         <h2>Últimos orçamentos</h2>
         <Link className="button button-subtle" to="/orcamentos">
-          Ver todos
+          Ver todos <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </header>
       <Table
@@ -28,7 +30,7 @@ export function DashboardTable({ recentes = [] }) {
             <th scope="col">Data de criação</th>
             <th scope="col">Validade</th>
             <th scope="col">Status</th>
-            <th scope="col">Valor</th>
+            <th scope="col" className="cell-number">Valor</th>
           </tr>
         </thead>
         <tbody>
@@ -42,8 +44,8 @@ export function DashboardTable({ recentes = [] }) {
               <td>{item.nome_cliente || "Cliente não vinculado"}</td>
               <td>{dataBR(item.data_criacao)}</td>
               <td>{dataBR(item.data_validade)}</td>
-              <td>{item.status || "Não aprovado"}</td>
-              <td>{moeda(item.valor_total)}</td>
+              <td><StatusBadge status={item.status} /></td>
+              <td className="cell-number">{moeda(item.valor_total)}</td>
             </tr>
           ))}
         </tbody>

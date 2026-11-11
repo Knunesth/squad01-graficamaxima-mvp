@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/shared/components/layout";
+import { CalendarDays } from "lucide-react";
 import { Button } from "@/shared/components/ui";
 
 export function DashboardHeader({ mes, setMes }) {
@@ -20,7 +21,7 @@ export function DashboardHeader({ mes, setMes }) {
       />
       <div className="dashboard-period">
         <span>
-          Dados do período · {label.charAt(0).toUpperCase() + label.slice(1)}
+          Período: {label}
         </span>
         <div
           className="period-control"
@@ -34,6 +35,7 @@ export function DashboardHeader({ mes, setMes }) {
             aria-controls="dashboard-month"
             onClick={() => setOpen(!open)}
           >
+            <CalendarDays size={18} aria-hidden="true" />
             {mes === currentMonth ? "Este mês" : "Alterar período"}
           </Button>
           {open && (

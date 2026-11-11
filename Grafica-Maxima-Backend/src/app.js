@@ -33,6 +33,13 @@ function createApp() {
     next();
   });
   app.use(express.json({ limit: '100kb' }));
+  // No Express 5, req.body fica undefined quando a requisição não traz JSON.
+  // As rotas leem req.body.campo direto; com um objeto vazio a validação
+  // responde 422 em vez de a rota quebrar com 500.
+  app.use((req, res, next) => {
+    if (req.body == null || typeof req.body !== 'object') req.body = {};
+    next();
+  });
   app.get('/', (req, res) => res.json({ status: 'ok', message: 'Servidor da Gráfica Máxima funcionando.' }));
   app.get('/health', async (req, res) => {
     let database = 'ok';

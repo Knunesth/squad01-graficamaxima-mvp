@@ -1,41 +1,51 @@
-import { moeda } from "@/shared/utils/format.js";
+import { StatusBadge, STATUS_OPCOES } from "@/shared/components/domain";
+import { inteiro, moeda } from "@/shared/utils/format.js";
 
-// Dynamic data uses the wireframe's 314 × 128 chart geometry.
-function WeeklyChart({ series = [], type = "bar", label }) {
+const compacto = new Intl.NumberFormat("pt-BR", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+const moedaCurta = (valor) => `R$ ${compacto.format(valor)}`;
+
+/** Menor teto "redondo" (1, 2, 5 ou 10 × potência de 10) acima do maior valor. */
+function tetoRedondo(maximo, contagem) {
+  if (maximo <= 0) return contagem ? 4 : 100;
+  const base = 10 ** Math.floor(Math.log10(maximo));
+  const passos = contagem ? [2, 4, 10] : [1, 2, 5, 10];
+  const teto = passos.map((p) => p * base).find((p) => p >= maximo);
+  return contagem ? Math.max(4, teto) : teto;
+}
+
+// Geometria do gráfico: 314 × 128, igual à dos wireframes.
+function WeeklyChart({ series = [], type = "bar", label, dinheiro = false }) {
   const values = series.map((item) => Math.max(0, Number(item.valor) || 0));
-  const max = Math.max(...values, 1);
-  const step = max > 10 ? 10 : 2;
-  const ceiling = (Math.floor(max / step) + 1) * step;
+  const ceiling = tetoRedondo(Math.max(...values, 0), !dinheiro);
+  const formatar = dinheiro ? moedaCurta : inteiro;
   const x = (index) =>
-    values.length <= 1 ? 169 : 53 + (index * 231) / (values.length - 1);
-  const y = (value) => 90 - (value / ceiling) * 80;
+    values.length <= 1 ? 174 : 64 + (index * 226) / (values.length - 1);
+  const y = (value) => 90 - (value / ceiling) * 76;
   return (
-    <svg
-      className="mini-chart"
-      viewBox="0 0 314 128"
-      role="img"
-      aria-label={label}
-    >
+    <svg className="mini-chart" viewBox="0 0 314 128" role="img" aria-label={label}>
       <title>
         {label}:{" "}
-        {series
-          .map((item, i) => "semana " + item.semana + ": " + values[i])
-          .join(", ") || "sem dados"}
+        {series.map((item, i) => `semana ${item.semana}: ${formatar(values[i])}`).join(", ") ||
+          "sem dados"}
       </title>
       {[ceiling, ceiling / 2, 0].map((value) => (
         <g key={value}>
-          <line x1="32" x2="304" y1={y(value)} y2={y(value)} stroke="#e5e5e5" />
-          <text x="0" y={y(value) + 4} fill="#696969" fontSize="10">
-            {value.toLocaleString("pt-BR")}
+          <line x1="44" x2="304" y1={y(value)} y2={y(value)} stroke="#e8e9f1" />
+          <text x="38" y={y(value) + 4} textAnchor="end" fill="#696d84" fontSize="10">
+            {formatar(value)}
           </text>
         </g>
       ))}
       {type === "line" && values.length > 0 && (
         <polyline
-          points={values.map((v, i) => x(i) + "," + y(v)).join(" ")}
+          points={values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
           fill="none"
           stroke="#333"
           strokeWidth="3"
+          strokeLinejoin="round"
         />
       )}
       {series.map((item, index) => (
@@ -49,27 +59,16 @@ function WeeklyChart({ series = [], type = "bar", label }) {
                 y={y(values[index])}
                 width="32"
                 height={90 - y(values[index])}
-                rx="2"
-                fill={index === values.length - 1 ? "#333" : "#999"}
+                rx="3"
               />
-              <text
-                x={x(index)}
-                y={y(values[index]) - 7}
-                textAnchor="middle"
-                fill="#333"
-                fontSize="10"
-              >
-                {values[index]}
-              </text>
+              {values[index] > 0 && (
+                <text x={x(index)} y={y(values[index]) - 6} textAnchor="middle" fill="#20234f" fontSize="10" fontWeight="600">
+                  {formatar(values[index])}
+                </text>
+              )}
             </>
           )}
-          <text
-            x={x(index)}
-            y="117"
-            textAnchor="middle"
-            fill="#696969"
-            fontSize="10"
-          >
+          <text x={x(index)} y="112" textAnchor="middle" fill="#696d84" fontSize="10">
             Sem. {item.semana}
           </text>
         </g>
@@ -79,53 +78,64 @@ function WeeklyChart({ series = [], type = "bar", label }) {
 }
 
 export function DashboardKPIs({ dados }) {
-  const series = (key, divisor = 1) =>
-    (dados.semanas || []).map((item) => ({
-      semana: item.semana,
-      valor: item[key] / divisor,
-    }));
-  const percent = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 1,
-  }).format(dados.novos ? (dados.aprovados / dados.novos) * 100 : 0);
+  const series = (key) =>
+    (dados.semanas || []).map((item) => ({ semana: item.semana, valor: item[key] }));
+  const percent = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(
+    dados.novos ? (dados.aprovados / dados.novos) * 100 : 0,
+  );
+  const plural = (n, um, varios) => `${inteiro(n)} ${n === 1 ? um : varios}`;
   const cards = [
     {
-      title: "Orçamentos ativos",
+      title: "Em andamento",
       value: moeda(dados.valorAtivo),
-      description: dados.ativos + " orçamentos · valor total ativo",
-      chart: series("ativos", 1000),
+      description: `${plural(dados.ativos, "orçamento aberto", "orçamentos abertos")}, de qualquer mês`,
+      chart: series("valor"),
       type: "line",
-      caption: "Valor ativo criado por semana · R$ mil",
+      dinheiro: true,
+      caption: "Valor orçado por semana, neste mês",
     },
     {
-      title: "Novos orçamentos",
-      value: dados.novos,
-      description: "Orçamentos criados neste mês",
+      title: "Novos no mês",
+      value: inteiro(dados.novos),
+      description: `${moeda(dados.valorNovos)} em orçamentos criados`,
       chart: series("novos"),
-      caption: "Quantidade por semana",
+      caption: "Orçamentos criados por semana",
     },
     {
-      title: "Orçamentos aprovados",
-      value: dados.aprovados,
-      description: percent + "% dos " + dados.novos + " novos orçamentos",
+      title: "Aprovados no mês",
+      value: inteiro(dados.aprovados),
+      description: `${percent}% dos novos · ${moeda(dados.valorAprovados)}`,
       chart: series("aprovados"),
-      caption: "Quantidade aprovada por semana",
+      caption: "Orçamentos aprovados por semana",
     },
   ];
+  const porStatus = STATUS_OPCOES.map((status) => ({
+    status,
+    ...(dados.statusCounts?.[status] || { count: 0, valor: 0 }),
+  }));
+
   return (
-    <section className="metric-grid" aria-label="Indicadores dos orçamentos">
-      {cards.map((card) => (
-        <article className="panel metric-card" key={card.title}>
-          <h2>{card.title}</h2>
-          <strong>{card.value}</strong>
-          <small>{card.description}</small>
-          <WeeklyChart
-            series={card.chart}
-            type={card.type}
-            label={card.caption}
-          />
-          <small>{card.caption}</small>
-        </article>
-      ))}
-    </section>
+    <>
+      <section className="metric-grid" aria-label="Indicadores dos orçamentos">
+        {cards.map((card) => (
+          <article className="panel metric-card" key={card.title}>
+            <h2>{card.title}</h2>
+            <strong>{card.value}</strong>
+            <small>{card.description}</small>
+            <WeeklyChart series={card.chart} type={card.type} label={card.caption} dinheiro={card.dinheiro} />
+            <small>{card.caption}</small>
+          </article>
+        ))}
+      </section>
+      <ul className="panel status-strip" aria-label="Orçamentos por status">
+        {porStatus.map((item) => (
+          <li key={item.status}>
+            <StatusBadge status={item.status} />
+            <strong>{inteiro(item.count)}</strong>
+            <small>{moeda(item.valor)}</small>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

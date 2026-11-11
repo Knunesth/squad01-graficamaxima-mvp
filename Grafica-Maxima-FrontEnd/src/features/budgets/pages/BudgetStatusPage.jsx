@@ -1,11 +1,13 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { FileDown, Pencil, Trash2 } from "lucide-react";
 import { SessionContext } from "@/app/SessionContext.js";
 import api, { mensagemErro } from "@/shared/services/api.js";
 import { Button, Feedback, Table, Spinner } from "@/shared/components/ui";
 import { PageHeader } from "@/shared/components/layout";
-import { StatusBadge } from "@/shared/components/domain";
-import { aprovado, dataBR, moeda } from "@/shared/utils/format.js";
+import { StatusSelect } from "@/shared/components/domain";
+import { useToast } from "@/shared/hooks/useToast.js";
+import { aprovado, dataBR, inteiro, moeda } from "@/shared/utils/format.js";
 import {
   useOrcamento,
   useAlternarStatusOrcamento,
@@ -15,172 +17,166 @@ import {
 export default function StatusOrcamento() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const { usuario } = useContext(SessionContext);
-
   const [pdfBusy, setPdfBusy] = useState(false);
-  const [pdfError, setPdfError] = useState("");
 
   const { data: quote, isLoading, error: queryError } = useOrcamento(id);
-  const toggleStatus = useAlternarStatusOrcamento();
+  const mudarStatus = useAlternarStatusOrcamento();
   const deleteMutation = useDeletarOrcamento();
+  const ocupado = mudarStatus.isPending || deleteMutation.isPending || pdfBusy;
 
-  async function status() {
-    if (toggleStatus.isPending) return;
-    toggleStatus.mutate({
-      id,
-      status: aprovado(quote.status) ? "Não aprovado" : "Aprovado",
-      versao: quote.versao,
-    });
+  function alterarStatus(status) {
+    mudarStatus.mutate(
+      { id, status, versao: quote.versao },
+      {
+        onSuccess: () => toast.success(`Orçamento #${id} agora está como ${status}.`),
+        onError: (erro) => toast.error(mensagemErro(erro)),
+      },
+    );
   }
 
   async function pdf() {
     setPdfBusy(true);
-    setPdfError("");
     try {
-      const response = await api.get(`/api/orcamentos/${id}/pdf`, {
-        responseType: "blob",
-      });
+      const response = await api.get(`/api/orcamentos/${id}/pdf`, { responseType: "blob" });
       const url = URL.createObjectURL(response.data);
       const a = document.createElement("a");
       a.href = url;
       a.download = `orcamento-${id}.pdf`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success(`PDF do orçamento #${id} gerado.`);
     } catch (e) {
+      let mensagem = mensagemErro(e);
       if (e.response?.data instanceof Blob) {
         try {
-          setPdfError(JSON.parse(await e.response.data.text()).error);
+          mensagem = JSON.parse(await e.response.data.text()).error;
         } catch {
-          setPdfError("Não foi possível gerar o PDF.");
+          mensagem = "Não foi possível gerar o PDF.";
         }
-      } else setPdfError(mensagemErro(e));
+      }
+      toast.error(mensagem);
     } finally {
       setPdfBusy(false);
     }
   }
 
-  async function excluir() {
+  function excluir() {
     if (!window.confirm("Excluir este orçamento e seus itens?")) return;
     deleteMutation.mutate(id, {
-      onSuccess: () => navigate("/orcamentos"),
+      onSuccess: () => {
+        toast.success(`Orçamento #${id} excluído.`);
+        navigate("/orcamentos");
+      },
+      onError: (erro) => toast.error(mensagemErro(erro)),
     });
   }
 
-  const errorMessage = queryError
-    ? mensagemErro(queryError)
-    : toggleStatus.error
-      ? mensagemErro(toggleStatus.error)
-      : deleteMutation.error
-        ? mensagemErro(deleteMutation.error)
-        : pdfError;
+  const desconto = quote ? Number(quote.subtotal ?? quote.valor_total) - Number(quote.valor_total) : 0;
 
   return (
     <>
       <PageHeader
         title={`Orçamento #${id}`}
-        subtitle={quote?.nome_cliente || "Detalhes do orçamento"}
+        subtitle={quote?.nome_cliente || "Sem cliente vinculado"}
         back="/orcamentos"
       />
-      <Feedback error={errorMessage} />
+      <Feedback error={queryError ? mensagemErro(queryError) : ""} />
       {isLoading ? (
-        <div
-          className="panel"
-          style={{ display: "flex", justifyContent: "center", padding: "2rem" }}
-        >
-          <Spinner />{" "}
-          <span style={{ marginLeft: "1rem" }}>Carregando detalhes...</span>
-        </div>
+        <p className="loading-line" role="status">
+          <Spinner /> Carregando detalhes...
+        </p>
       ) : quote ? (
         <section className="panel quote-detail">
-          <div className="detail-summary">
-            <p>
-              Cliente:{" "}
-              <strong>{quote.nome_cliente || "Cliente não vinculado"}</strong>
-            </p>
-            <p>Criação: {dataBR(quote.data_criacao)}</p>
-            <p>Validade: {dataBR(quote.data_validade)}</p>
-            <p>
-              Status: <StatusBadge status={quote.status} />
-            </p>
-          </div>
+          <dl className="detail-summary">
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <StatusSelect
+                  status={quote.status}
+                  label={`Status do orçamento ${id}`}
+                  disabled={ocupado}
+                  onChange={alterarStatus}
+                />
+              </dd>
+            </div>
+            <div>
+              <dt>Cliente</dt>
+              <dd>{quote.nome_cliente || "Sem cliente vinculado"}</dd>
+            </div>
+            <div>
+              <dt>Criação</dt>
+              <dd>{dataBR(quote.data_criacao)}</dd>
+            </div>
+            <div>
+              <dt>Validade</dt>
+              <dd>{dataBR(quote.data_validade)}</dd>
+            </div>
+            <div>
+              <dt>Prazo de entrega</dt>
+              <dd>{dataBR(quote.prazo_entrega)}</dd>
+            </div>
+          </dl>
           <Table caption={`Itens do orçamento ${id}, quantidade e valores`}>
             <thead>
               <tr>
                 <th scope="col">Material</th>
-                <th scope="col">Quantidade</th>
-                <th scope="col">Valor unitário</th>
-                <th scope="col">Subtotal</th>
+                <th scope="col" className="cell-number">Quantidade</th>
+                <th scope="col" className="cell-number">Valor unitário</th>
+                <th scope="col" className="cell-number">Subtotal</th>
               </tr>
             </thead>
             <tbody>
               {quote.itens.map((i) => (
                 <tr key={i.id_item}>
                   <td>{i.tipo_produto}</td>
-                  <td>{i.quantidade}</td>
-                  <td>{moeda(i.valor_unitario)}</td>
-                  <td>{moeda(i.valor_total)}</td>
+                  <td className="cell-number">{inteiro(i.quantidade)}</td>
+                  <td className="cell-number">{moeda(i.valor_unitario)}</td>
+                  <td className="cell-number">{moeda(i.valor_total)}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
-          <div
-            style={{
-              marginTop: "1rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-              alignItems: "flex-end",
-              fontWeight: 500,
-              fontSize: "1.1rem",
-            }}
-          >
-            <p>Subtotal: {moeda(quote.subtotal)}</p>
-            <p>
-              Desconto:{" "}
-              {moeda(Number(quote.subtotal) - Number(quote.valor_total))}
+          {quote.observacoes && (
+            <p className="detail-notes">
+              <strong>Observações</strong> {quote.observacoes}
             </p>
-            <h2>Total: {moeda(quote.valor_total)}</h2>
-          </div>
-          <div className="detail-actions" style={{ marginTop: "2rem" }}>
-            <Link
-              className="button button-neutral"
-              to={`/orcamentos/${id}/editar`}
-            >
-              Editar
+          )}
+          <dl className="detail-totals">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{moeda(quote.subtotal ?? quote.valor_total)}</dd>
+            </div>
+            <div>
+              <dt>Desconto</dt>
+              <dd>{desconto > 0 ? `− ${moeda(desconto)}` : moeda(0)}</dd>
+            </div>
+            <div className="detail-total">
+              <dt>Total</dt>
+              <dd>{moeda(quote.valor_total)}</dd>
+            </div>
+          </dl>
+          <div className="detail-actions">
+            <Link className="button button-neutral" to={`/orcamentos/${id}/editar`}>
+              <Pencil size={18} aria-hidden="true" /> Editar
             </Link>
             <Button
-              disabled={
-                toggleStatus.isPending || deleteMutation.isPending || pdfBusy
-              }
-              onClick={status}
-            >
-              {toggleStatus.isPending ? (
-                <Spinner />
-              ) : aprovado(quote.status) ? (
-                "Marcar como não aprovado"
-              ) : (
-                "Aprovar orçamento"
-              )}
-            </Button>
-            <Button
-              variant="neutral"
-              disabled={pdfBusy || !aprovado(quote.status)}
+              disabled={ocupado || !aprovado(quote.status)}
+              title={aprovado(quote.status) ? undefined : "Aprove o orçamento para gerar o PDF"}
               onClick={pdf}
             >
-              {pdfBusy ? "Gerando..." : "Gerar PDF"}
+              <FileDown size={18} aria-hidden="true" /> {pdfBusy ? "Gerando..." : "Gerar PDF"}
             </Button>
             {usuario.tipo === "admin" && (
-              <Button
-                variant="subtle"
-                disabled={
-                  deleteMutation.isPending || toggleStatus.isPending || pdfBusy
-                }
-                onClick={excluir}
-              >
-                {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+              <Button variant="subtle" className="text-danger push-end" disabled={ocupado} onClick={excluir}>
+                <Trash2 size={18} aria-hidden="true" /> {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
               </Button>
             )}
           </div>
+          {!aprovado(quote.status) && (
+            <small className="hint">O PDF fica disponível quando o status é Aprovado ou Finalizado.</small>
+          )}
         </section>
       ) : null}
     </>

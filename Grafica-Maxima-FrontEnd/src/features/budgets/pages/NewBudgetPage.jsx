@@ -1,619 +1,486 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import api, { mensagemErro } from "@/shared/services/api.js";
-import { Button, Feedback, InputField } from "@/shared/components/ui";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  Check,
+  Plus,
+  Save,
+  Trash2,
+  UserPlus,
+  UserRound,
+  UserX,
+} from "lucide-react";
+import { mensagemErro } from "@/shared/services/api.js";
+import {
+  Button,
+  Feedback,
+  InputField,
+  Modal,
+  NumericInput,
+  Spinner,
+} from "@/shared/components/ui";
 import { PageHeader } from "@/shared/components/layout";
-import { decimal, moeda } from "@/shared/utils/format.js";
+import { useToast } from "@/shared/hooks/useToast.js";
+import { dataISO, moeda } from "@/shared/utils/format.js";
 import { useCatalogo } from "@/features/catalog/hooks/useCatalog.js";
 import {
   useOrcamento,
   useSalvarOrcamento,
 } from "@/features/budgets/hooks/useBudgets.js";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { ArrowRight, Plus, Trash2 } from "lucide-react";
+import {
+  lerClienteDoOrcamento,
+  limparClienteDoOrcamento,
+} from "@/features/budgets/quoteCustomer.js";
+import { CustomerForm } from "@/features/customers/components/CustomerForm.jsx";
+import { CustomerTable } from "@/features/customers/components/CustomerTable.jsx";
 
-const contexto = "01 · Cliente (opcional)    /    02 · Monte o orçamento";
-function limparCliente() {
-  sessionStorage.removeItem("orcamento_cliente");
-}
-export function EscolherCliente() {
-  return (
-    <>
-      <PageHeader
-        title="Novo orçamento"
-        subtitle={contexto}
-        back="/orcamentos"
-      />
-      <section className="client-choice">
-        <h2>Como você quer começar?</h2>
-        <p>
-          Monte o orçamento agora ou escolha um cliente para identificar o
-          pedido.
-        </p>
-        <Link
-          className="quick-quote"
-          to="/orcamentos/novo/producao"
-          onClick={limparCliente}
-        >
-          <span className="quick-quote-copy">
-            <strong>Orçamento sem cadastro</strong>
-            <span>
-              Vá direto aos materiais e valores. Os dados do cliente são
-              opcionais.
-            </span>
-          </span>
-          <span className="quick-quote-action">
-            Continuar sem cliente <ArrowRight size={18} aria-hidden="true" />
-          </span>
-        </Link>
-        <div className="choice-grid">
-          <article className="panel">
-            <h3>Cliente já cadastrado</h3>
-            <p>Localize o cadastro pelo e-mail e CPF ou CNPJ do cliente.</p>
-            <Link
-              className="button button-primary"
-              to="/orcamentos/novo/cliente"
-            >
-              Selecionar cliente
-            </Link>
-          </article>
-          <article className="panel">
-            <h3>Novo cliente</h3>
-            <p>
-              Cadastre os dados de uma pessoa ou empresa para o primeiro
-              orçamento.
-            </p>
-            <Link
-              className="button button-neutral"
-              to="/orcamentos/novo/cadastro"
-            >
-              Cadastrar cliente
-            </Link>
-          </article>
-        </div>
-      </section>
-    </>
-  );
-}
-
-const clienteSchemaExistente = z.object({
-  email: z.string().email("E-mail inválido"),
-  cpf_cnpj: z.string().min(11, "CPF/CNPJ muito curto"),
-});
-
-const clienteSchemaNovo = clienteSchemaExistente.extend({
-  nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-  telefone: z.string().min(10, "Telefone inválido"),
-});
-
-export function ClienteFormulario({ novo = false }) {
-  const navigate = useNavigate();
-  const [error, setError] = useState("");
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(novo ? clienteSchemaNovo : clienteSchemaExistente),
-  });
-
-  const onSubmit = async (data) => {
-    setError("");
-    try {
-      const response = await api.post(
-        novo ? "/api/clientes" : "/api/clientes/buscar",
-        data,
-      );
-      sessionStorage.setItem(
-        "orcamento_cliente",
-        JSON.stringify(response.data),
-      );
-      navigate("/orcamentos/novo/producao");
-    } catch (e) {
-      setError(mensagemErro(e));
-    }
-  };
-
-  return (
-    <>
-      <PageHeader
-        title={novo ? "Cadastrar novo cliente" : "Cliente cadastrado"}
-        subtitle={contexto}
-        back="/orcamentos/novo"
-      />
-      <form
-        className={`panel client-form ${novo ? "client-form-new" : ""}`}
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <h2>{novo ? "Dados do novo cliente" : "Localizar cadastro"}</h2>
-        <p>
-          {novo
-            ? "Preencha os dados abaixo para cadastrar e continuar."
-            : "Informe os dados para selecionar o cliente do orçamento."}
-        </p>
-        {novo && (
-          <>
-            <InputField
-              label="Nome do cliente ou da empresa"
-              {...register("nome")}
-              error={errors.nome?.message}
-              maxLength={100}
-              placeholder="Digite o nome completo ou a razão social"
-            />
-            <InputField
-              label="Telefone"
-              {...register("telefone")}
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              error={errors.telefone?.message}
-              maxLength={20}
-              placeholder="(00) 00000-0000"
-            />
-          </>
-        )}
-        <InputField
-          label="E-mail"
-          {...register("email")}
-          type="email"
-          autoComplete="email"
-          error={errors.email?.message}
-          maxLength={100}
-          placeholder="Digite o e-mail do cliente"
-        />
-        <InputField
-          label="CPF ou CNPJ"
-          {...register("cpf_cnpj")}
-          error={errors.cpf_cnpj?.message}
-          maxLength={20}
-          inputMode="numeric"
-          autoComplete="off"
-          placeholder="Digite o CPF ou CNPJ"
-        />
-        <Feedback error={error} />
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting
-            ? "Aguarde..."
-            : novo
-              ? "Cadastrar e continuar"
-              : "Selecionar e continuar"}
-        </Button>
-        <Link
-          className="button button-subtle"
-          to="/orcamentos/novo/producao"
-          onClick={limparCliente}
-        >
-          Continuar sem cliente
-        </Link>
-        <small>
-          {novo
-            ? "Os dados serão usados para identificar o cliente nos pedidos."
-            : "O cadastro será vinculado ao novo orçamento."}
-        </small>
-      </form>
-    </>
-  );
-}
-
-const vazia = () => ({
+const MAX_LINHAS = 17;
+const linhaVazia = () => ({
+  id_item: null,
   id_material: "",
   tipo_produto: "",
   quantidade: "",
   valor_unitario: "",
 });
-function lerCliente() {
-  try {
-    return JSON.parse(sessionStorage.getItem("orcamento_cliente") || "null");
-  } catch {
-    return null;
-  }
-}
+const preenchida = (linha) => Boolean(linha?.id_material || linha?.id_item);
+const numero = (valor) => (valor === "" || valor == null ? 0 : Number(valor));
 
 export default function NovoOrcamentos() {
   const { id } = useParams();
+  const catalogo = useCatalogo();
+  const orcamento = useOrcamento(id);
 
-  const {
-    data: catalogoResponse,
-    isLoading: loadingCatalogo,
-    error: errorCatalogo,
-  } = useCatalogo();
-  const {
-    data: quote,
-    isLoading: loadingQuote,
-    error: errorQuote,
-  } = useOrcamento(id);
-
-  const error = errorCatalogo
-    ? mensagemErro(errorCatalogo)
-    : errorQuote
-      ? mensagemErro(errorQuote)
-      : "";
-  const isLoading = loadingCatalogo || loadingQuote;
-
-  if (error) return <Feedback error={error} />;
-  if (isLoading) return <p role="status">Carregando orçamento...</p>;
+  const erro = catalogo.error || orcamento.error;
+  if (erro) return <Feedback error={mensagemErro(erro)} />;
+  if (catalogo.isLoading || orcamento.isLoading)
+    return (
+      <p className="loading-line" role="status">
+        <Spinner /> Carregando orçamento...
+      </p>
+    );
   return (
     <Producao
-      key={id || "novo"}
-      catalogo={catalogoResponse?.itens || []}
-      quote={quote}
+      // A versão entra na chave: se o orçamento mudar no servidor (por exemplo,
+      // um item vindo da calculadora), o formulário é remontado com os dados
+      // novos em vez de salvar por cima de uma versão antiga.
+      key={id ? `${id}-v${orcamento.data?.versao}` : "novo"}
+      catalogo={catalogo.data?.itens || []}
+      quote={orcamento.data}
     />
   );
 }
-import { useFieldArray, useWatch } from "react-hook-form";
 
-const itemSchema = z.object({
-  id_material: z.union([z.number(), z.string()]).optional(),
-  id_item: z.union([z.number(), z.string()]).optional(),
-  tipo_produto: z.string().optional(),
-  quantidade: z.union([z.number(), z.string()]).optional(),
-  valor_unitario: z.union([z.number(), z.string()]).optional(),
-});
-
-const producaoSchema = z
-  .object({
-    linhas: z.array(itemSchema),
-    desconto_tipo: z.enum(["percentual", "valor"]),
-    desconto_valor: z.coerce.number().min(0, "Desconto inválido"),
-    validade: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      const itens = data.linhas.filter(
-        (l) => (l.id_material && l.id_material !== "legado") || l.id_item,
-      );
-      return itens.length > 0;
-    },
-    { message: "Selecione pelo menos um material válido.", path: ["root"] },
-  );
-
-function ConfirmarRemocao({ material, cancelar, confirmar }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const dialog = ref.current;
-    dialog.showModal();
-    return () => dialog.close();
-  }, []);
+function TrocarCliente({ fechar, escolher }) {
+  const [cadastrando, setCadastrando] = useState(false);
+  const toast = useToast();
   return (
-    <dialog
-      ref={ref}
-      className="remove-material-dialog"
-      aria-labelledby="remove-material-title"
-      aria-describedby="remove-material-description"
-      onCancel={cancelar}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) cancelar();
-      }}
+    <Modal
+      size="lg"
+      title={cadastrando ? "Cadastrar cliente" : "Escolher cliente"}
+      description={
+        cadastrando
+          ? "O cliente novo já fica vinculado a este orçamento."
+          : "Os materiais já preenchidos continuam como estão."
+      }
+      onClose={fechar}
     >
-      <h2 id="remove-material-title">Remover material?</h2>
-      <p id="remove-material-description">
-        Deseja remover{" "}
-        {material.nome ? (
-          <strong>{material.nome}</strong>
-        ) : (
-          `a linha ${material.numero}`
-        )}{" "}
-        do orçamento? A quantidade e o valor desta linha também serão removidos.
-      </p>
-      <div className="remove-material-dialog-actions">
-        <Button variant="neutral" onClick={cancelar} autoFocus>
-          Cancelar
-        </Button>
-        <Button onClick={confirmar}>Remover</Button>
-      </div>
-    </dialog>
+      {cadastrando ? (
+        <CustomerForm
+          salvarLabel="Cadastrar e usar neste orçamento"
+          onCancelar={() => setCadastrando(false)}
+          onSalvo={(cliente) => {
+            toast.success(`Cliente ${cliente.nome} cadastrado.`);
+            escolher(cliente);
+          }}
+        />
+      ) : (
+        <>
+          <div className="toolbar">
+            <Button variant="neutral" onClick={() => setCadastrando(true)}>
+              <UserPlus size={18} aria-hidden="true" /> Cadastrar novo cliente
+            </Button>
+            <Button variant="subtle" onClick={() => escolher(null)}>
+              <UserX size={18} aria-hidden="true" /> Deixar sem cliente
+            </Button>
+          </div>
+          <CustomerTable
+            colunaAcoes="Selecionar"
+            acoes={(cliente) => (
+              <Button
+                variant="neutral"
+                onClick={() => escolher(cliente)}
+                aria-label={`Selecionar ${cliente.nome}`}
+              >
+                <Check size={16} aria-hidden="true" /> Selecionar
+              </Button>
+            )}
+          />
+        </>
+      )}
+    </Modal>
   );
 }
 
 function Producao({ catalogo, quote }) {
   const navigate = useNavigate();
-  const [materialRemover, setMaterialRemover] = useState(null);
-  const [cliente] = useState(() =>
+  const toast = useToast();
+  const mutation = useSalvarOrcamento();
+  const [trocandoCliente, setTrocandoCliente] = useState(false);
+  const [tentouSalvar, setTentouSalvar] = useState(false);
+  const [cliente, setCliente] = useState(() =>
     quote
-      ? {
-          id_cliente: quote.id_cliente,
-          nome: quote.nome_cliente,
-          email: quote.email,
-        }
-      : lerCliente(),
+      ? quote.id_cliente
+        ? { id_cliente: quote.id_cliente, nome: quote.nome_cliente, email: quote.email }
+        : null
+      : lerClienteDoOrcamento(),
   );
 
-  const linhasIniciais = quote?.itens || [];
-  const defaultLinhas = [
-    ...linhasIniciais,
-    ...Array.from({ length: Math.max(0, 3 - linhasIniciais.length) }, vazia),
-  ];
-
-  const mutation = useSalvarOrcamento();
-
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(producaoSchema),
+  const { register, control, handleSubmit, setValue, getValues } = useForm({
     defaultValues: {
-      linhas: defaultLinhas,
+      linhas: quote?.itens?.length
+        ? quote.itens.map((item) => ({
+            id_item: item.id_item,
+            id_material: item.id_material ?? "",
+            tipo_produto: item.tipo_produto || "",
+            quantidade: Number(item.quantidade),
+            valor_unitario: Number(item.valor_unitario),
+          }))
+        : [linhaVazia()],
       desconto_tipo: quote?.desconto_tipo || "percentual",
-      desconto_valor: quote?.desconto_valor || "0",
-      validade: quote?.data_validade?.slice(0, 10) || "",
+      desconto_valor: quote ? Number(quote.desconto_valor) : 0,
+      validade: dataISO(quote?.data_validade),
+      prazo: dataISO(quote?.prazo_entrega),
+      observacoes: quote?.observacoes || "",
     },
   });
-
   const { fields, append, remove } = useFieldArray({ control, name: "linhas" });
+  const linhas = useWatch({ control, name: "linhas" }) || [];
+  const descontoTipo = useWatch({ control, name: "desconto_tipo" });
+  const descontoValor = useWatch({ control, name: "desconto_valor" });
 
-  const watchLinhas = useWatch({ control, name: "linhas" }) || [];
-  const watchDescontoTipo =
-    useWatch({ control, name: "desconto_tipo" }) || "percentual";
-  const watchDescontoValor = useWatch({ control, name: "desconto_valor" }) || 0;
-
-  const subtotal = watchLinhas.reduce(
-    (sum, l) =>
-      sum + (Number(l.quantidade) || 0) * (Number(l.valor_unitario) || 0),
+  const subtotal = linhas.reduce(
+    (soma, linha) =>
+      soma + (preenchida(linha) ? numero(linha.quantidade) * numero(linha.valor_unitario) : 0),
     0,
   );
-  const descontoReal =
-    watchDescontoTipo === "percentual"
-      ? (subtotal * Number(watchDescontoValor || 0)) / 100
-      : Number(watchDescontoValor || 0);
-  const total = subtotal - descontoReal;
+  const desconto =
+    descontoTipo === "percentual"
+      ? (subtotal * numero(descontoValor)) / 100
+      : numero(descontoValor);
+  const total = Math.max(0, subtotal - desconto);
 
-  function selecionar(index, value) {
-    const material = catalogo.find((m) => String(m.id_material) === value);
-    if (material) {
-      setValue(`linhas.${index}.id_material`, material.id_material);
-      setValue(`linhas.${index}.tipo_produto`, material.nome);
-      setValue(
-        `linhas.${index}.quantidade`,
-        watchLinhas[index]?.quantidade || 1,
-      );
-      setValue(
-        `linhas.${index}.valor_unitario`,
-        Number(material.custo_unitario) + Number(material.lucro_unitario),
-      );
-    } else {
-      setValue(`linhas.${index}.id_material`, "");
-      setValue(`linhas.${index}.tipo_produto`, "");
-      setValue(`linhas.${index}.quantidade`, "");
-      setValue(`linhas.${index}.valor_unitario`, "");
+  const usadas = linhas.filter(preenchida);
+  const problemas = [];
+  if (!usadas.length) problemas.push("Escolha pelo menos um material.");
+  if (usadas.some((linha) => numero(linha.quantidade) < 1))
+    problemas.push("Informe a quantidade de cada material (mínimo 1).");
+  if (usadas.some((linha) => linha.valor_unitario === "" || linha.valor_unitario == null))
+    problemas.push("Informe o valor unitário de cada material.");
+  if (descontoTipo === "percentual" && numero(descontoValor) > 100)
+    problemas.push("O desconto não pode passar de 100%.");
+  if (descontoTipo === "valor" && numero(descontoValor) > subtotal)
+    problemas.push("O desconto não pode ser maior que o subtotal.");
+
+  function escolherMaterial(index, valor) {
+    const material = catalogo.find((m) => String(m.id_material) === valor);
+    const atual = getValues(`linhas.${index}`);
+    if (!material) {
+      setValue(`linhas.${index}`, { ...linhaVazia(), id_item: null });
+      return;
     }
+    setValue(`linhas.${index}`, {
+      ...atual,
+      id_material: material.id_material,
+      tipo_produto: material.nome,
+      quantidade: atual.quantidade || 1,
+      valor_unitario:
+        Number(material.custo_unitario) + Number(material.lucro_unitario),
+    });
+    // Ao preencher a última linha, a próxima já aparece pronta.
+    if (index === fields.length - 1 && fields.length < MAX_LINHAS)
+      append(linhaVazia(), { shouldFocus: false });
   }
 
-  const onSubmit = (data) => {
-    if (total < 0) return; // Optional extra check
-
-    const itens = data.linhas.filter((l) => l.id_material || l.id_item);
+  function salvar(dados) {
+    setTentouSalvar(true);
+    if (problemas.length) return;
     const payload = {
       id_cliente: cliente?.id_cliente ?? null,
-      itens,
-      desconto_tipo: data.desconto_tipo,
-      desconto_valor: data.desconto_valor || 0,
-      data_validade: data.validade || null,
-      prazo_entrega: quote?.prazo_entrega || null,
-      observacoes: quote?.observacoes || "",
+      itens: dados.linhas.filter(preenchida).map((linha) => ({
+        id_item: linha.id_item || null,
+        id_material: linha.id_material || null,
+        tipo_produto: linha.tipo_produto,
+        quantidade: numero(linha.quantidade),
+        valor_unitario: numero(linha.valor_unitario),
+      })),
+      desconto_tipo: dados.desconto_tipo,
+      desconto_valor: numero(dados.desconto_valor),
+      data_validade: dados.validade || null,
+      prazo_entrega: dados.prazo || null,
+      observacoes: dados.observacoes.trim(),
       versao: quote?.versao,
     };
-
     mutation.mutate(
       { id: quote?.id_orcamento, payload },
       {
-        onSuccess: () => {
-          sessionStorage.removeItem("orcamento_cliente");
-          navigate("/orcamentos", {
-            state: { message: "Orçamento salvo com sucesso." },
-          });
+        onSuccess: (salvo) => {
+          limparClienteDoOrcamento();
+          toast.success(
+            quote
+              ? `Orçamento #${salvo.id_orcamento} atualizado.`
+              : `Orçamento #${salvo.id_orcamento} criado.`,
+          );
+          navigate(`/status-orcamento/${salvo.id_orcamento}`);
         },
+        onError: (erro) => toast.error(mensagemErro(erro)),
       },
     );
-  };
+  }
 
   return (
     <>
       <PageHeader
-        title={quote ? "Editar orçamento" : "Custo de produção"}
-        subtitle="Cliente opcional · Monte o orçamento"
-        back="/orcamentos"
+        title={quote ? `Editar orçamento #${quote.id_orcamento}` : "Novo orçamento"}
+        subtitle="Escolha os materiais, ajuste quantidades e valores e confira o total."
+        back={quote ? `/status-orcamento/${quote.id_orcamento}` : "/orcamentos"}
       />
+
       <div className="client-strip">
-        <strong>
-          {cliente?.id_cliente
-            ? `Cliente: ${cliente.nome}${cliente.email ? ` · ${cliente.email}` : ""}`
-            : "Cliente não vinculado"}
-        </strong>
-        {!quote && (
-          <Link className="button button-subtle" to="/orcamentos/novo">
-            {cliente?.id_cliente ? "Trocar cliente" : "Selecionar cliente"}
-          </Link>
-        )}
+        <UserRound size={20} aria-hidden="true" />
+        <p>
+          {cliente?.id_cliente ? (
+            <>
+              <strong>{cliente.nome}</strong>
+              {cliente.email && <span>{cliente.email}</span>}
+            </>
+          ) : (
+            <strong>Orçamento sem cliente vinculado</strong>
+          )}
+        </p>
+        <Button variant="subtle" onClick={() => setTrocandoCliente(true)}>
+          {cliente?.id_cliente ? "Trocar cliente" : "Escolher cliente"}
+        </Button>
       </div>
-      <form className="production-grid" onSubmit={handleSubmit(onSubmit)}>
-        <section className="panel materials">
-          <h2>Materiais e quantidades</h2>
-          <small>
-            Selecione os materiais e informe as quantidades. Adicione outras
-            linhas quando precisar.
-          </small>
-          <div className="materials-scroll">
-            <div className="material-row material-head">
+
+      <form className="quote-form" onSubmit={handleSubmit(salvar)} noValidate>
+        <section className="panel materials" aria-labelledby="materiais-titulo">
+          <header className="panel-heading">
+            <h2 id="materiais-titulo">Materiais e quantidades</h2>
+            <small role="status">
+              {usadas.length} de {MAX_LINHAS} materiais
+            </small>
+          </header>
+
+          <div className="material-list">
+            <div className="material-row material-head" aria-hidden="true">
               <span>Nº</span>
               <span>Material</span>
-              <span>Qtd.</span>
-              <span>Valor unit. (R$)</span>
-              <span>Subtotal (R$)</span>
-              <span className="sr-only">Remover</span>
+              <span>Quantidade</span>
+              <span>Valor unitário</span>
+              <span className="cell-number">Subtotal</span>
+              <span />
             </div>
             {fields.map((field, index) => {
-              const linha = watchLinhas[index] || {};
-              const isLegacy = linha.id_item && !linha.id_material;
+              const linha = linhas[index] || {};
+              const ativa = preenchida(linha);
+              const legado = linha.id_item && !linha.id_material;
+              const arquivado =
+                linha.id_material &&
+                !catalogo.some((m) => String(m.id_material) === String(linha.id_material));
               return (
                 <div className="material-row" key={field.id}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <span className="material-number">{String(index + 1).padStart(2, "0")}</span>
                   <select
                     aria-label={`Material ${index + 1}`}
-                    value={linha.id_material || (isLegacy ? "legado" : "")}
-                    onChange={(e) => selecionar(index, e.target.value)}
+                    value={linha.id_material || (legado ? "legado" : "")}
+                    onChange={(event) => escolherMaterial(index, event.target.value)}
                   >
                     <option value="">Selecionar material</option>
-                    {isLegacy && (
-                      <option value="legado">{linha.tipo_produto}</option>
+                    {legado && <option value="legado">{linha.tipo_produto}</option>}
+                    {arquivado && (
+                      <option value={linha.id_material}>
+                        {linha.tipo_produto} (fora do catálogo)
+                      </option>
                     )}
-                    {linha.id_material &&
-                      !catalogo.some(
-                        (m) =>
-                          String(m.id_material) === String(linha.id_material),
-                      ) && (
-                        <option value={linha.id_material}>
-                          {linha.tipo_produto} (arquivado)
-                        </option>
-                      )}
                     {catalogo.map((m) => (
                       <option key={m.id_material} value={m.id_material}>
                         {m.categoria} · {m.nome}
                       </option>
                     ))}
                   </select>
-                  <input
-                    aria-label={`Quantidade ${index + 1}`}
-                    {...register(`linhas.${index}.quantidade`)}
-                    type="number"
-                    min="1"
-                    max="10000000"
-                    step="1"
-                    placeholder="0"
-                    required={!!(linha.id_material || linha.id_item)}
-                    disabled={!linha.id_material && !linha.id_item}
-                  />
-                  <input
-                    aria-label={`Valor unitário ${index + 1}`}
-                    {...register(`linhas.${index}.valor_unitario`)}
-                    type="number"
-                    min="0"
-                    max="10000000"
-                    step="0.0001"
-                    placeholder="0,00"
-                    required={!!(linha.id_material || linha.id_item)}
-                    disabled={!linha.id_material && !linha.id_item}
-                  />
-                  <span>
-                    {decimal(
-                      Number(linha.quantidade || 0) *
-                        Number(linha.valor_unitario || 0),
+                  <Controller
+                    control={control}
+                    name={`linhas.${index}.quantidade`}
+                    render={({ field: campo }) => (
+                      <NumericInput
+                        aria-label={`Quantidade ${index + 1}`}
+                        decimals={0}
+                        max={10000000}
+                        placeholder="0"
+                        disabled={!ativa}
+                        aria-invalid={
+                          tentouSalvar && ativa && numero(campo.value) < 1 ? "true" : undefined
+                        }
+                        value={campo.value}
+                        onChange={campo.onChange}
+                        onBlur={campo.onBlur}
+                      />
                     )}
-                  </span>
+                  />
+                  <Controller
+                    control={control}
+                    name={`linhas.${index}.valor_unitario`}
+                    render={({ field: campo }) => (
+                      <NumericInput
+                        aria-label={`Valor unitário ${index + 1}`}
+                        prefix="R$"
+                        decimals={4}
+                        max={10000000}
+                        placeholder="0,00"
+                        disabled={!ativa}
+                        aria-invalid={
+                          tentouSalvar && ativa && campo.value === "" ? "true" : undefined
+                        }
+                        value={campo.value}
+                        onChange={campo.onChange}
+                        onBlur={campo.onBlur}
+                      />
+                    )}
+                  />
+                  <output className="cell-number material-subtotal" aria-label={`Subtotal ${index + 1}`}>
+                    {ativa ? moeda(numero(linha.quantidade) * numero(linha.valor_unitario)) : "—"}
+                  </output>
                   <button
                     type="button"
-                    className="remove-material"
+                    className="icon-button"
                     aria-label={`Remover material ${index + 1}`}
                     title="Remover material"
-                    disabled={fields.length === 1}
-                    onClick={() =>
-                      setMaterialRemover({
-                        id: field.id,
-                        numero: index + 1,
-                        nome: linha.tipo_produto,
-                      })
-                    }
+                    disabled={fields.length === 1 && !ativa}
+                    onClick={() => (fields.length === 1 ? setValue("linhas.0", linhaVazia()) : remove(index))}
                   >
-                    <Trash2 size={17} aria-hidden="true" />
+                    <Trash2 size={18} aria-hidden="true" />
                   </button>
                 </div>
               );
             })}
           </div>
+
           <div className="materials-actions">
             <Button
               variant="neutral"
-              type="button"
-              disabled={fields.length >= 17}
-              onClick={() => append(vazia(), { shouldFocus: false })}
+              disabled={fields.length >= MAX_LINHAS}
+              onClick={() => append(linhaVazia(), { shouldFocus: false })}
             >
               <Plus size={18} aria-hidden="true" /> Adicionar material
             </Button>
-            <small role="status">
-              {fields.length >= 17
-                ? "Limite de 17 materiais atingido"
-                : `${fields.length} de 17 linhas`}
-            </small>
+            {fields.length >= MAX_LINHAS && <small>Limite de {MAX_LINHAS} materiais atingido.</small>}
           </div>
-          <small>Subtotal de cada item = quantidade × valor unitário.</small>
           {!catalogo.length && (
             <Feedback message="Nenhum material cadastrado. Peça ao administrador para preencher o catálogo em Papel." />
           )}
         </section>
-        <aside className="panel quote-summary">
-          <h2>Resumo do orçamento</h2>
-          <p>Subtotal dos materiais</p>
-          <strong className="subtotal">{moeda(subtotal)}</strong>
-          <strong>Desconto no pedido</strong>
-          <div className="discount-toggle">
-            <Button
-              variant="neutral"
-              type="button"
-              aria-pressed={watchDescontoTipo === "percentual"}
-              onClick={() => {
-                setValue("desconto_tipo", "percentual");
-                setValue("desconto_valor", "0");
-              }}
-            >
-              Percentual (%)
-            </Button>
-            <Button
-              variant="neutral"
-              type="button"
-              aria-pressed={watchDescontoTipo === "valor"}
-              onClick={() => {
-                setValue("desconto_tipo", "valor");
-                setValue("desconto_valor", "0");
-              }}
-            >
-              Valor (R$)
-            </Button>
-          </div>
-          <InputField
-            label={`Desconto (${watchDescontoTipo === "percentual" ? "%" : "R$"})`}
-            {...register("desconto_valor")}
-            type="number"
-            min="0"
-            max={watchDescontoTipo === "percentual" ? 100 : subtotal}
-            step="0.01"
-          />
-          <small>O desconto será aplicado sobre o subtotal.</small>
-          <div className="quote-total">
-            <small>TOTAL DO ORÇAMENTO</small>
-            <strong>{moeda(total)}</strong>
-          </div>
-          <InputField
-            label="Validade do orçamento"
-            {...register("validade")}
-            type="date"
-          />
 
-          {errors.root && <Feedback error={errors.root.message} />}
-          {total < 0 && (
-            <Feedback error="O desconto não pode ultrapassar o subtotal." />
+        <section className="panel quote-summary" aria-labelledby="resumo-titulo">
+          <header className="panel-heading">
+            <h2 id="resumo-titulo">Resumo do orçamento</h2>
+          </header>
+          <div className="summary-grid">
+            <fieldset className="field discount-field">
+              <legend>Desconto</legend>
+              <div className="discount-control">
+                <div className="segmented" role="group" aria-label="Tipo de desconto">
+                  {[
+                    ["percentual", "%"],
+                    ["valor", "R$"],
+                  ].map(([tipo, rotulo]) => (
+                    <button
+                      key={tipo}
+                      type="button"
+                      aria-pressed={descontoTipo === tipo}
+                      aria-label={tipo === "percentual" ? "Desconto em porcentagem" : "Desconto em reais"}
+                      onClick={() => {
+                        if (descontoTipo === tipo) return;
+                        setValue("desconto_tipo", tipo);
+                        setValue("desconto_valor", 0);
+                      }}
+                    >
+                      {rotulo}
+                    </button>
+                  ))}
+                </div>
+                <Controller
+                  control={control}
+                  name="desconto_valor"
+                  render={({ field: campo }) => (
+                    <NumericInput
+                      aria-label={descontoTipo === "percentual" ? "Desconto em porcentagem" : "Desconto em reais"}
+                      decimals={2}
+                      minDecimals={descontoTipo === "percentual" ? 0 : 2}
+                      max={descontoTipo === "percentual" ? 100 : 1000000000}
+                      placeholder="0"
+                      aria-invalid={desconto > subtotal ? "true" : undefined}
+                      value={campo.value}
+                      onChange={campo.onChange}
+                      onBlur={campo.onBlur}
+                    />
+                  )}
+                />
+              </div>
+            </fieldset>
+            <InputField label="Validade do orçamento" type="date" {...register("validade")} />
+            <InputField label="Prazo de entrega" type="date" {...register("prazo")} />
+            <div className="field span-3">
+              <label htmlFor="observacoes">Observações</label>
+              <textarea
+                id="observacoes"
+                rows={3}
+                maxLength={5000}
+                placeholder="Acabamento, forma de entrega, combinados com o cliente..."
+                {...register("observacoes")}
+              />
+            </div>
+          </div>
+
+          {tentouSalvar && problemas.length > 0 && (
+            <div className="feedback error" role="alert">
+              <strong>Antes de salvar:</strong>
+              <ul>
+                {problemas.map((problema) => (
+                  <li key={problema}>{problema}</li>
+                ))}
+              </ul>
+            </div>
           )}
-          {mutation.error && <Feedback error={mensagemErro(mutation.error)} />}
+        </section>
 
-          <Button type="submit" disabled={mutation.isPending}>
+        <div className="totals-bar">
+          <dl>
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{moeda(subtotal)}</dd>
+            </div>
+            <div>
+              <dt>Desconto</dt>
+              <dd>{desconto > 0 ? `− ${moeda(Math.min(desconto, subtotal))}` : moeda(0)}</dd>
+            </div>
+            <div className="totals-total">
+              <dt>Total</dt>
+              <dd>{moeda(total)}</dd>
+            </div>
+          </dl>
+          <Button type="submit" loading={mutation.isPending}>
+            <Save size={18} aria-hidden="true" />
             {mutation.isPending ? "Salvando..." : "Salvar orçamento"}
           </Button>
-        </aside>
+        </div>
       </form>
-      {materialRemover && (
-        <ConfirmarRemocao
-          material={materialRemover}
-          cancelar={() => setMaterialRemover(null)}
-          confirmar={() => {
-            const index = fields.findIndex(
-              (field) => field.id === materialRemover.id,
-            );
-            if (index >= 0 && fields.length > 1) remove(index);
-            setMaterialRemover(null);
+
+      {trocandoCliente && (
+        <TrocarCliente
+          fechar={() => setTrocandoCliente(false)}
+          escolher={(novo) => {
+            setCliente(novo);
+            setTrocandoCliente(false);
           }}
         />
       )}

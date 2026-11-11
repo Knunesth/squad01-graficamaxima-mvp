@@ -1,177 +1,84 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import api, { mensagemErro } from "@/shared/services/api.js";
-import { Button, Feedback, InputField, Spinner, Table } from "@/shared/components/ui";
+import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { mensagemErro } from "@/shared/services/api.js";
+import { Button, Modal } from "@/shared/components/ui";
 import { PageHeader } from "@/shared/components/layout";
-
-const vazio = { nome: "", telefone: "", email: "", cpf_cnpj: "" };
+import { useToast } from "@/shared/hooks/useToast.js";
+import { CustomerForm } from "@/features/customers/components/CustomerForm.jsx";
+import { CustomerTable } from "@/features/customers/components/CustomerTable.jsx";
+import { useExcluirCliente } from "@/features/customers/hooks/useCustomers.js";
 
 export default function Clientes() {
-  const queryClient = useQueryClient();
-  const {
-    data: clientes,
-    isLoading,
-    error: loadError,
-  } = useQuery({
-    queryKey: ["clientes"],
-    queryFn: async () => (await api.get("/api/clientes")).data,
-  });
-  const [selecionado, setSelecionado] = useState(null);
-  const [form, setForm] = useState(vazio);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const toast = useToast();
+  const excluirMutation = useExcluirCliente();
+  // null = fechado · {} = novo cliente · {id_cliente, ...} = edição
+  const [emEdicao, setEmEdicao] = useState(null);
 
-  function editar(cliente) {
-    setSelecionado(cliente.id_cliente);
-    setForm({
-      nome: cliente.nome,
-      telefone: cliente.telefone,
-      email: cliente.email,
-      cpf_cnpj: cliente.cpf_cnpj,
-    });
-    setError("");
-    setMessage("");
-  }
-
-  function novo() {
-    setSelecionado(null);
-    setForm(vazio);
-    setError("");
-    setMessage("");
-  }
-
-  async function salvar(event) {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    setMessage("");
-    try {
-      if (selecionado) await api.put(`/api/clientes/${selecionado}`, form);
-      else await api.post("/api/clientes", form);
-      await queryClient.invalidateQueries({ queryKey: ["clientes"] });
-      setMessage(selecionado ? "Cliente atualizado." : "Cliente cadastrado.");
-      setSelecionado(null);
-      setForm(vazio);
-    } catch (err) {
-      setError(mensagemErro(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function excluir(cliente) {
+  function excluir(cliente) {
     if (!window.confirm(`Excluir o cliente ${cliente.nome}?`)) return;
-    setBusy(true);
-    setError("");
-    setMessage("");
-    try {
-      await api.delete(`/api/clientes/${cliente.id_cliente}`);
-      await queryClient.invalidateQueries({ queryKey: ["clientes"] });
-      if (selecionado === cliente.id_cliente) novo();
-      setMessage("Cliente excluído.");
-    } catch (err) {
-      setError(mensagemErro(err));
-    } finally {
-      setBusy(false);
-    }
+    excluirMutation.mutate(cliente.id_cliente, {
+      onSuccess: () => toast.success(`Cliente ${cliente.nome} excluído.`),
+      onError: (erro) => toast.error(mensagemErro(erro)),
+    });
   }
 
   return (
     <>
       <PageHeader
         title="Clientes"
-        subtitle="Cadastros vinculados aos orçamentos."
-      />
-      <Feedback
-        error={error || (loadError && mensagemErro(loadError))}
-        message={message}
-      />
-      <section className="panel">
-        <h2>{selecionado ? "Editar cliente" : "Novo cliente"}</h2>
-        <form onSubmit={salvar}>
-          {Object.entries({
-            nome: "Nome",
-            telefone: "Telefone",
-            email: "E-mail",
-            cpf_cnpj: "CPF ou CNPJ",
-          }).map(([key, label]) => (
-            <InputField
-              key={key}
-              label={label}
-              name={key}
-              value={form[key]}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  [key]: event.target.value,
-                }))
-              }
-              type={key === "email" ? "email" : key === "telefone" ? "tel" : "text"}
-              inputMode={key === "telefone" ? "tel" : key === "cpf_cnpj" ? "numeric" : undefined}
-              autoComplete={{ nome: "name", telefone: "tel", email: "email", cpf_cnpj: "off" }[key]}
-              maxLength={key === "nome" || key === "email" ? 100 : 20}
-              required
-            />
-          ))}
-          <Button type="submit" disabled={busy}>
-            {busy ? "Salvando..." : "Salvar"}
-          </Button>{" "}
-          {selecionado && (
-            <Button type="button" variant="neutral" onClick={novo}>
-              Cancelar
-            </Button>
+        subtitle="Pessoas e empresas que recebem os orçamentos."
+      >
+        <Button onClick={() => setEmEdicao({})}>
+          <UserPlus size={18} aria-hidden="true" /> Novo cliente
+        </Button>
+      </PageHeader>
+
+      <section className="panel table-panel">
+        <CustomerTable
+          vazio="Nenhum cliente cadastrado ainda. Use o botão Novo cliente para começar."
+          acoes={(cliente) => (
+            <>
+              <Button
+                variant="subtle"
+                onClick={() => setEmEdicao(cliente)}
+                aria-label={`Editar ${cliente.nome}`}
+              >
+                <Pencil size={16} aria-hidden="true" /> Editar
+              </Button>
+              <Button
+                variant="subtle"
+                className="text-danger"
+                disabled={excluirMutation.isPending}
+                onClick={() => excluir(cliente)}
+                aria-label={`Excluir ${cliente.nome}`}
+              >
+                <Trash2 size={16} aria-hidden="true" /> Excluir
+              </Button>
+            </>
           )}
-        </form>
+        />
       </section>
-      <section className="panel">
-        <h2>Clientes cadastrados</h2>
-        {isLoading ? (
-          <p role="status">
-            <Spinner /> Carregando clientes...
-          </p>
-        ) : (
-          <Table
-            caption="Clientes cadastrados, e-mail, telefone e ações"
-            empty={!clientes?.length}
-            emptyMessage="Nenhum cliente cadastrado."
-          >
-            <thead>
-              <tr>
-                <th scope="col">Nome</th>
-                <th scope="col">E-mail</th>
-                <th scope="col">Telefone</th>
-                <th scope="col">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes?.map((cliente) => (
-                <tr key={cliente.id_cliente}>
-                  <td>{cliente.nome}</td>
-                  <td>{cliente.email}</td>
-                  <td>{cliente.telefone}</td>
-                  <td>
-                    <Button
-                      variant="subtle"
-                      disabled={busy}
-                      onClick={() => editar(cliente)}
-                    >
-                      Editar
-                    </Button>{" "}
-                    <Button
-                      variant="subtle"
-                      disabled={busy}
-                      onClick={() => excluir(cliente)}
-                    >
-                      Excluir
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </section>
+
+      {emEdicao && (
+        <Modal
+          title={emEdicao.id_cliente ? "Editar cliente" : "Novo cliente"}
+          description="Todos os campos são obrigatórios."
+          onClose={() => setEmEdicao(null)}
+        >
+          <CustomerForm
+            cliente={emEdicao}
+            onCancelar={() => setEmEdicao(null)}
+            onSalvo={(salvo) => {
+              toast.success(
+                emEdicao.id_cliente
+                  ? `Cliente ${salvo.nome} atualizado.`
+                  : `Cliente ${salvo.nome} cadastrado.`,
+              );
+              setEmEdicao(null);
+            }}
+          />
+        </Modal>
+      )}
     </>
   );
 }

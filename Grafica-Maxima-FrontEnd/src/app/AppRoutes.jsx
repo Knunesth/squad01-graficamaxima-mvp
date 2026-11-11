@@ -3,10 +3,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/shared/components/layout";
 import Dashboard from "@/features/dashboard/pages/DashboardPage.jsx";
 import Orcamentos from "@/features/budgets/pages/BudgetsPage.jsx";
-import NovoOrcamentos, {
-  ClienteFormulario,
+import NovoOrcamentos from "@/features/budgets/pages/NewBudgetPage.jsx";
+import {
+  CadastrarCliente,
   EscolherCliente,
-} from "@/features/budgets/pages/NewBudgetPage.jsx";
+} from "@/features/budgets/pages/CustomerStepPages.jsx";
 import Papeis from "@/features/catalog/pages/PapersPage.jsx";
 import Configuracao from "@/features/settings/pages/SettingsPage.jsx";
 import StatusOrcamento from "@/features/budgets/pages/BudgetStatusPage.jsx";
@@ -36,11 +37,11 @@ export function AppRoutes({ usuario }) {
             <Route path="/orcamentos/novo" element={<EscolherCliente />} />
             <Route
               path="/orcamentos/novo/cliente"
-              element={<ClienteFormulario key="existente" />}
+              element={<Navigate to="/orcamentos/novo" replace />}
             />
             <Route
               path="/orcamentos/novo/cadastro"
-              element={<ClienteFormulario key="novo" novo />}
+              element={<CadastrarCliente />}
             />
             <Route
               path="/orcamentos/novo/producao"
