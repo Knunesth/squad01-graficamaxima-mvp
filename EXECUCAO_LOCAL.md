@@ -11,6 +11,8 @@
    docker compose ps
    ```
 
+   O Compose publica o PostgreSQL na porta `55432` do Windows para coexistir com uma instalação local na porta `5432`. O `.env.example` do backend já aponta para essa porta.
+
 4. Em um terminal:
 
    ```powershell
@@ -36,7 +38,7 @@
 
 ## PostgreSQL instalado localmente
 
-Instale PostgreSQL 16 ou superior e confirme que o serviço está ativo na porta 5432. No PowerShell, conecte como administrador do PostgreSQL:
+Para usar uma instalação local, confirme que o serviço PostgreSQL 16 ou superior está ativo na porta 5432 e ajuste a porta da `DATABASE_URL` para `5432`. No PowerShell, conecte como administrador do PostgreSQL:
 
 ```powershell
 psql -U postgres -h localhost -p 5432
