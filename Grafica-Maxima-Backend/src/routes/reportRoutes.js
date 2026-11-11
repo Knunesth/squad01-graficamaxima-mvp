@@ -11,6 +11,7 @@ const {
 const {
   e164,
   listRecipients,
+  getRecipientCapacity,
   createRecipient,
   deactivateRecipient,
   sendReport,
@@ -51,6 +52,7 @@ router.get("/recipients", async (req, res) => {
       ? "cloud"
       : "mock",
     itens: await listRecipients(),
+    limites: await getRecipientCapacity(),
   });
 });
 

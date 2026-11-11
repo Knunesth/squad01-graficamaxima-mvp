@@ -21,6 +21,7 @@ let clientId;
 let quoteId;
 let reportDate;
 let recipientId;
+const recipientIds = [];
 const deliveryIds = [];
 const testPhone = `+1${Array.from(randomBytes(10)).map((value) => value % 10).join('')}`;
 
@@ -50,8 +51,8 @@ async function cleanup() {
   if (deliveryIds.length) {
     await pool.query('DELETE FROM relatorio_envio WHERE id_envio = ANY($1::int[])', [deliveryIds]);
   }
-  if (recipientId) {
-    await pool.query('UPDATE whatsapp_destinatario SET ativo = false WHERE id_destinatario = $1', [recipientId]);
+  if (recipientIds.length) {
+    await pool.query('DELETE FROM whatsapp_destinatario WHERE id_destinatario = ANY($1::int[])', [recipientIds]);
   }
   if (quoteId) {
     await pool.query('DELETE FROM acabamento_item WHERE id_item IN (SELECT id_item FROM item WHERE id_orcamento = $1)', [quoteId]);
@@ -164,6 +165,7 @@ async function run() {
       method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
     }, 201);
     recipientId = testRecipient.body.id_destinatario;
+    recipientIds.push(recipientId);
     await request('/api/reports/recipients', {
       method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
     }, 409);
@@ -276,6 +278,41 @@ async function run() {
     await request('/api/reports/generate', {
       method: 'POST', body: JSON.stringify({ type: 'monthly', date: reportDate }),
     }, 201);
+
+    let capacity = (await request('/api/reports/recipients')).body.limites;
+    const activeLimitIds = [];
+    let sequence = 0;
+    const createLimitRecipient = async () => {
+      sequence += 1;
+      const phone = `+1${Array.from(randomBytes(10)).map((value) => value % 10).join('')}`;
+      const createdRecipient = await request('/api/reports/recipients', {
+        method: 'POST', body: JSON.stringify({ nome: `${tag}_L${sequence}`, telefone: phone }),
+      }, 201);
+      recipientIds.push(createdRecipient.body.id_destinatario);
+      return createdRecipient.body.id_destinatario;
+    };
+    while (capacity.activeCount < capacity.activeMax) {
+      activeLimitIds.push(await createLimitRecipient());
+      capacity = (await request('/api/reports/recipients')).body.limites;
+    }
+    const activeBlocked = await request('/api/reports/recipients', {
+      method: 'POST', body: JSON.stringify({ nome: `${tag}_active_block`, telefone: `+1${Array.from(randomBytes(10)).map((value) => value % 10).join('')}` }),
+    }, 422);
+    assert.match(activeBlocked.body.error, /ativos/);
+    for (const id of activeLimitIds) await request(`/api/reports/recipients/${id}`, { method: 'DELETE' });
+
+    capacity = (await request('/api/reports/recipients')).body.limites;
+    while (capacity.totalCount < capacity.totalMax) {
+      const id = await createLimitRecipient();
+      await request(`/api/reports/recipients/${id}`, { method: 'DELETE' });
+      capacity = (await request('/api/reports/recipients')).body.limites;
+    }
+    const totalBlocked = await request('/api/reports/recipients', {
+      method: 'POST', body: JSON.stringify({ nome: `${tag}_total_block`, telefone: `+1${Array.from(randomBytes(10)).map((value) => value % 10).join('')}` }),
+    }, 422);
+    assert.match(totalBlocked.body.error, /cadastrados/);
+    console.log('Limites de destinatários ativos e totais exibidos e aplicados no backend: OK.');
+
     console.log(`E2E concluído; admin ${adminId}; dados TESTE_ removidos.`);
   } finally {
     await cleanup();

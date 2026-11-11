@@ -137,6 +137,11 @@ function RecipientsPanel({ reportId }) {
         <div>
           <h2 id="report-recipients-title">Destinatários e envios</h2>
           <p>Os números configurados recebem os relatórios desta administradora.</p>
+          {recipientsQuery.data?.limites ? (
+            <p className="report-recipient-limit">
+              {recipientsQuery.data.limites.activeCount}/{recipientsQuery.data.limites.activeMax} ativos · {recipientsQuery.data.limites.totalCount}/{recipientsQuery.data.limites.totalMax} cadastrados. Números inativos contam no limite total.
+            </p>
+          ) : null}
         </div>
         {recipientsQuery.data ? (
           <span className={`report-mode-badge ${recipientsQuery.data.mode}`}>
@@ -188,7 +193,11 @@ function RecipientsPanel({ reportId }) {
             required
           />
         </label>
-        <Button type="submit" variant="neutral" disabled={addRecipient.isPending}>
+        <Button
+          type="submit"
+          variant="neutral"
+          disabled={addRecipient.isPending || recipientsQuery.data?.limites?.activeCount >= recipientsQuery.data?.limites?.activeMax || recipientsQuery.data?.limites?.totalCount >= recipientsQuery.data?.limites?.totalMax}
+        >
           {addRecipient.isPending ? "Salvando…" : "Adicionar número"}
         </Button>
       </form>

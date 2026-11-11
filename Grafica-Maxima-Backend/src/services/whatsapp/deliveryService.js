@@ -3,6 +3,42 @@ const { WhatsAppProvider, isCloudConfigured } = require("./WhatsAppProvider");
 
 const e164 = /^\+[1-9]\d{7,14}$/;
 const STALE_PENDING_AFTER = "5 minutes";
+const RECIPIENT_LIMIT_LOCK = 781513206;
+
+function configuredRecipientLimits(env = process.env) {
+  const readLimit = (key, fallback) => {
+    const value = Number(env[key] || fallback);
+    if (!Number.isInteger(value) || value < 1) throw new Error(`${key} deve ser um inteiro positivo.`);
+    return value;
+  };
+  return {
+    activeMax: readLimit("MAX_RECIPIENTS_ACTIVE", 5),
+    totalMax: readLimit("MAX_RECIPIENTS_TOTAL", 10),
+  };
+}
+
+async function recipientUsage(connection = db) {
+  const defaultPhone = process.env.WHATSAPP_DEFAULT_RECIPIENT?.trim();
+  const validDefault = defaultPhone && e164.test(defaultPhone) ? defaultPhone : null;
+  const { rows } = await connection.query(
+    `SELECT count(*)::int AS total,
+       count(*) FILTER (WHERE ativo = true)::int AS active,
+       count(*) FILTER (WHERE telefone = $1)::int AS default_total,
+       count(*) FILTER (WHERE telefone = $1 AND ativo = true)::int AS default_active
+     FROM whatsapp_destinatario`,
+    [validDefault],
+  );
+  const row = rows[0];
+  return {
+    totalCount: row.total + (validDefault && row.default_total === 0 ? 1 : 0),
+    activeCount: row.active + (validDefault && row.default_active === 0 ? 1 : 0),
+  };
+}
+
+async function getRecipientCapacity() {
+  const [limits, usage] = await Promise.all([Promise.resolve(configuredRecipientLimits()), recipientUsage()]);
+  return { ...usage, ...limits };
+}
 
 async function listRecipients() {
   const { rows } = await db.query(
@@ -23,11 +59,33 @@ async function listRecipients() {
 }
 
 async function createRecipient({ name, phone }) {
-  const { rows } = await db.query(
-    "INSERT INTO whatsapp_destinatario (nome, telefone) VALUES ($1, $2) RETURNING id_destinatario, nome, telefone, ativo, criado_em",
-    [name, phone],
-  );
-  return { ...rows[0], origem: "aplicacao" };
+  const connection = await db.getClient();
+  try {
+    await connection.query("BEGIN");
+    await connection.query("SELECT pg_advisory_xact_lock($1)", [RECIPIENT_LIMIT_LOCK]);
+    const capacity = { ...await recipientUsage(connection), ...configuredRecipientLimits() };
+    if (capacity.activeCount >= capacity.activeMax) {
+      const error = new Error(`Limite de ${capacity.activeMax} destinatários ativos atingido.`);
+      error.status = 422;
+      throw error;
+    }
+    if (capacity.totalCount >= capacity.totalMax) {
+      const error = new Error(`Limite de ${capacity.totalMax} destinatários cadastrados atingido; remova registros inativos para liberar espaço.`);
+      error.status = 422;
+      throw error;
+    }
+    const { rows } = await connection.query(
+      "INSERT INTO whatsapp_destinatario (nome, telefone) VALUES ($1, $2) RETURNING id_destinatario, nome, telefone, ativo, criado_em",
+      [name, phone],
+    );
+    await connection.query("COMMIT");
+    return { ...rows[0], origem: "aplicacao" };
+  } catch (error) {
+    await connection.query("ROLLBACK");
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function deactivateRecipient(recipientId) {
@@ -153,6 +211,7 @@ async function listDeliveries(reportId) {
 module.exports = {
   e164,
   listRecipients,
+  getRecipientCapacity,
   createRecipient,
   deactivateRecipient,
   sendReport,
