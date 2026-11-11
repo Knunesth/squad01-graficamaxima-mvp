@@ -80,7 +80,8 @@ router.get("/:id/deliveries", async (req, res) => {
 router.post("/:id/send", async (req, res) => {
   const report = await getReportById(id(req.params.id));
   if (!report) throw new HttpError(404, "Relatório não encontrado.");
-  res.json(await sendReport(report));
+  const result = await sendReport(report, { confirmResend: req.body.confirmResend === true });
+  res.status(result.confirmationRequired ? 409 : 200).json(result);
 });
 
 router.get("/", async (req, res) => {

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const { randomBytes } = require('node:crypto');
 const { Pool } = require('pg');
 const { todayAtTimezone } = require('../src/services/reporting/period');
+const { sendReport } = require('../src/services/whatsapp/deliveryService');
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD || !process.env.ATTENDANT_PASSWORD) {
   throw new Error('Defina DATABASE_URL, JWT_SECRET e senhas de admin e atendente antes do E2E.');
@@ -151,6 +152,42 @@ async function run() {
     await request('/api/reports/recipients', {
       method: 'POST', body: JSON.stringify({ nome: tag, telefone: testPhone }),
     }, 409);
+
+    let providerCalls = 0;
+    const fakeProviderFactory = () => ({
+      async sendReport() {
+        providerCalls += 1;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        return { mode: 'mock', messageId: 'e2e-concurrent-reservation' };
+      },
+    });
+    const concurrentSends = await Promise.all([
+      sendReport(report.body, { providerFactory: fakeProviderFactory }),
+      sendReport(report.body, { providerFactory: fakeProviderFactory }),
+    ]);
+    assert.equal(providerCalls, 1);
+    const reservations = await pool.query(
+      'SELECT id_envio, status FROM relatorio_envio WHERE id_relatorio = $1 AND destinatario = $2',
+      [report.body.id_relatorio, testPhone],
+    );
+    assert.equal(reservations.rowCount, 1);
+    assert.equal(reservations.rows[0].status, 'sent');
+    deliveryIds.push(reservations.rows[0].id_envio);
+    console.log(`Reserva concorrente: ${providerCalls} chamada ao provedor para ${concurrentSends.length} execuções.`);
+
+    await pool.query(
+      "UPDATE relatorio_envio SET status = 'pending', criado_em = now() - interval '6 minutes' WHERE id_envio = $1",
+      [reservations.rows[0].id_envio],
+    );
+    const staleHistory = await request(`/api/reports/${report.body.id_relatorio}/deliveries`);
+    assert.equal(staleHistory.body.itens.find((item) => item.id_envio === reservations.rows[0].id_envio).status, 'unknown');
+    await request(`/api/reports/${report.body.id_relatorio}/send`, { method: 'POST', body: JSON.stringify({}) }, 409);
+    const recovered = await request(`/api/reports/${report.body.id_relatorio}/send`, {
+      method: 'POST', body: JSON.stringify({ confirmResend: true }),
+    });
+    assert.equal(recovered.body.results[0].status, 'sent');
+    console.log('Reserva pendente antiga virou desconhecida; reenvio manual confirmado: OK.');
+
     const delivery = await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
       method: 'POST', body: JSON.stringify({}),
     });
@@ -158,6 +195,13 @@ async function run() {
     assert.equal(delivery.body.results[0].status, 'sent');
     assert.equal(delivery.body.results[0].tentativas, 1);
     deliveryIds.push(delivery.body.results[0].id_envio);
+    await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
+      method: 'POST', body: JSON.stringify({}),
+    }, 409);
+    const confirmedResend = await request(`/api/reports/${monthlyReport.body.id_relatorio}/send`, {
+      method: 'POST', body: JSON.stringify({ confirmResend: true }),
+    });
+    assert.equal(confirmedResend.body.results[0].status, 'sent');
     const deliveryHistory = await request(`/api/reports/${monthlyReport.body.id_relatorio}/deliveries`);
     assert.ok(deliveryHistory.body.itens.some((item) => deliveryIds.includes(item.id_envio)));
     console.log('WhatsApp mock: envio registrado e histórico persistido.');

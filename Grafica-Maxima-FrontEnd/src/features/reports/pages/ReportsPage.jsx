@@ -206,7 +206,7 @@ function RecipientsPanel({ reportId }) {
               <li key={delivery.id_envio}>
                 <span><strong>{delivery.destinatario}</strong><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(delivery.criado_em))} · {delivery.modo === "mock" ? "teste" : "Cloud API"} · {delivery.tentativas} tentativa(s)</small></span>
                 <span className={`report-delivery-status ${delivery.status}`}>
-                  {delivery.status === "sent" ? "Enviado" : delivery.status === "failed" ? "Falhou" : "Pendente"}
+                  {delivery.status === "sent" ? "Enviado" : delivery.status === "failed" ? "Falhou" : delivery.status === "unknown" ? "Resultado desconhecido" : "Pendente"}
                   {delivery.erro ? <small>{delivery.erro}</small> : null}
                 </span>
               </li>
@@ -242,8 +242,16 @@ export default function ReportsPage() {
     },
   });
   const sendNow = useMutation({
-    mutationFn: async (id) => (await api.post(`/api/reports/${id}/send`)).data,
-    onSuccess: async (_, id) => queryClient.invalidateQueries({ queryKey: ["report-deliveries", id] }),
+    mutationFn: async ({ id, confirmResend = false }) => {
+      try {
+        return (await api.post(`/api/reports/${id}/send`, { confirmResend })).data;
+      } catch (error) {
+        if (error.response?.status !== 409 || !error.response.data.confirmationRequired) throw error;
+        if (!window.confirm(error.response.data.message)) return { cancelled: true, results: [] };
+        return (await api.post(`/api/reports/${id}/send`, { confirmResend: true })).data;
+      }
+    },
+    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["report-deliveries", variables.id] }),
   });
   const report = reportsQuery.data?.current;
   const history = reportsQuery.data?.history || [];
@@ -261,7 +269,7 @@ export default function ReportsPage() {
           <p>Visão de vendas, conversão e produção da Gráfica Máxima.</p>
         </div>
         <div className="report-header-actions">
-          <Button variant="primary" onClick={() => sendNow.mutate(report.id_relatorio)} disabled={!report || sendNow.isPending}>
+          <Button variant="primary" onClick={() => sendNow.mutate({ id: report.id_relatorio })} disabled={!report || sendNow.isPending}>
             <Send size={17} aria-hidden="true" /> {sendNow.isPending ? "Enviando…" : "Enviar por WhatsApp agora"}
           </Button>
           <Button variant="neutral" onClick={abrirImpressao} disabled={!report}>
@@ -302,8 +310,8 @@ export default function ReportsPage() {
         </div>
       ) : report ? (
         <>
-          {sendNow.isError && sendNow.variables === report.id_relatorio ? <div className="report-state-error report-send-feedback" role="alert">{mensagemErro(sendNow.error)}</div> : null}
-          {sendNow.isSuccess && sendNow.variables === report.id_relatorio ? (
+          {sendNow.isError && sendNow.variables?.id === report.id_relatorio ? <div className="report-state-error report-send-feedback" role="alert">{mensagemErro(sendNow.error)}</div> : null}
+          {sendNow.isSuccess && sendNow.variables?.id === report.id_relatorio && !sendNow.data.cancelled ? (
             <div className="report-send-feedback" role="status">
               {sendNow.data.results.length && sendNow.data.results.every((result) => result.status === "failed")
                 ? "O envio falhou para todos os destinatários; confira os erros no histórico abaixo."
