@@ -400,8 +400,18 @@ function Producao({ catalogo, quote }) {
                       aria-label={tipo === "percentual" ? "Desconto em porcentagem" : "Desconto em reais"}
                       onClick={() => {
                         if (descontoTipo === tipo) return;
+                        // Converte o desconto atual para o novo tipo, em vez de zerar:
+                        // 10% de R$ 1.000,00 vira R$ 100,00, e o contrário.
+                        const atual = numero(descontoValor);
+                        let convertido = 0;
+                        if (subtotal > 0 && atual > 0) {
+                          convertido =
+                            tipo === "valor"
+                              ? Math.round(((subtotal * atual) / 100) * 100) / 100
+                              : Math.min(100, Math.round((atual / subtotal) * 100 * 10000) / 10000);
+                        }
                         setValue("desconto_tipo", tipo);
-                        setValue("desconto_valor", 0);
+                        setValue("desconto_valor", convertido, { shouldDirty: true });
                       }}
                     >
                       {rotulo}
@@ -414,7 +424,7 @@ function Producao({ catalogo, quote }) {
                   render={({ field: campo }) => (
                     <NumericInput
                       aria-label={descontoTipo === "percentual" ? "Desconto em porcentagem" : "Desconto em reais"}
-                      decimals={2}
+                      decimals={descontoTipo === "percentual" ? 4 : 2}
                       minDecimals={descontoTipo === "percentual" ? 0 : 2}
                       max={descontoTipo === "percentual" ? 100 : 1000000000}
                       placeholder="0"
@@ -426,6 +436,13 @@ function Producao({ catalogo, quote }) {
                   )}
                 />
               </div>
+              {subtotal > 0 && numero(descontoValor) > 0 && (
+                <p className="hint" aria-live="polite">
+                  {descontoTipo === "percentual"
+                    ? `Equivale a ${moeda(Math.min(desconto, subtotal))}`
+                    : `Equivale a ${Math.min(100, (desconto / subtotal) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% do subtotal`}
+                </p>
+              )}
             </fieldset>
             <InputField label="Validade do orçamento" type="date" {...register("validade")} />
             <InputField label="Prazo de entrega" type="date" {...register("prazo")} />

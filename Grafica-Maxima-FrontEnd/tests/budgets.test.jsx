@@ -309,6 +309,25 @@ describe("Montagem do orçamento", () => {
     expect(totais).toHaveTextContent(/Total\s*R\$\s54,00/);
   });
 
+  it("converte o desconto entre % e R$ em vez de zerar, e mostra o equivalente", async () => {
+    abrir();
+    await userEvent.selectOptions(await screen.findByLabelText("Material 1"), "7");
+    await userEvent.clear(screen.getByLabelText("Quantidade 1"));
+    await userEvent.type(screen.getByLabelText("Quantidade 1"), "200");
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Desconto em porcentagem" }), "10");
+    expect(screen.getByText(/Equivale a R\$\s6,00/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Desconto em reais" }));
+    expect(screen.getByRole("textbox", { name: "Desconto em reais" })).toHaveValue("6,00");
+    expect(screen.getByText(/Equivale a 10% do subtotal/)).toBeInTheDocument();
+    expect(screen.getByText("Total").closest("dl")).toHaveTextContent(/Total\s*R\$\s54,00/);
+
+    await userEvent.click(screen.getByRole("button", { name: "Desconto em porcentagem" }));
+    expect(screen.getByRole("textbox", { name: "Desconto em porcentagem" })).toHaveValue("10");
+    expect(screen.getByText("Total").closest("dl")).toHaveTextContent(/Total\s*R\$\s54,00/);
+  });
+
   it("não deixa digitar valores negativos em quantidade, valor e desconto", async () => {
     abrir();
     await userEvent.selectOptions(await screen.findByLabelText("Material 1"), "7");
