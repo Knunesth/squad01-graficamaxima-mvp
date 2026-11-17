@@ -93,6 +93,17 @@ describe("Acesso — cadastro", () => {
     expect(screen.getByText("Força da senha: Forte")).toBeInTheDocument();
   });
 
+  it("avisa que o login não aceita acentos nem caracteres especiais", async () => {
+    renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
+    expect(screen.getByText(/Não use acentos, espaços ou caracteres especiais/)).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("Login"), "Kauã");
+    await userEvent.type(screen.getByLabelText("Senha"), "Senha-Bem-Longa-123!");
+    await userEvent.type(screen.getByLabelText("Confirmar senha"), "Senha-Bem-Longa-123!");
+    await userEvent.click(screen.getByRole("button", { name: "Criar minha conta" }));
+    expect(await screen.findByText(/Use só letras sem acento/)).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
   it("mostra e oculta a senha pelo botão", async () => {
     renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
     const campo = screen.getByLabelText("Senha");
@@ -158,6 +169,20 @@ describe("Usuários", () => {
     expect(within(linhaDe("novo")).getByRole("button", { name: "Liberar acesso" })).toBeEnabled();
     expect(within(linhaDe("bia")).getByRole("button", { name: "Desativar" })).toBeEnabled();
     expect(within(linhaDe("bia")).getByLabelText("Perfil de bia")).toHaveValue("atendente");
+  });
+
+  it("trava a conta administradora principal: sem trocar perfil, desativar ou redefinir senha", async () => {
+    api.get.mockResolvedValue({
+      data: [{ id_usuario: 9, nome: "admin", login: "admin", tipo: "admin", ativo: true, protegido: true }, ...lista],
+    });
+    renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
+    expect(await screen.findByText(/Conta principal/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Perfil de admin")).toBeDisabled();
+    const linha = screen.getByLabelText("Perfil de admin").closest("tr");
+    expect(within(linha).getByRole("button", { name: "Desativar" })).toBeDisabled();
+    expect(within(linha).queryByText("Redefinir senha")).not.toBeInTheDocument();
+    // as demais contas seguem editáveis
+    expect(within(linhaDe("bia")).getByRole("button", { name: "Desativar" })).toBeEnabled();
   });
 
   it("não deixa o administrador alterar a própria conta", async () => {

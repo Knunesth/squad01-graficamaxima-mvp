@@ -115,3 +115,24 @@ describe('validation.dinheiro', () => {
     assert.equal(v.dinheiro(10), 10);
   });
 });
+
+describe('contaProtegida', () => {
+  const { contaProtegida } = require('../../src/utils/contaProtegida');
+
+  it('protege o login "admin", sem diferenciar maiúsculas nem espaços', () => {
+    assert.equal(contaProtegida('admin'), true);
+    assert.equal(contaProtegida(' Admin '), true);
+    assert.equal(contaProtegida('admin_teste'), false);
+    assert.equal(contaProtegida(null), false);
+  });
+
+  it('usa PROTECTED_ADMIN_LOGIN quando definido', () => {
+    process.env.PROTECTED_ADMIN_LOGIN = 'dona.grafica';
+    try {
+      assert.equal(contaProtegida('dona.grafica'), true);
+      assert.equal(contaProtegida('admin'), false);
+    } finally {
+      delete process.env.PROTECTED_ADMIN_LOGIN;
+    }
+  });
+});

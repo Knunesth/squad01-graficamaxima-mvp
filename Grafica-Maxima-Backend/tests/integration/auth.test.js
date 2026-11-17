@@ -160,6 +160,20 @@ describe('API — autenticação e usuários', { skip: motivoParaPular() }, () =
     assert.equal((await ctx.req('/api/auth/usuarios', { cookie: s.atendente })).status, 403);
   });
 
+  it('a conta administradora principal ("admin") não pode ser alterada nem desativada', async () => {
+    const idPrincipal = await ctx.criarUsuario({ login: 'admin', senha: 'senha-da-conta-principal-1', tipo: 'admin', email: 'admin@principal.example', nome: 'Admin principal' });
+    const patch = (body) => ctx.req(`/api/auth/usuarios/${idPrincipal}`, { method: 'PATCH', cookie: s.admin, body });
+    assert.equal((await patch({ tipo: 'atendente', ativo: true })).status, 403);
+    assert.equal((await patch({ tipo: 'admin', ativo: false })).status, 403);
+    const senha = await ctx.req(`/api/auth/usuarios/${idPrincipal}/senha`, { method: 'PATCH', cookie: s.admin, body: { nova_senha: 'outra-senha-bem-longa-1' } });
+    assert.equal(senha.status, 403);
+    const lista = await ctx.req('/api/auth/usuarios', { cookie: s.admin });
+    assert.equal(lista.body.find((u) => u.id_usuario === idPrincipal).protegido, true);
+    assert.equal(lista.body.find((u) => u.id_usuario === s.idAdmin).protegido, false);
+    // continua entrando normalmente
+    await ctx.login('admin', 'senha-da-conta-principal-1');
+  });
+
   it('logout limpa o cookie de sessão', async () => {
     const res = await ctx.req('/api/auth/logout', { method: 'POST', cookie: s.atendente });
     assert.equal(res.status, 200);

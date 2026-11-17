@@ -1197,3 +1197,13 @@ fieldset.field legend {
 .strength-list li.bad {
   color: var(--brand-danger);
 }
+
+.login-rule {
+  margin: -8px 0 0;
+  line-height: 1.4;
+}
+
+.protected-note {
+  display: block;
+  margin-top: 4px;
+}

@@ -57,13 +57,21 @@ export default function Usuarios() {
             <tbody>
               {users.map((u) => (
                 <tr key={u.id_usuario}>
-                  <td>{u.login || u.nome}</td>
+                  <td>
+                    {u.login || u.nome}
+                    {u.protegido && (
+                      <small className="hint protected-note">
+                        Conta principal: não pode ser alterada nem desativada.
+                      </small>
+                    )}
+                  </td>
                   <td>
                     <select
                       aria-label={`Perfil de ${u.login || u.nome}`}
                       value={u.tipo}
                       disabled={
                         mutation.isPending ||
+                        u.protegido ||
                         u.id_usuario === usuario.id_usuario
                       }
                       onChange={(e) => salvar(u, e.target.value, !!u.ativo)}
@@ -77,13 +85,14 @@ export default function Usuarios() {
                       variant="neutral"
                       disabled={
                         mutation.isPending ||
+                        u.protegido ||
                         u.id_usuario === usuario.id_usuario
                       }
                       onClick={() => salvar(u, u.tipo, !u.ativo)}
                     >
                       {u.ativo ? "Desativar" : "Liberar acesso"}
                     </Button>
-                    {u.id_usuario !== usuario.id_usuario && (
+                    {u.id_usuario !== usuario.id_usuario && !u.protegido && (
                       <details>
                         <summary>Redefinir senha</summary>
                         <form onSubmit={(event) => {
