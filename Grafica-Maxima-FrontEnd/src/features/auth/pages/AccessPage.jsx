@@ -2,9 +2,10 @@ import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { mensagemErro } from "@/shared/services/api.js";
 import { SessionContext } from "@/app/SessionContext.js";
-import { Button, Feedback, InputField } from "@/shared/components/ui";
+import { Button, Feedback, InputField, PasswordField, PasswordStrength } from "@/shared/components/ui";
+import { avaliarSenha } from "@/shared/utils/password.js";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowUpRight, BarChart3, Check, PackageCheck } from "lucide-react";
@@ -14,10 +15,21 @@ const loginSchema = z.object({
   senha: z.string().min(1, "A senha é obrigatória"),
 });
 
-const cadastroSchema = z.object({
-  login: z.string().min(3, "Mínimo 3 caracteres"),
-  senha: z.string().min(12, "A senha deve ter no mínimo 12 caracteres"),
-});
+const cadastroSchema = z
+  .object({
+    login: z.string().min(3, "Mínimo 3 caracteres"),
+    senha: z.string().min(12, "A senha deve ter no mínimo 12 caracteres"),
+    confirmar: z.string().min(1, "Repita a senha"),
+  })
+  .superRefine((dados, ctx) => {
+    const { requisitos, contemLogin } = avaliarSenha(dados.senha, dados.login);
+    if (dados.senha.length >= 12 && !requisitos.every((r) => r.ok || !r.obrigatorio))
+      ctx.addIssue({ code: "custom", path: ["senha"], message: "Use letra maiúscula, minúscula e número" });
+    else if (contemLogin)
+      ctx.addIssue({ code: "custom", path: ["senha"], message: "A senha não pode conter o seu login" });
+    if (dados.confirmar && dados.confirmar !== dados.senha)
+      ctx.addIssue({ code: "custom", path: ["confirmar"], message: "As senhas não conferem" });
+  });
 
 export default function Acesso({ cadastro = false }) {
   const { setUsuario } = useContext(SessionContext);
@@ -27,19 +39,25 @@ export default function Acesso({ cadastro = false }) {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(cadastro ? cadastroSchema : loginSchema),
   });
 
+  const senhaDigitada = useWatch({ control, name: "senha" }) || "";
+  const loginDigitado = useWatch({ control, name: "login" }) || "";
+
   const onSubmit = async (data) => {
     setError("");
     setMessage("");
     try {
+      // A confirmação é só da tela; a API recebe login e senha.
+      const corpo = cadastro ? { login: data.login, senha: data.senha } : data;
       const response = await api.post(
         `/api/auth/${cadastro ? "register" : "login"}`,
-        data,
+        corpo,
       );
       if (cadastro) setMessage(response.data.message);
       else {
@@ -105,15 +123,26 @@ export default function Acesso({ cadastro = false }) {
               cadastro ? "Escolha seu nome de usuário" : "Seu nome de usuário"
             }
           />
-          <InputField
+          <PasswordField
             label="Senha"
             {...register("senha")}
-            type="password"
             error={errors.senha?.message}
             maxLength={256}
             autoComplete={cadastro ? "new-password" : "current-password"}
             placeholder={cadastro ? "Crie sua senha" : "Sua senha"}
-          />
+          >
+            {cadastro && <PasswordStrength senha={senhaDigitada} login={loginDigitado} />}
+          </PasswordField>
+          {cadastro && (
+            <PasswordField
+              label="Confirmar senha"
+              {...register("confirmar")}
+              error={errors.confirmar?.message}
+              maxLength={256}
+              autoComplete="new-password"
+              placeholder="Repita a senha"
+            />
+          )}
           <Feedback error={error} message={message} />
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting

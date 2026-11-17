@@ -79,14 +79,60 @@ describe("Acesso — cadastro", () => {
     expect(api.post).not.toHaveBeenCalled();
   });
 
+  it("mostra a força da senha e os requisitos enquanto a pessoa digita", async () => {
+    renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
+    expect(screen.getByText("Crie uma senha forte")).toBeInTheDocument();
+    const campo = screen.getByLabelText("Senha");
+    await userEvent.type(campo, "abc");
+    expect(screen.getByText("Força da senha: Fraca")).toBeInTheDocument();
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "SenhaBemLonga123");
+    expect(screen.getByText("Força da senha: Boa")).toBeInTheDocument();
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "Senha-Bem-Longa-123!");
+    expect(screen.getByText("Força da senha: Forte")).toBeInTheDocument();
+  });
+
+  it("mostra e oculta a senha pelo botão", async () => {
+    renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
+    const campo = screen.getByLabelText("Senha");
+    expect(campo).toHaveAttribute("type", "password");
+    await userEvent.click(screen.getByRole("button", { name: "Mostrar senha" }));
+    expect(campo).toHaveAttribute("type", "text");
+    await userEvent.click(screen.getByRole("button", { name: "Ocultar senha" }));
+    expect(campo).toHaveAttribute("type", "password");
+  });
+
+  it("exige maiúscula, minúscula e número, e que a confirmação confira", async () => {
+    renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
+    await userEvent.type(screen.getByLabelText("Login"), "novo.usuario");
+    await userEvent.type(screen.getByLabelText("Senha"), "somente-minusculas");
+    await userEvent.type(screen.getByLabelText("Confirmar senha"), "outra-coisa");
+    await userEvent.click(screen.getByRole("button", { name: "Criar minha conta" }));
+    expect(await screen.findByText("Use letra maiúscula, minúscula e número")).toBeInTheDocument();
+    expect(screen.getByText("As senhas não conferem")).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it("não aceita senha que contém o login", async () => {
+    renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
+    await userEvent.type(screen.getByLabelText("Login"), "maria");
+    await userEvent.type(screen.getByLabelText("Senha"), "Maria-Senha-1234");
+    await userEvent.type(screen.getByLabelText("Confirmar senha"), "Maria-Senha-1234");
+    await userEvent.click(screen.getByRole("button", { name: "Criar minha conta" }));
+    expect((await screen.findAllByText("A senha não pode conter o seu login")).length).toBeGreaterThan(0);
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
   it("cria a conta e avisa que falta a liberação do administrador", async () => {
     api.post.mockResolvedValue({ data: { message: "Conta criada. Aguarde a liberação pelo administrador para entrar." } });
     const { setUsuario } = renderComApp(<Acesso cadastro />, { usuario: null, rota: "/cadastro" });
     await userEvent.type(screen.getByLabelText("Login"), "novo.usuario");
-    await userEvent.type(screen.getByLabelText("Senha"), "senha-bem-longa-123");
+    await userEvent.type(screen.getByLabelText("Senha"), "Senha-Bem-Longa-123!");
+    await userEvent.type(screen.getByLabelText("Confirmar senha"), "Senha-Bem-Longa-123!");
     await userEvent.click(screen.getByRole("button", { name: "Criar minha conta" }));
     expect(await screen.findByRole("status")).toHaveTextContent("Aguarde a liberação pelo administrador");
-    expect(api.post).toHaveBeenCalledWith("/api/auth/register", { login: "novo.usuario", senha: "senha-bem-longa-123" });
+    expect(api.post).toHaveBeenCalledWith("/api/auth/register", { login: "novo.usuario", senha: "Senha-Bem-Longa-123!" });
     expect(setUsuario).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Senha")).toHaveAttribute("autocomplete", "new-password");
   });

@@ -1,5 +1,6 @@
 export * from "./Button.jsx";
 export * from "./InputField.jsx";
+export * from "./PasswordField.jsx";
 export * from "./Feedback.jsx";
 export * from "./Table.jsx";
 export * from "./Badge.jsx";
