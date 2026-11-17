@@ -123,6 +123,8 @@ Não foi verificado: a aplicação rodando no navegador, o passo a passo de inst
 
 ## 6. Testes criados
 
+> **Atualizado:** a lista completa e atual dos testes está em [docs/TESTES.md](docs/TESTES.md). Os números e os testes de "falha esperada" abaixo são da rodada de 11/11/2026 e estão superados.
+
 ### Backend — 189 testes (`Grafica-Maxima-Backend/tests/`)
 
 Usam o executor de testes nativo do Node, sem dependência nova.

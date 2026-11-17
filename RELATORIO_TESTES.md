@@ -1,5 +1,7 @@
 # Relatório de testes — Fase 7
 
+> Registro histórico. Para a lista atual de testes e como rodá-los, veja [docs/TESTES.md](docs/TESTES.md).
+
 **Executado em 11/11/2026.** Todos os ensaios com banco usaram PostgreSQL local e uma schema temporária aleatória (`phase7_e2e_*` ou equivalente), removida ao final. Não foram acessados nem alterados dados de produção.
 
 ## Resultados
