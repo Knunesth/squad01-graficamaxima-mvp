@@ -17,7 +17,10 @@ const loginSchema = z.object({
 
 const cadastroSchema = z
   .object({
-    login: z.string().min(3, "Mínimo 3 caracteres"),
+    login: z
+      .string()
+      .min(3, "Mínimo 3 caracteres")
+      .regex(/^[A-Za-z0-9_.-]+$/, "Use só letras sem acento, números, ponto, traço ou sublinhado. Sem espaços nem caracteres especiais."),
     senha: z.string().min(12, "A senha deve ter no mínimo 12 caracteres"),
     confirmar: z.string().min(1, "Repita a senha"),
   })
@@ -119,10 +122,17 @@ export default function Acesso({ cadastro = false }) {
             error={errors.login?.message}
             maxLength={80}
             autoComplete="username"
+            aria-describedby={cadastro ? "login-regra" : undefined}
             placeholder={
               cadastro ? "Escolha seu nome de usuário" : "Seu nome de usuário"
             }
           />
+          {cadastro && (
+            <p id="login-regra" className="hint login-rule">
+              Não use acentos, espaços ou caracteres especiais. Aceita letras
+              (a–z), números, ponto, traço e sublinhado. Ex.: kaua.silva
+            </p>
+          )}
           <PasswordField
             label="Senha"
             {...register("senha")}
