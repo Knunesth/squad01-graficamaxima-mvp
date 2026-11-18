@@ -6,7 +6,7 @@ Este guia descreve os fluxos que existem hoje na aplicação. O sistema é uma �
 
 Abra o endereço fornecido pela equipe e entre com login e senha. No primeiro uso, o administrador inicial é criado pelo processo de implantação; não compartilhe essa conta. Uma pessoa sem conta pode usar **Criar conta** na tela de acesso. O cadastro novo fica inativo até o administrador liberar em **Usuários**. Se a conta não estiver liberada, o login será recusado.
 
-Atendente e administrador podem consultar o dashboard, clientes, orçamentos, catálogo e configurações. A tela **Relatórios** e a administração de **Usuários** aparecem apenas para administradores. O administrador também é o único perfil que altera catálogo, usuários, destinatários e preços por m². Atendentes podem consultar o catálogo, simular cálculos e criar orçamentos.
+Atendente e administrador podem consultar o dashboard, clientes, orçamentos, catálogo e configurações. A tela **Relatórios** e a administração de **Usuários** aparecem apenas para administradores. O administrador também é o único perfil que altera catálogo, usuários e destinatários. Atendentes podem consultar o catálogo e criar orçamentos.
 
 ## Fluxos mais usados
 
@@ -14,7 +14,7 @@ Atendente e administrador podem consultar o dashboard, clientes, orçamentos, ca
 
 1. Na navegação lateral, abra **Novo orçamento**.
 2. Escolha continuar sem cliente, localizar um cliente existente (por e-mail e CPF/CNPJ) ou cadastrar um cliente.
-3. Informe os dados do produto e os itens: materiais, quantidades, dimensões e opções disponíveis. Use o botão **m²** para abrir a calculadora; dentro de um orçamento, o resultado pode ser vinculado ao orçamento.
+3. Informe os dados do produto e os itens: materiais, quantidades, dimensões e opções disponíveis.
 4. Revise valores, desconto e validade e salve.
 5. Abra o orçamento na lista para conferir os itens, baixar o PDF ou editar os dados.
 
@@ -32,7 +32,7 @@ Em **Clientes**, escolha novo cadastro, preencha nome e os dados de contato/docu
 
 Abra **Papel** para consultar materiais agrupados por categoria. O administrador pode editar os valores e margens da categoria ou de um material, cadastrar novos materiais e desativá-los. Materiais desativados deixam de aparecer como opções novas; os orçamentos anteriores preservam seus valores.
 
-Em **Configurações**, o administrador ajusta os preços base por m². O cálculo mostra o valor estimado conforme tipo de serviço, largura, altura e quantidade. A configuração de destinatários e o histórico de WhatsApp ficam na área de **Relatórios**.
+Em **Configurações**, cada pessoa vê os dados da própria conta e troca a senha. A configuração de destinatários e o histórico de WhatsApp ficam na área de **Relatórios**.
 
 ### Consultar relatórios e WhatsApp (administrador)
 

@@ -6,7 +6,6 @@ import userEvent from "@testing-library/user-event";
 import api from "@/shared/services/api.js";
 import Acesso from "@/features/auth/pages/AccessPage.jsx";
 import Usuarios from "@/features/users/pages/UsersPage.jsx";
-import CalculadoraM2 from "@/features/calculator/CalculatorM2.jsx";
 import { ADMIN, ATENDENTE, erroDaApi, renderComApp } from "./helpers/render.jsx";
 
 vi.mock("@/shared/services/api.js", async (importOriginal) => {
@@ -225,94 +224,22 @@ describe("Usuários", () => {
   });
 });
 
-describe("Calculadora de m²", () => {
-  const tipos = [
-    { tipo: "banner", preco_base_m2: "48.0000" },
-    { tipo: "adesivo", preco_base_m2: "36.0000" },
-  ];
-  const calculo = { area_total_m2: 3, valor_unitario: 144, valor_total: 144 };
+describe("Papel — novo tipo", () => {
+  const catalogo = {
+    categorias: ["Offset", "Kraft"],
+    itens: [{ id_material: 1, categoria: "Offset", nome: "couchê 250", custo_fixo: 1, custo_unitario: 1, lucro_fixo: 1, lucro_unitario: 1, ativo: true }],
+  };
 
-  beforeEach(() => {
-    api.get.mockResolvedValue({ data: { tipos } });
-    api.post.mockResolvedValue({ data: { calculo } });
-  });
+  it("mostra \"Criar nova categoria\" no início da lista e já foca o campo do nome", async () => {
+    api.get.mockResolvedValue({ data: catalogo });
+    const { default: Papeis } = await import("@/features/catalog/pages/PapersPage.jsx");
+    renderComApp(<Papeis />, { usuario: ADMIN, rota: "/papel" });
+    await userEvent.click(await screen.findByRole("button", { name: /Novo tipo de papel/ }));
 
-  it("carrega os tipos de serviço com o preço por m²", async () => {
-    renderComApp(<CalculadoraM2 aoFechar={vi.fn()} />);
-    expect(await screen.findByRole("option", { name: /BANNER/, hidden: true })).toHaveTextContent(/R\$\s48,00\/m²/);
-    expect(api.get).toHaveBeenCalledWith("/api/calculo/tipos");
-    expect(screen.getByLabelText(/Tipo de Serviço/)).toHaveValue("banner");
-  });
+    const opcoes = within(screen.getByLabelText("Categoria")).getAllByRole("option").map((o) => o.textContent);
+    expect(opcoes.slice(0, 3)).toEqual(["Selecione...", "+ Criar nova categoria", "Offset"]);
 
-  it("exige medidas maiores que zero antes de chamar a API", async () => {
-    renderComApp(<CalculadoraM2 aoFechar={vi.fn()} />);
-    await screen.findByRole("option", { name: /BANNER/, hidden: true });
-    await userEvent.click(screen.getByRole("button", { name: "Simular Valores", hidden: true }));
-    expect(await screen.findByRole("alert", { hidden: true })).toHaveTextContent("valores maiores que zero");
-    expect(api.post).not.toHaveBeenCalled();
-  });
-
-  it("simula e mostra área, valor unitário e total", async () => {
-    renderComApp(<CalculadoraM2 aoFechar={vi.fn()} />);
-    await screen.findByRole("option", { name: /BANNER/, hidden: true });
-    await userEvent.type(screen.getByLabelText(/Largura/), "2");
-    await userEvent.type(screen.getByLabelText(/Altura/), "1.5");
-    await userEvent.click(screen.getByRole("button", { name: "Simular Valores", hidden: true }));
-    await waitFor(() =>
-      expect(api.post).toHaveBeenCalledWith("/api/calculo/metro-quadrado/simulacao", {
-        tipo_servico: "banner",
-        largura: 2,
-        altura: 1.5,
-        quantidade: 1,
-        id_orcamento: null,
-      }),
-    );
-    const resultado = await screen.findByRole("status", { hidden: true });
-    expect(resultado).toHaveTextContent("3,00 m²");
-    expect(resultado).toHaveTextContent(/Valor Total:\s*R\$\s144,00/);
-  });
-
-  it("mostra o erro devolvido pela API e fecha pelo botão", async () => {
-    api.post.mockRejectedValue(erroDaApi(422, "Confira os dados do cálculo."));
-    const aoFechar = vi.fn();
-    renderComApp(<CalculadoraM2 aoFechar={aoFechar} />);
-    await screen.findByRole("option", { name: /BANNER/, hidden: true });
-    await userEvent.type(screen.getByLabelText(/Largura/), "2");
-    await userEvent.type(screen.getByLabelText(/Altura/), "2");
-    await userEvent.click(screen.getByRole("button", { name: "Simular Valores", hidden: true }));
-    expect(await screen.findByRole("alert", { hidden: true })).toHaveTextContent("Confira os dados do cálculo.");
-    await userEvent.click(screen.getByRole("button", { name: "Fechar calculadora", hidden: true }));
-    expect(aoFechar).toHaveBeenCalledTimes(1);
-  });
-
-  // O App renderiza a calculadora fora de <Routes>; o orçamento aberto é
-  // identificado pelo endereço da página.
-  it("vincula o item ao orçamento aberto (edição ou detalhe) e avisa", async () => {
-    for (const rota of ["/orcamentos/5/editar", "/status-orcamento/5"]) {
-      api.post.mockClear();
-      const { unmount } = renderComApp(<CalculadoraM2 aoFechar={vi.fn()} />, { rota });
-      await screen.findByRole("option", { name: /BANNER/, hidden: true });
-      expect(screen.getByRole("heading", { name: "Vincular Item ao Orçamento #5", hidden: true })).toBeInTheDocument();
-      await userEvent.type(screen.getByLabelText(/Largura/), "2");
-      await userEvent.type(screen.getByLabelText(/Altura/), "1.5");
-      await userEvent.click(screen.getByRole("button", { name: "Calcular & Salvar Item", hidden: true }));
-      await waitFor(() =>
-        expect(api.post).toHaveBeenCalledWith("/api/calculo/metro-quadrado", {
-          tipo_servico: "banner",
-          largura: 2,
-          altura: 1.5,
-          quantidade: 1,
-          id_orcamento: 5,
-        }),
-      );
-      expect(await screen.findByText("Item adicionado ao orçamento #5.")).toBeInTheDocument();
-      unmount();
-    }
-  });
-
-  it("fora de um orçamento, continua só simulando", async () => {
-    renderComApp(<CalculadoraM2 aoFechar={vi.fn()} />, { rota: "/orcamentos" });
-    await screen.findByRole("option", { name: /BANNER/, hidden: true });
-    expect(screen.getByRole("heading", { name: "Calculadora de M²", hidden: true })).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText("Categoria"), "+ Criar nova categoria");
+    expect(await screen.findByLabelText("Nome da nova categoria")).toHaveFocus();
   });
 });

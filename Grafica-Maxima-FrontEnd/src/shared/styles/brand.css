@@ -713,16 +713,6 @@ input::placeholder {
   object-fit: contain;
 }
 
-.calculator-toggle {
-  border-color: var(--brand-primary);
-  background: var(--brand-primary);
-  box-shadow: 0 5px 15px rgb(69 65 162 / 24%);
-}
-
-.calculator-toggle:hover {
-  background: var(--brand-primary-hover);
-}
-
 @media (max-width: 1000px) {
   .sidebar {
     width: 220px;

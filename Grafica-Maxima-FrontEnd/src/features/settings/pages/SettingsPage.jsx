@@ -1,78 +1,24 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { Link } from "react-router-dom";
-import { ChartColumn, KeyRound, Layers3, Save, Users } from "lucide-react";
+import { ChartColumn, KeyRound, Layers3, Users } from "lucide-react";
 import { SessionContext } from "@/app/SessionContext.js";
 import { mensagemErro } from "@/shared/services/api.js";
-import { Button, Feedback, InputField, NumericInput, Spinner } from "@/shared/components/ui";
-import { PageHeader } from "@/shared/components/layout";
+import { Button, Feedback, InputField } from "@/shared/components/ui";
 import { useToast } from "@/shared/hooks/useToast.js";
-import { moeda } from "@/shared/utils/format.js";
-import {
-  useTiposCalculo,
-  useSalvarTipoCalculo,
-} from "@/features/settings/hooks/useSettings.js";
+import { PageHeader } from "@/shared/components/layout";
 import { useTrocarSenha } from "@/features/users/hooks/useUsers.js";
-
-function PrecoM2({ preco, podeEditar }) {
-  const toast = useToast();
-  const mutation = useSalvarTipoCalculo();
-  const [valor, setValor] = useState(Number(preco.preco_base_m2));
-  const nome = preco.tipo.replaceAll("_", " ");
-  const alterado = valor !== "" && Number(valor) !== Number(preco.preco_base_m2);
-
-  if (!podeEditar)
-    return (
-      <li>
-        <div className="price-list-readonly">
-          <span>{nome}</span> <strong>{moeda(preco.preco_base_m2)}</strong>
-        </div>
-      </li>
-    );
-
-  return (
-    <li>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!valor) return toast.error("Informe um preço maior que zero.");
-          mutation.mutate(
-            { tipo: preco.tipo, preco_base_m2: valor },
-            {
-              onSuccess: () => toast.success(`Preço de ${nome} atualizado para ${moeda(valor)} por m².`),
-              onError: (erro) => toast.error(mensagemErro(erro)),
-            },
-          );
-        }}
-      >
-        <label htmlFor={`preco-${preco.tipo}`}>{nome}</label>
-        <NumericInput
-          id={`preco-${preco.tipo}`}
-          prefix="R$"
-          decimals={4}
-          max={1000000}
-          value={valor}
-          onChange={setValor}
-        />
-        <Button type="submit" variant="neutral" disabled={!alterado} loading={mutation.isPending}>
-          <Save size={16} aria-hidden="true" /> Salvar
-        </Button>
-      </form>
-    </li>
-  );
-}
 
 export default function Configuracao() {
   const { usuario } = useContext(SessionContext);
   const toast = useToast();
   const admin = usuario.tipo === "admin";
-  const { data: precos, isLoading, error } = useTiposCalculo();
   const senha = useTrocarSenha();
 
   return (
     <>
       <PageHeader
         title="Configurações"
-        subtitle="Sua conta, sua senha e os preços usados na calculadora."
+        subtitle="Sua conta e sua senha."
         action={false}
       />
       <div className="settings">
@@ -135,32 +81,6 @@ export default function Configuracao() {
               </Button>
             </div>
           </form>
-        </section>
-
-        <section className="settings-section" aria-labelledby="precos-titulo">
-          <header>
-            <h2 id="precos-titulo">Preços por m²</h2>
-            <p>
-              Valor base de cada serviço na calculadora de m².
-              {!admin && " Somente administradores podem alterar."}
-            </p>
-          </header>
-          <div>
-            <Feedback error={error ? mensagemErro(error) : ""} />
-            {isLoading ? (
-              <p className="loading-line" role="status">
-                <Spinner /> Carregando preços...
-              </p>
-            ) : precos?.length ? (
-              <ul className="price-list">
-                {precos.map((preco) => (
-                  <PrecoM2 key={preco.tipo} preco={preco} podeEditar={admin} />
-                ))}
-              </ul>
-            ) : (
-              !error && <p className="hint">Nenhum tipo de serviço cadastrado.</p>
-            )}
-          </div>
         </section>
 
         {admin && (

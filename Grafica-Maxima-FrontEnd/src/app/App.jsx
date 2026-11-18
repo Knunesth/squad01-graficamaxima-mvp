@@ -1,13 +1,11 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { AppProviders } from "./AppProviders";
 import { AppRoutes } from "./AppRoutes";
 import { SessionContext } from "./SessionContext";
-import CalculadoraM2 from "@/features/calculator/CalculatorM2";
 
 function Application() {
   const { usuario } = useContext(SessionContext);
-  const [calculadora, setCalculadora] = useState(false);
   const location = useLocation();
   const previousPath = useRef(location.pathname);
   useEffect(() => {
@@ -28,29 +26,6 @@ function Application() {
   return (
     <>
       <AppRoutes usuario={usuario} />
-      {usuario && (
-        <>
-          <button
-            className="calculator-toggle"
-            type="button"
-            title="Calculadora de m²"
-            aria-label="Calculadora de m²"
-            aria-expanded={calculadora}
-            aria-haspopup="dialog"
-            onClick={() => setCalculadora((open) => !open)}
-          >
-            m²
-          </button>
-          {calculadora && (
-            <div className="calculator-window">
-            <CalculadoraM2 aoFechar={() => {
-              setCalculadora(false);
-              requestAnimationFrame(() => document.querySelector(".calculator-toggle")?.focus());
-            }} />
-            </div>
-          )}
-        </>
-      )}
     </>
   );
 }

@@ -656,10 +656,6 @@ fieldset.field legend {
   border-color: var(--brand-yellow);
 }
 
-.app-shell:has(.totals-bar) ~ .calculator-toggle {
-  bottom: 112px;
-}
-
 /* ---------- Detalhe do orçamento ---------- */
 .detail-summary,
 .detail-totals {
@@ -906,35 +902,6 @@ fieldset.field legend {
   justify-content: flex-start;
 }
 
-.price-list {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.price-list li {
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid #eceef5;
-}
-
-.price-list li:first-child {
-  padding-top: 0;
-}
-
-.price-list form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px auto;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.price-list label {
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
 .shortcut-list {
   display: flex;
   flex-wrap: wrap;
@@ -1072,14 +1039,6 @@ fieldset.field legend {
     flex: 1 1 100%;
   }
 
-  .price-list form {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .price-list label {
-    grid-column: 1 / -1;
-  }
-
   .row-actions {
     flex-wrap: wrap;
   }
@@ -1092,9 +1051,6 @@ fieldset.field legend {
 }
 
 @media (max-width: 800px) {
-  .app-shell:has(.totals-bar) ~ .calculator-toggle {
-    bottom: 176px;
-  }
 }
 
 /* Senha: mostrar/ocultar, medidor de força e requisitos */

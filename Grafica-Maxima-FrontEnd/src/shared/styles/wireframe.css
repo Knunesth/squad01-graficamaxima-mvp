@@ -174,14 +174,6 @@ input::placeholder {
 .category-card th {
   font-weight: 400;
 }
-.calculator-toggle {
-  width: auto;
-  height: auto;
-  min-height: 36px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-}
 
 @media (max-width: 1200px) {
   .workspace {
@@ -234,10 +226,6 @@ input::placeholder {
   .metric-card {
     height: auto;
     min-height: 310px;
-  }
-  .calculator-toggle {
-    bottom: 12px;
-    right: 12px;
   }
 }
 

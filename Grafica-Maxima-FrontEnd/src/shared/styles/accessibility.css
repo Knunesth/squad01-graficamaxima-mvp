@@ -134,67 +134,6 @@ summary {
   border: 0;
 }
 
-.calculator-dialog {
-  width: min(34rem, calc(100vw - 2rem));
-  max-width: calc(100vw - 2rem);
-  max-height: min(90dvh, 52rem);
-  margin: auto;
-  padding: 0;
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--brand-ink);
-  background: #fff;
-  box-shadow: var(--shadow-dialog);
-}
-
-.calculator-dialog::backdrop { background: rgb(20 24 55 / 56%); }
-
-.calculator-dialog .modal-calculadora {
-  width: 100%;
-  padding: clamp(1rem, 4vw, 1.5rem);
-  color: var(--brand-ink);
-  background: #fff;
-  box-shadow: none;
-}
-
-.calculator-dialog .modal-calculadora label { color: var(--brand-ink); font-size: 1rem; }
-.calculator-dialog .modal-calculadora form > div:has(input[type="number"]) {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.calculator-dialog .modal-calculadora input,
-.calculator-dialog .modal-calculadora select {
-  min-height: 44px;
-  color: var(--brand-ink) !important;
-  background: #fff !important;
-  border: 1px solid var(--line) !important;
-}
-
-.calculator-dialog .btn-fechar-modal {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  color: var(--brand-ink);
-  font-size: 1.5rem;
-}
-
-.calculator-dialog .calculator-error {
-  padding: 0.75rem;
-  border-radius: var(--radius-sm);
-  color: var(--brand-danger);
-  background: #fff0f3;
-}
-
-.calculator-dialog .calculator-result {
-  padding: 0.75rem;
-  border-radius: var(--radius-sm);
-  color: #124d36;
-  background: #e8f6ef;
-}
-
 @media (max-width: 800px) {
   .app-shell { display: block; }
 
@@ -250,7 +189,6 @@ summary {
   .report-metrics-grid { grid-template-columns: minmax(0, 1fr); }
   .report-controls, .report-header-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
   .report-controls .button, .report-header-actions .button { width: 100%; white-space: normal; }
-  .calculator-dialog .modal-calculadora form > div:has(input[type="number"]) { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -263,7 +201,11 @@ summary {
 }
 
 @media print {
-  .sidebar, .skip-link, .report-header-actions, .report-controls, .report-recipients-panel, .calculator-toggle { display: none !important; }
+  .sidebar,
+.skip-link,
+.report-header-actions,
+.report-controls,
+.report-recipients-panel { display: none !important; }
   .app-shell, .workspace, .reports-page {
     display: block !important;
     min-height: 0 !important;

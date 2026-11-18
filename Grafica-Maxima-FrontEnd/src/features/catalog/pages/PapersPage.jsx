@@ -193,12 +193,12 @@ function MaterialModal({ material, categorias, fechar }) {
             required
           >
             <option value="">Selecione...</option>
+            <option value={NOVA_CATEGORIA}>+ Criar nova categoria</option>
             {categorias.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
-            <option value={NOVA_CATEGORIA}>+ Criar nova categoria</option>
           </select>
         </div>
         {categoriaEscolhida === NOVA_CATEGORIA && (
@@ -209,6 +209,7 @@ function MaterialModal({ material, categorias, fechar }) {
               validate: (v) => v.trim().length >= 2 || "Informe o nome da categoria.",
             })}
             error={errors.nova_categoria?.message}
+            autoFocus
             maxLength={50}
             placeholder="Ex.: Papel fotográfico"
           />

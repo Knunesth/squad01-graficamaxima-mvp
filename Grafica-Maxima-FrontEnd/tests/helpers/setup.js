@@ -5,7 +5,7 @@ import { cleanup } from '@testing-library/react';
 
 afterEach(() => cleanup());
 
-// O jsdom não implementa a API de <dialog>; a calculadora usa showModal().
+// O jsdom não implementa a API de <dialog>; o componente Modal usa showModal().
 if (!HTMLDialogElement.prototype.showModal) {
   HTMLDialogElement.prototype.showModal = function showModal() { this.open = true; };
   HTMLDialogElement.prototype.close = function close() { this.open = false; };
