@@ -105,10 +105,23 @@ describe('WhatsAppProvider.sendReport — modo cloud', () => {
     const parametros = corpo.template.components[0].parameters.map((p) => p.text);
     assert.equal(parametros.length, 5);
     assert.equal(parametros[0], 'relatório semanal');
-    assert.equal(parametros[1], '2026-11-02 a 2026-11-08');
+    assert.equal(parametros[1], '02/11/2026 a 08/11/2026');
     assert.equal(parametros[2], '3');
     assert.match(parametros[3], /^R\$\s1\.234,50$/);
     assert.equal(parametros[4], '42,5%');
+  });
+
+  it('formata em dd/mm/aaaa as datas que o banco devolve como Date', async () => {
+    const chamadas = [];
+    const provider = new WhatsAppProvider(envCloud, async (url, options) => {
+      chamadas.push(options);
+      return resposta(200, { messages: [{ id: 'wamid.456' }] });
+    });
+    const doBanco = { ...relatorio, tipo: 'monthly', data_inicio: new Date(2026, 10, 1), data_fim: new Date(2026, 10, 30) };
+    await provider.sendReport('+5561999998888', doBanco);
+    const parametros = JSON.parse(chamadas[0].body).template.components[0].parameters.map((p) => p.text);
+    assert.equal(parametros[0], 'relatório mensal');
+    assert.equal(parametros[1], '01/11/2026 a 30/11/2026');
   });
 
   it('exige o nome do template e não tenta de novo', async () => {

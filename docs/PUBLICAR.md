@@ -85,3 +85,7 @@ npm run bootstrap-admin
 - Supabase Free pausa o projeto depois de uma semana sem uso e não faz backup automático. Use `npm run backup-db` com regularidade.
 - Railway Trial dá um crédito inicial; depois é cobrado por uso.
 - Confira os preços atuais nas páginas de cada serviço antes de contratar.
+
+## Ligar o envio real por WhatsApp (opcional)
+
+O sistema sai no ar com `WHATSAPP_MODE=mock`, que só registra os envios. O passo a passo para a API oficial da Meta, do app ao primeiro envio real, está em [WHATSAPP.md](WHATSAPP.md).

@@ -69,7 +69,7 @@ O backend persiste snapshots por semana/mês, compara com o período anterior e 
 
 O envio usa a API oficial da Meta e mensagens modelo (`template`), sem automação por WhatsApp Web. Sem credenciais, o modo mock registra o envio no banco e escreve a mensagem no log; não envia uma mensagem real. A tela administrativa permite cadastrar/remover destinatários. O número padrão pode vir de `WHATSAPP_DEFAULT_RECIPIENT`.
 
-Para ativar a entrega real:
+Para ativar a entrega real, siga o tutorial completo em [`docs/WHATSAPP.md`](docs/WHATSAPP.md). Em resumo:
 
 1. Configure um app da Meta com WhatsApp Cloud API, número habilitado e token com permissão de envio.
 2. Cadastre e aguarde aprovação de um template de mensagem no WhatsApp Manager.

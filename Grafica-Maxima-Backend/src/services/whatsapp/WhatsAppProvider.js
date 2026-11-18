@@ -11,6 +11,17 @@ function periodLabel(report) {
   return `relatório ${period}`;
 }
 
+// O banco devolve as datas do relatório como objetos Date; sem formatar, a
+// mensagem sairia com "Sun Nov 01 2026 00:00:00 GMT-0300".
+function dataBR(value) {
+  if (value instanceof Date) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${pad(value.getDate())}/${pad(value.getMonth() + 1)}/${value.getFullYear()}`;
+  }
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value);
+}
+
 function maskedPhone(value) {
   const digits = String(value).replace(/\D/g, "");
   const suffix = digits.slice(-4);
@@ -72,7 +83,7 @@ class WhatsAppProvider {
               type: "body",
               parameters: [
                 { type: "text", text: periodLabel(report) },
-                { type: "text", text: `${report.data_inicio} a ${report.data_fim}` },
+                { type: "text", text: `${dataBR(report.data_inicio)} a ${dataBR(report.data_fim)}` },
                 { type: "text", text: String(metrics.finalizedSales) },
                 { type: "text", text: currency.format(metrics.revenue) },
                 { type: "text", text: `${formatter.format(metrics.conversionRate)}%` },
