@@ -10,7 +10,7 @@ router.get("/tipos", metroQuadradoController.listarTipos);
 router.post("/metro-quadrado/simulacao", metroQuadradoController.simular);
 router.post("/metro-quadrado", metroQuadradoController.calcular);
 
-// 🚀 NOVA ROTA ADICIONADA: Permite que a tela de Configurações atualize o precos.json
+// Permite que a tela de Configurações atualize o preço por m².
 router.put(
   "/tipos/atualizar",
   [autenticar, apenasAdmin],

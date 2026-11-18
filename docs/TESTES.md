@@ -8,10 +8,10 @@ Atualizado em 17/11/2026.
 
 | Camada | Ferramenta | Testes | Precisa de banco | Última execução |
 |---|---|---|---|---|
-| Backend — unitários | `node:test` (nativo do Node) | 112 | Não | 112 passaram, 0 falhas |
+| Backend — unitários | `node:test` (nativo do Node) | 114 | Não | 114 passaram, 0 falhas |
 | Backend — integração | `node:test` | 80 | Sim (PostgreSQL local) | **Não reexecutados** após as últimas correções (Docker parado); 187 passaram na rodada anterior, antes das correções |
 | Backend — ponta a ponta | `scripts/e2e-phase7.js` | 1 roteiro | Sim | Aprovado em 11/11/2026 |
-| Frontend | Vitest, Testing Library, jsdom | 87 | Não | 87 passaram, 0 falhas |
+| Frontend | Vitest, Testing Library, jsdom | 89 | Não | 89 passaram, 0 falhas |
 
 Não há testes marcados como "falha esperada": os quatro defeitos que estavam documentados dessa forma foram corrigidos (escrita sem corpo respondia 500, datas devolvidas pela API eram recusadas na volta, calculadora não vinculava o item ao orçamento aberto).
 
@@ -48,13 +48,13 @@ npm test
 
 `npm run test:watch` roda em modo contínuo. Antes de publicar, rode também `npm run lint` e `npm run build`.
 
-## Backend — unitários (112)
+## Backend — unitários (114)
 
 Pasta `Grafica-Maxima-Backend/tests/unit/`.
 
 | Arquivo | Testes | O que cobre |
 |---|---|---|
-| `validation.test.js` | 16 | Números, ids, textos, datas (inclusive data-hora ISO), status e arredondamento monetário. |
+| `validation.test.js` | 18 | Números, ids, textos, datas (inclusive data-hora ISO), status, arredondamento monetário e a regra da conta administradora principal. |
 | `quoteCalculation.test.js` | 12 | Total por item, subtotal, desconto percentual e em valor, limite de 1 a 17 itens, sem erro de ponto flutuante. |
 | `metroQuadrado.test.js` | 7 | Área, custo, acréscimo e rejeição de tipos de serviço inválidos. |
 | `period.test.js` | 13 | Semana e mês dos relatórios, virada de ano, ano bissexto, fuso e horário de verão. |
@@ -78,18 +78,18 @@ Pasta `Grafica-Maxima-Backend/tests/integration/`. Sobem a API real contra um Po
 
 Testes com "(comportamento atual)" no nome passam, mas registram um comportamento que merece confirmação do cliente: valor unitário abaixo do custo é aceito, editar orçamento aprovado mantém o status, e número de WhatsApp desativado ainda conta no limite total.
 
-## Frontend (87)
+## Frontend (89)
 
 Pasta `Grafica-Maxima-FrontEnd/tests/`. A API é substituída por dublês; o roteador e os provedores vêm de `tests/helpers/render.jsx`.
 
 | Arquivo | Testes | O que cobre |
 |---|---|---|
-| `utils.test.js` | 15 | Moeda, decimal, datas, máscaras de CPF/CNPJ e telefone, mensagens de erro e junção de classes. |
+| `utils.test.js` | 10 | Moeda, decimal, datas, máscaras de CPF/CNPJ e telefone e junção de classes. |
 | `api.test.js` | 6 | Cookies de sessão, tempo limite, aviso de sessão expirada e mensagens de erro de rede. |
 | `ui.test.jsx` | 12 | Botão, campo, feedback, tabela e etiqueta de status, com atributos de acessibilidade. |
 | `routes.test.jsx` | 8 | Quem enxerga cada rota: visitante, atendente e administrador, atalhos do menu e link de pular para o conteúdo. |
-| `budgets.test.jsx` | 25 | Campo numérico sem negativos, lista com filtro automático e status na linha, detalhe (aprovar, finalizar, versão desatualizada, exclusão confirmada), cliente em tabela, montagem do orçamento (totais, troca de cliente sem perder materiais, salvar, editar), cadastro de clientes. |
-| `pages.test.jsx` | 19 | Login e cadastro, usuários (liberar, perfil, redefinir senha), calculadora de m² (simular e vincular ao orçamento aberto). |
+| `budgets.test.jsx` | 26 | Campo numérico sem negativos, lista com filtro automático e status na linha, detalhe (aprovar, finalizar, versão desatualizada, exclusão confirmada), cliente em tabela, montagem do orçamento (totais, troca de cliente sem perder materiais, salvar, editar), cadastro de clientes. |
+| `pages.test.jsx` | 25 | Login e cadastro (força da senha, confirmação, regra do login), usuários (liberar, perfil, redefinir senha, conta principal protegida), calculadora de m² (simular e vincular ao orçamento aberto). |
 | `dashboard-period.test.jsx` | 2 | Seleção do mês do dashboard. |
 
 ## Ponta a ponta (Fase 7)

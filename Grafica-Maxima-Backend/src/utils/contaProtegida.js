@@ -10,4 +10,4 @@ function contaProtegida(login) {
   return typeof login === "string" && login.trim().toLowerCase() === loginProtegido();
 }
 
-module.exports = { contaProtegida, loginProtegido };
+module.exports = { contaProtegida };
