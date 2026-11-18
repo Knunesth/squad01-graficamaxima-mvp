@@ -103,4 +103,11 @@ function todayAtTimezone(timezone = process.env.REPORT_TIMEZONE || "America/Sao_
   return `${value.year}-${value.month}-${value.day}`;
 }
 
-module.exports = { getPeriod, todayAtTimezone, addDays, parseDate };
+// Um período ainda está aberto enquanto o último dia dele não passou: vendas
+// finalizadas depois da primeira consulta ainda entram nos números. Datas no
+// formato AAAA-MM-DD comparam corretamente como texto.
+function isPeriodOpen(period, today = todayAtTimezone()) {
+  return String(period.end) >= today;
+}
+
+module.exports = { getPeriod, todayAtTimezone, addDays, parseDate, isPeriodOpen };

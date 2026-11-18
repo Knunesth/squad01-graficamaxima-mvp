@@ -102,3 +102,14 @@ describe('period — utilitários', () => {
     assert.match(todayAtTimezone('Pacific/Kiritimati'), /^\d{4}-\d{2}-\d{2}$/);
   });
 });
+
+describe('period.isPeriodOpen', () => {
+  const { isPeriodOpen } = require('../../src/services/reporting/period');
+
+  it('mantém aberto o período que inclui hoje e fecha o que já terminou', () => {
+    const mes = getPeriod('monthly', '2026-11-17');
+    assert.equal(isPeriodOpen(mes, '2026-11-17'), true);
+    assert.equal(isPeriodOpen(mes, '2026-11-30'), true);
+    assert.equal(isPeriodOpen(mes, '2026-12-01'), false);
+  });
+});

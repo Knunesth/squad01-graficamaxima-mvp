@@ -1,5 +1,5 @@
 const db = require("../../config/db");
-const { getPeriod } = require("./period");
+const { getPeriod, isPeriodOpen } = require("./period");
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -147,7 +147,24 @@ async function getReport(type, date, generatedBy = null) {
     "SELECT * FROM relatorio WHERE tipo = $1 AND data_inicio = $2 AND data_fim = $3",
     [period.type, period.start, period.end],
   );
-  return rows[0] || calculateReport(type, date, generatedBy);
+  // Período fechado: o relatório guardado é definitivo. Período em andamento
+  // (ou ainda sem relatório): recalcula, para a tela mostrar as vendas
+  // finalizadas depois da primeira consulta.
+  if (rows[0] && !isPeriodOpen(period)) return rows[0];
+  return calculateReport(type, date, generatedBy);
+}
+
+// Antes de enviar, atualiza o relatório se o período ainda estiver aberto,
+// para a mensagem não sair com números antigos.
+async function refreshIfOpen(report) {
+  const day = (value) => {
+    if (typeof value === "string") return value.slice(0, 10);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+  };
+  const period = getPeriod(report.tipo, day(report.data_inicio));
+  if (!isPeriodOpen(period)) return report;
+  return calculateReport(report.tipo, day(report.data_inicio));
 }
 
 async function listReports({ type, limit = 12 } = {}) {
@@ -173,4 +190,4 @@ async function getReportById(reportId) {
   return rows[0] || null;
 }
 
-module.exports = { calculateReport, getReport, listReports, getReportById };
+module.exports = { calculateReport, getReport, listReports, getReportById, refreshIfOpen };

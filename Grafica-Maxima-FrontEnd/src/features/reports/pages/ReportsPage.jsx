@@ -370,6 +370,11 @@ export default function ReportsPage() {
             <MetricCard
               label="Vendas finalizadas"
               value={number.format(report.dados.metrics.finalizedSales)}
+              description={
+                report.dados.metrics.finalizedSales === 0 && report.dados.metrics.approvedProduction.count > 0
+                  ? `Só conta orçamento com status Finalizado. Há ${number.format(report.dados.metrics.approvedProduction.count)} aprovado(s) ainda não finalizado(s).`
+                  : "Só conta orçamento com status Finalizado."
+              }
               change={report.dados.changes.finalizedSales}
             />
             <MetricCard
