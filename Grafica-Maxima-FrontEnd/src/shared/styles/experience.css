@@ -1163,3 +1163,83 @@ fieldset.field legend {
   display: block;
   margin-top: 4px;
 }
+
+/* Tela de usuários */
+.user-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: var(--space-4);
+}
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.summary-chip strong {
+  color: var(--brand-ink);
+}
+
+.summary-chip-alert {
+  border-color: #e8c96b;
+  background: #fff8e1;
+  color: var(--brand-warning);
+}
+
+.summary-chip-alert strong {
+  color: var(--brand-warning);
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f1f0fc;
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.user-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.user-meta small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-muted);
+  font-size: 0.8125rem;
+}
+
+.user-row-pending td {
+  background: #fffdf5;
+}
+
+select.user-role {
+  min-width: 170px;
+  max-width: 220px;
+}
+
+.user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

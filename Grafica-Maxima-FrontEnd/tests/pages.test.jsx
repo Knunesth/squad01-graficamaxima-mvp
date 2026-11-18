@@ -154,20 +154,25 @@ describe("Usuários", () => {
     { id_usuario: 2, nome: "Bia", login: "bia", tipo: "atendente", ativo: true },
     { id_usuario: 1, nome: "Ana", login: "ana", tipo: "admin", ativo: true },
   ];
-  const linhaDe = (login) => screen.getByRole("cell", { name: login }).closest("tr");
+  const linhaDe = (login) => screen.getByLabelText(`Perfil de ${login}`).closest("tr");
 
   beforeEach(() => {
     api.get.mockResolvedValue({ data: lista });
     api.patch.mockResolvedValue({ data: { message: "ok" } });
   });
 
-  it("lista as contas com perfil e estado de acesso", async () => {
+  it("lista as contas com perfil e situação, com as que aguardam liberação primeiro", async () => {
     renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
-    expect(await screen.findByRole("cell", { name: "novo" })).toBeInTheDocument();
+    expect(await screen.findByLabelText("Perfil de novo")).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith("/api/auth/usuarios");
-    expect(within(linhaDe("novo")).getByRole("button", { name: "Liberar acesso" })).toBeEnabled();
-    expect(within(linhaDe("bia")).getByRole("button", { name: "Desativar" })).toBeEnabled();
-    expect(within(linhaDe("bia")).getByLabelText("Perfil de bia")).toHaveValue("atendente");
+    expect(screen.getByText("aguardando liberação", { selector: ".summary-chip" })).toBeInTheDocument();
+    const linhas = screen.getAllByRole("row").slice(1);
+    expect(within(linhas[0]).getByText("novo")).toBeInTheDocument();
+    expect(within(linhaDe("novo")).getByText("Aguardando liberação")).toBeInTheDocument();
+    expect(within(linhaDe("bia")).getByText("Ativo")).toBeInTheDocument();
+    expect(within(linhaDe("novo")).getByRole("button", { name: "Liberar acesso de novo" })).toBeEnabled();
+    expect(within(linhaDe("bia")).getByRole("button", { name: "Desativar bia" })).toBeEnabled();
+    expect(screen.getByLabelText("Perfil de bia")).toHaveValue("atendente");
   });
 
   it("trava a conta administradora principal: sem trocar perfil, desativar ou redefinir senha", async () => {
@@ -177,44 +182,54 @@ describe("Usuários", () => {
     renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
     expect(await screen.findByText(/Conta principal/)).toBeInTheDocument();
     expect(screen.getByLabelText("Perfil de admin")).toBeDisabled();
-    const linha = screen.getByLabelText("Perfil de admin").closest("tr");
-    expect(within(linha).getByRole("button", { name: "Desativar" })).toBeDisabled();
-    expect(within(linha).queryByText("Redefinir senha")).not.toBeInTheDocument();
+    const linha = within(linhaDe("admin"));
+    expect(linha.getByRole("button", { name: "Desativar admin" })).toBeDisabled();
+    expect(linha.queryByRole("button", { name: /Redefinir senha/ })).not.toBeInTheDocument();
     // as demais contas seguem editáveis
-    expect(within(linhaDe("bia")).getByRole("button", { name: "Desativar" })).toBeEnabled();
+    expect(within(linhaDe("bia")).getByRole("button", { name: "Desativar bia" })).toBeEnabled();
   });
 
   it("não deixa o administrador alterar a própria conta", async () => {
     renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
-    await screen.findByRole("cell", { name: "ana" });
+    await screen.findByLabelText("Perfil de ana");
     const propria = within(linhaDe("ana"));
+    expect(propria.getByText("Você")).toBeInTheDocument();
     expect(propria.getByLabelText("Perfil de ana")).toBeDisabled();
-    expect(propria.getByRole("button", { name: "Desativar" })).toBeDisabled();
-    expect(propria.queryByText("Redefinir senha")).not.toBeInTheDocument();
+    expect(propria.getByRole("button", { name: "Desativar ana" })).toBeDisabled();
+    expect(propria.queryByRole("button", { name: /Redefinir senha/ })).not.toBeInTheDocument();
   });
 
-  it("libera o acesso mantendo o perfil", async () => {
+  it("libera o acesso mantendo o perfil e avisa", async () => {
     renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
-    await screen.findByRole("cell", { name: "novo" });
-    await userEvent.click(within(linhaDe("novo")).getByRole("button", { name: "Liberar acesso" }));
+    await screen.findByLabelText("Perfil de novo");
+    await userEvent.click(within(linhaDe("novo")).getByRole("button", { name: "Liberar acesso de novo" }));
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith("/api/auth/usuarios/3", { tipo: "atendente", ativo: true }));
+    expect(await screen.findByText("Acesso de novo liberado.")).toBeInTheDocument();
   });
 
-  it("troca o perfil mantendo o estado de acesso", async () => {
+  it("troca o perfil mantendo o estado de acesso e avisa", async () => {
     renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
-    await screen.findByRole("cell", { name: "bia" });
+    await screen.findByLabelText("Perfil de bia");
     await userEvent.selectOptions(screen.getByLabelText("Perfil de bia"), "admin");
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith("/api/auth/usuarios/2", { tipo: "admin", ativo: true }));
+    expect(await screen.findByText("Perfil de bia alterado para Administrador.")).toBeInTheDocument();
   });
 
-  it("redefine a senha de outra conta", async () => {
+  it("redefine a senha de outra conta em uma janela, só com senha forte", async () => {
     renderComApp(<Usuarios />, { usuario: ADMIN, rota: "/usuarios" });
-    await screen.findByRole("cell", { name: "bia" });
-    const linha = within(linhaDe("bia"));
-    await userEvent.click(linha.getByText("Redefinir senha"));
-    await userEvent.type(linha.getByLabelText(/Nova senha/), "senha-redefinida-123");
-    await userEvent.click(linha.getByRole("button", { name: "Confirmar redefinição" }));
-    await waitFor(() => expect(api.patch).toHaveBeenCalledWith("/api/auth/usuarios/2/senha", { nova_senha: "senha-redefinida-123" }));
+    await screen.findByLabelText("Perfil de bia");
+    await userEvent.click(within(linhaDe("bia")).getByRole("button", { name: "Redefinir senha de bia" }));
+    const campo = await screen.findByLabelText("Nova senha");
+    const confirmar = screen.getByRole("button", { name: "Redefinir senha", hidden: true });
+    expect(confirmar).toBeDisabled();
+    await userEvent.type(campo, "curta");
+    expect(confirmar).toBeDisabled();
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "Senha-Redefinida-123!");
+    expect(confirmar).toBeEnabled();
+    await userEvent.click(confirmar);
+    await waitFor(() => expect(api.patch).toHaveBeenCalledWith("/api/auth/usuarios/2/senha", { nova_senha: "Senha-Redefinida-123!" }));
+    expect(await screen.findByText(/Senha de bia redefinida/)).toBeInTheDocument();
   });
 
   it("mostra o erro devolvido pela API", async () => {
