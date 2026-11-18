@@ -1,0 +1,12 @@
+{
+  "name": "Gráfica Máxima",
+  "short_name": "Gráfica Máxima",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#4541a2",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
